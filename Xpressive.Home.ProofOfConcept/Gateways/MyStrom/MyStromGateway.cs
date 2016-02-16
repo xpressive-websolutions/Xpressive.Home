@@ -4,7 +4,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
-
 using RestSharp;
 
 namespace Xpressive.Home.ProofOfConcept.Gateways.MyStrom
@@ -48,7 +47,7 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.MyStrom
         protected override async Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values)
         {
             var d = (MyStromDevice)device;
-            var client = new RestClient("http://" + d.IpAddress);
+            var client = new RestClient($"http://{d.IpAddress}");
             var request = new RestRequest("relay", Method.GET);
 
             switch (action.Name.ToLowerInvariant())
@@ -79,7 +78,7 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.MyStrom
 
                     if (dto != null)
                     {
-                        RegisterDevice(address);
+                        await RegisterDevice(address);
                     }
                 });
 
@@ -87,8 +86,17 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.MyStrom
             }
         }
 
-        private void RegisterDevice(string ipAddress)
+        private async Task RegisterDevice(string ipAddress)
         {
+            var client = new RestClient($"http://{ipAddress}/");
+            var request = new RestRequest("info.json", Method.GET);
+            var response = await client.ExecuteTaskAsync<MyStromDeviceInfo>(request);
+
+            if (response.Data == null)
+            {
+                return;
+            }
+
             lock (_deviceListLock)
             {
                 if (_devices.Any(d => d.Id.Equals(ipAddress)))
@@ -96,14 +104,14 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.MyStrom
                     return;
                 }
 
-                Console.WriteLine("Found myStrom device {0}", ipAddress);
-                _devices.Add(new MyStromDevice(ipAddress));
+                Console.WriteLine($"Found myStrom device {ipAddress} - {response.Data.Mac}");
+                _devices.Add(new MyStromDevice(ipAddress, response.Data.Mac));
             }
         }
 
         private async Task<Dto> GetReport(string ipAddress)
         {
-            var client = new RestClient("http://" + ipAddress);
+            var client = new RestClient($"http://{ipAddress}");
             client.Timeout = 5000;
 
             var response = await client.ExecuteTaskAsync<Dto>(new RestRequest("report", Method.GET));
@@ -185,6 +193,12 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.MyStrom
         {
             public double Power { get; set; }
             public bool Relay { get; set; }
+        }
+
+        private class MyStromDeviceInfo
+        {
+            public string Version { get; set; }
+            public string Mac { get; set; }
         }
     }
 }
