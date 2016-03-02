@@ -10,21 +10,24 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.MyStrom
 {
     internal class MyStromGateway : GatewayBase
     {
+        private readonly IIpAddressService _ipAddressService;
         private readonly object _deviceListLock = new object();
 
-        public MyStromGateway() : base("myStrom")
+        public MyStromGateway(IIpAddressService ipAddressService) : base("myStrom")
         {
+            _ipAddressService = ipAddressService;
+
             _actions.Add(new Action("Switch On"));
             _actions.Add(new Action("Switch Off"));
 
-            _properties.Add("Power");
-            _properties.Add("Relay");
+            _properties.Add(new NumericProperty("Power", double.MinValue, double.MaxValue));
+            _properties.Add(new BoolProperty("Relay"));
 
             Observe();
             FindDevices();
         }
 
-        protected override async Task<string> GetInternal(IDevice device, string property)
+        protected override async Task<string> GetInternal(DeviceBase device, PropertyBase property)
         {
             var dto = await GetReport(((MyStromDevice)device).IpAddress);
 
@@ -33,7 +36,7 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.MyStrom
                 return null;
             }
 
-            switch (property.ToLowerInvariant())
+            switch (property.Name.ToLowerInvariant())
             {
                 case "power":
                     return dto.Power.ToString("F6");
@@ -44,7 +47,12 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.MyStrom
             return null;
         }
 
-        protected override async Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values)
+        protected override Task SetInternal(DeviceBase device, PropertyBase property, string value)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override async Task ExecuteInternal(DeviceBase device, IAction action, IDictionary<string, string> values)
         {
             var d = (MyStromDevice)device;
             var client = new RestClient($"http://{d.IpAddress}");
@@ -69,8 +77,7 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.MyStrom
         {
             while (true)
             {
-                var ipAddress = GetIpAddress();
-                var addresses = GetOtherIpAddresses(ipAddress);
+                var addresses = _ipAddressService.GetOtherIpAddresses();
 
                 Parallel.ForEach(addresses, async address =>
                 {
@@ -128,8 +135,8 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.MyStrom
 
         private async Task Observe()
         {
-            var powerProperty = Properties.Single(p => p.Equals("Power", StringComparison.Ordinal));
-            var relayProperty = Properties.Single(p => p.Equals("Relay", StringComparison.Ordinal));
+            var powerProperty = GetProperty("Power");
+            var relayProperty = GetProperty("Relay");
 
             var previousPowers = new Dictionary<string, double>();
 
@@ -161,32 +168,6 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.MyStrom
                     previousPowers[device.Id] = dto.Power;
                 }
             }
-        }
-
-        private IEnumerable<string> GetOtherIpAddresses(string ipAddress)
-        {
-            var parts = ipAddress.Split('.');
-            var prefix = string.Join(".", parts.Take(3));
-
-            for (var i = 0; i < 256; i++)
-            {
-                yield return $"{prefix}.{i}";
-            }
-        }
-
-        private string GetIpAddress()
-        {
-            var host = Dns.GetHostEntry(Dns.GetHostName());
-
-            foreach (var ip in host.AddressList)
-            {
-                if (ip.AddressFamily == AddressFamily.InterNetwork)
-                {
-                    return ip.ToString();
-                }
-            }
-
-            return string.Empty;
         }
 
         private class Dto

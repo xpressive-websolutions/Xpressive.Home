@@ -29,7 +29,7 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.TextToSpeech
             });
         }
 
-        protected override async Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values)
+        protected override async Task ExecuteInternal(DeviceBase device, IAction action, IDictionary<string, string> values)
         {
             var language = values["Language"];
             var key = ((TextToSpeechDevice)device).ApiKey;
@@ -46,7 +46,12 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.TextToSpeech
             }
         }
 
-        protected override Task<string> GetInternal(IDevice device, string property)
+        protected override Task SetInternal(DeviceBase device, PropertyBase property, string value)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        protected override Task<string> GetInternal(DeviceBase device, PropertyBase property)
         {
             return Task.FromResult<string>(null);
         }

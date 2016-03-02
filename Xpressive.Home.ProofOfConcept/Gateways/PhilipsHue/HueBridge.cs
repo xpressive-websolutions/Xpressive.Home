@@ -1,9 +1,16 @@
+using RestSharp.Deserializers;
+
 namespace Xpressive.Home.ProofOfConcept.Gateways.PhilipsHue
 {
     internal class HueBridge
     {
+        [DeserializeAs(Name = "id")]
         public string Id { get; set; }
+
+        [DeserializeAs(Name = "internalipaddress")]
         public string InternalIpAddress { get; set; }
-        public string MacAddress { get; set; }
+
+        [DeserializeAs(Name = "name")]
+        public string Name { get; set; }
     }
 }

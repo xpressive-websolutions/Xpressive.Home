@@ -11,21 +11,21 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.DateTime
         {
             _devices.Add(new DateTimeDevice());
 
-            _properties.Add("Date");
-            _properties.Add("Day");
-            _properties.Add("Time");
-            _properties.Add("Hour");
-            _properties.Add("Minute");
-            _properties.Add("Second");
+            _properties.Add(new DateProperty("Date"));
+            _properties.Add(new WeekdayProperty("Day"));
+            _properties.Add(new TimeProperty("Time"));
+            _properties.Add(new NumericProperty("Hour", 0, 23));
+            _properties.Add(new NumericProperty("Minute", 0, 59));
+            _properties.Add(new NumericProperty("Second", 0, 59));
 
             Observe();
         }
 
-        protected override Task<string> GetInternal(IDevice device, string property)
+        protected override Task<string> GetInternal(DeviceBase device, PropertyBase property)
         {
             var now = System.DateTime.Now;
 
-            switch (property.ToLowerInvariant())
+            switch (property.Name.ToLowerInvariant())
             {
                 case "time":
                     return Task.FromResult(now.ToString("HH:mm:ss"));
@@ -44,7 +44,12 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.DateTime
             return Task.FromResult<string>(null);
         }
 
-        protected override Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values)
+        protected override Task SetInternal(DeviceBase device, PropertyBase property, string value)
+        {
+            return Task.CompletedTask;
+        }
+
+        protected override Task ExecuteInternal(DeviceBase device, IAction action, IDictionary<string, string> values)
         {
             return Task.CompletedTask;
         }
@@ -53,12 +58,12 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.DateTime
         {
             var previousTime = System.DateTime.UtcNow;
             var device = _devices.Single();
-            var timeProperty = Properties.Single(p => p.Equals("Time", StringComparison.Ordinal));
-            var dateProperty = Properties.Single(p => p.Equals("Date", StringComparison.Ordinal));
-            var dayProperty = Properties.Single(p => p.Equals("Day", StringComparison.Ordinal));
-            var hourProperty = Properties.Single(p => p.Equals("Hour", StringComparison.Ordinal));
-            var minuteProperty = Properties.Single(p => p.Equals("Minute", StringComparison.Ordinal));
-            var secondProperty = Properties.Single(p => p.Equals("Second", StringComparison.Ordinal));
+            var timeProperty = GetProperty("Time");
+            var dateProperty = GetProperty("Date");
+            var dayProperty = GetProperty("Day");
+            var hourProperty = GetProperty("Hour");
+            var minuteProperty = GetProperty("Minute");
+            var secondProperty = GetProperty("Second");
 
             while (true)
             {

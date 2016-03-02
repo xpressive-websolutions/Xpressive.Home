@@ -11,9 +11,10 @@ namespace Xpressive.Home.ProofOfConcept
         string Name { get; }
         IEnumerable<IDevice> Devices { get; }
         IEnumerable<IAction> Actions { get; }
-        IEnumerable<string> Properties { get; }
+        IEnumerable<IProperty> Properties { get; }
 
         Task<string> Get(IDevice device, string property);
-        void Execute(IDeviceAction action);
+        Task Set(IDevice device, string property, string value);
+        Task Execute(IDeviceAction action);
     }
 }

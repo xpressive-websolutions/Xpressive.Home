@@ -15,12 +15,17 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.Pushalot
             });
         }
 
-        protected override Task<string> GetInternal(IDevice device, string property)
+        protected override Task<string> GetInternal(DeviceBase device, PropertyBase property)
         {
             return Task.FromResult<string>(null);
         }
 
-        protected override async Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values)
+        protected override Task SetInternal(DeviceBase device, PropertyBase property, string value)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        protected override async Task ExecuteInternal(DeviceBase device, IAction action, IDictionary<string, string> values)
         {
             var key = ((PushalotDevice)device).Key;
             var text = values["Text"];
