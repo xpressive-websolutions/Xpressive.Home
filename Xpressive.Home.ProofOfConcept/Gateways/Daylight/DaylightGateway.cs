@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Xpressive.Home.ProofOfConcept.Contracts;
 
 namespace Xpressive.Home.ProofOfConcept.Gateways.Daylight
 {
@@ -13,7 +14,6 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.Daylight
         {
             _variableRepository = variableRepository;
             _messageQueue = messageQueue;
-            _properties.Add(new BoolProperty("Daylight", isReadOnly: true));
 
             CanCreateDevices = true;
 

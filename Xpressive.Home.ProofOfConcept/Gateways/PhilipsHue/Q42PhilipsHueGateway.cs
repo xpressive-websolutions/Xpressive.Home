@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Q42.HueApi;
+using Xpressive.Home.ProofOfConcept.Contracts;
 
 namespace Xpressive.Home.ProofOfConcept.Gateways.PhilipsHue
 {
@@ -19,8 +20,8 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.PhilipsHue
             _variableRepository = variableRepository;
             _messageQueue = messageQueue;
 
-            _properties.Add(new NumericProperty("Brightness", 0, 255, isReadOnly: false));
-            _properties.Add(new ColorProperty("Color", isReadOnly: false));
+            //_properties.Add(new NumericProperty("Brightness", 0, 255, isReadOnly: false));
+            //_properties.Add(new ColorProperty("Color", isReadOnly: false));
 
             _actions.Add(new Action("Switch On")
             {
@@ -225,6 +226,8 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.PhilipsHue
                 foreach (var light in bulbs)
                 {
                     var bulb = new HueBulb(light.Id, bridge, light.Name);
+
+                    // TODO: register variables
                     _devices.Add(bulb);
                 }
             }

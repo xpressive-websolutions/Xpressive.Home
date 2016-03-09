@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Xpressive.Home.ProofOfConcept
+namespace Xpressive.Home.ProofOfConcept.Contracts
 {
     public interface IGatewayResolver
     {

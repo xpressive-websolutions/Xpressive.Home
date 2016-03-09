@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Threading;
+using Xpressive.Home.ProofOfConcept.Contracts;
 using Xpressive.Home.ProofOfConcept.Gateways.Daylight;
 using Xpressive.Home.ProofOfConcept.Gateways.Denon;
 using Xpressive.Home.ProofOfConcept.Gateways.GoogleCalendar;

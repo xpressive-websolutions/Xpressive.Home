@@ -87,6 +87,8 @@
     <Compile Include="Action.cs" />
     <Compile Include="Automation\AutomationEngine.cs" />
     <Compile Include="Contracts\IGatewayDeviceFactory.cs" />
+    <Compile Include="Contracts\IIpAddressService.cs" />
+    <Compile Include="IpAddressService.cs" />
     <Compile Include="Gateways\Daylight\DaylightDevice.cs" />
     <Compile Include="Gateways\Daylight\DaylightGateway.cs" />
     <Compile Include="DeviceAction.cs" />
@@ -115,9 +117,6 @@
     <Compile Include="Gateways\Ifttt\IftttGateway.cs" />
     <Compile Include="Contracts\IGateway.cs" />
     <Compile Include="Contracts\IGatewayResolver.cs" />
-    <Compile Include="Contracts\ISubscription.cs" />
-    <Compile Include="Contracts\ISubscriptionPropertyObserver.cs" />
-    <Compile Include="Contracts\ISubscriptionService.cs" />
     <Compile Include="Gateways\MyStrom\MyStromDevice.cs" />
     <Compile Include="Gateways\MyStrom\MyStromGateway.cs" />
     <Compile Include="Gateways\PhilipsHue\IHueAppKeyStore.cs" />

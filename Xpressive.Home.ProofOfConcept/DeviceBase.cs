@@ -1,3 +1,5 @@
+using Xpressive.Home.ProofOfConcept.Contracts;
+
 namespace Xpressive.Home.ProofOfConcept
 {
     public abstract class DeviceBase : IDevice

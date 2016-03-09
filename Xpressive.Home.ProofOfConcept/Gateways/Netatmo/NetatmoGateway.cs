@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Xpressive.Home.ProofOfConcept.Contracts;
 
 namespace Xpressive.Home.ProofOfConcept.Gateways.Netatmo
 {
@@ -8,8 +9,8 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.Netatmo
     {
         public NetatmoGateway() : base("Netatmo")
         {
-            ClientId = "56ce1c1aacb39b8fa9c2a7b0";
-            ClientSecret = "4oGyMDqaZuEbkycuoiu72rAVM4";
+            ClientId = "";
+            ClientSecret = "";
 
             Setup();
         }

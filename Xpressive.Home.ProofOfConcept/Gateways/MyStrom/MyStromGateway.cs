@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using RestSharp;
+using Xpressive.Home.ProofOfConcept.Contracts;
 
 namespace Xpressive.Home.ProofOfConcept.Gateways.MyStrom
 {
@@ -23,8 +24,8 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.MyStrom
             _actions.Add(new Action("Switch On"));
             _actions.Add(new Action("Switch Off"));
 
-            _properties.Add(new NumericProperty("Power", double.MinValue, double.MaxValue, isReadOnly: true));
-            _properties.Add(new BoolProperty("Relay", isReadOnly: true));
+            //_properties.Add(new NumericProperty("Power", double.MinValue, double.MaxValue, isReadOnly: true));
+            //_properties.Add(new BoolProperty("Relay", isReadOnly: true));
 
             Observe();
             FindDevices();
@@ -121,8 +122,8 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.MyStrom
 
         private async Task Observe()
         {
-            var powerProperty = GetProperty("Power");
-            var relayProperty = GetProperty("Relay");
+            //var powerProperty = GetProperty("Power");
+            //var relayProperty = GetProperty("Relay");
 
             var previousPowers = new Dictionary<string, double>();
 

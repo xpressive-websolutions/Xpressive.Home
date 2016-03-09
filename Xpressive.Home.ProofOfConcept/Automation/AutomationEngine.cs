@@ -3,6 +3,7 @@ using System.Collections.Specialized;
 using System.Net;
 using System.Threading.Tasks;
 using Jint;
+using Xpressive.Home.ProofOfConcept.Contracts;
 
 namespace Xpressive.Home.ProofOfConcept.Automation
 {

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Xpressive.Home.ProofOfConcept.Contracts;
 
 namespace Xpressive.Home.ProofOfConcept
 {
@@ -11,19 +12,19 @@ namespace Xpressive.Home.ProofOfConcept
         private bool _canCreateDevices;
         protected readonly IList<DeviceBase> _devices;
         protected readonly IList<Action> _actions;
-        protected readonly IList<PropertyBase> _properties;
+        //protected readonly IList<PropertyBase> _properties;
 
         protected GatewayBase(string name)
         {
             _name = name;
             _devices = new List<DeviceBase>();
             _actions = new List<Action>();
-            _properties = new List<PropertyBase>();
+            //_properties = new List<PropertyBase>();
         }
 
         public IEnumerable<IDevice> Devices => _devices.ToList();
         public IEnumerable<IAction> Actions => _actions.ToList();
-        public IEnumerable<IProperty> Properties => _properties.ToList();
+        //public IEnumerable<IProperty> Properties => _properties.ToList();
         public string Name => _name;
         public bool CanCreateDevices { get; protected set; }
 
@@ -68,10 +69,10 @@ namespace Xpressive.Home.ProofOfConcept
             }
         }
 
-        protected PropertyBase GetProperty(string property)
-        {
-            return _properties.Single(p => p.Name.Equals(property, StringComparison.Ordinal));
-        }
+        //protected PropertyBase GetProperty(string property)
+        //{
+        //    return _properties.Single(p => p.Name.Equals(property, StringComparison.Ordinal));
+        //}
 
         protected abstract Task ExecuteInternal(DeviceBase device, IAction action, IDictionary<string, string> values);
     }

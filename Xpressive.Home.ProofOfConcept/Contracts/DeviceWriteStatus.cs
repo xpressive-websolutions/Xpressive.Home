@@ -1,4 +1,4 @@
-namespace Xpressive.Home.ProofOfConcept
+namespace Xpressive.Home.ProofOfConcept.Contracts
 {
     public enum DeviceWriteStatus
     {

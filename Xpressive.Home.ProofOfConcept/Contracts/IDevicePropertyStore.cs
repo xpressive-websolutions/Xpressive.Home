@@ -3,19 +3,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 
-namespace Xpressive.Home.ProofOfConcept
+namespace Xpressive.Home.ProofOfConcept.Contracts
 {
-    //public interface IDevicePropertyStore
-    //{
-    //    event EventHandler<DevicePropertyEventArgs> DevicePropertyChanged;
-
-    //    void Save(string gatewayName, string deviceId, string property, string value);
-
-    //    string Get(string gatewayName, string deviceId, string property);
-
-    //    IDictionary<string, string> Get(string gatewayName, string deviceId);
-    //}
-
     public interface IVariableRepository
     {
         void Register<T>(T variable) where T : IVariable;
