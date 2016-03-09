@@ -128,9 +128,6 @@
     <Compile Include="Gateways\Pushalot\PushalotDevice.cs" />
     <Compile Include="Gateways\Pushalot\PushalotGateway.cs" />
     <Compile Include="Gateways\PhilipsHue\Q42PhilipsHueGateway.cs" />
-    <Compile Include="Subscription.cs" />
-    <Compile Include="SubscriptionPropertyObserver.cs" />
-    <Compile Include="SubscriptionService.cs" />
     <Compile Include="Gateways\Daylight\SunsetCalculator.cs" />
     <Compile Include="Gateways\TextToSpeech\TextToSpeechGateway.cs" />
   </ItemGroup>
