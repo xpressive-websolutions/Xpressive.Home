@@ -4,7 +4,7 @@ namespace Xpressive.Home.ProofOfConcept
     {
         private readonly string _key;
 
-        public IftttDevice(string key) : base("IFTTT Device", "IFTTT Device")
+        public IftttDevice(string key)
         {
             _key = key;
         }

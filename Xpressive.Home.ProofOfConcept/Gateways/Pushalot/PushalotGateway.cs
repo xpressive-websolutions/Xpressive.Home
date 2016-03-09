@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Net;
@@ -9,20 +10,11 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.Pushalot
     {
         public PushalotGateway() : base("Pushalot")
         {
-            _actions.Add(new Action("Send Notification")
-            {
-                Fields = { "Text" }
-            });
         }
 
-        protected override Task<string> GetInternal(DeviceBase device, PropertyBase property)
+        public override bool IsConfigurationValid()
         {
-            return Task.FromResult<string>(null);
-        }
-
-        protected override Task SetInternal(DeviceBase device, PropertyBase property, string value)
-        {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         protected override async Task ExecuteInternal(DeviceBase device, IAction action, IDictionary<string, string> values)

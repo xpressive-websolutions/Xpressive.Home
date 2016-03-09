@@ -4,7 +4,7 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.Pushalot
     {
         private readonly string _key;
 
-        public PushalotDevice(string key) : base("PushalotDevice", "PushalotDevice")
+        public PushalotDevice(string key)
         {
             _key = key;
         }

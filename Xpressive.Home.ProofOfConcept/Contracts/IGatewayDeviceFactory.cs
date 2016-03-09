@@ -1,11 +1,10 @@
-using System.Collections.Generic;
+using System;
 
 namespace Xpressive.Home.ProofOfConcept
 {
-    public interface IGatewayDeviceFactory<T> where T : IGateway
-    {
-        bool TryCreate(IGateway gateway, IDictionary<string, string> properties, out IDevice device);
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
+    public sealed class GatewayPropertyAttribute : Attribute { }
 
-        IEnumerable<string> GetPropertiesForCreation();
-    }
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
+    public sealed class DevicePropertyAttribute : Attribute { }
 }

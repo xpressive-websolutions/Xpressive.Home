@@ -11,19 +11,14 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.GoogleCalendar
         {
         }
 
+        public override bool IsConfigurationValid()
+        {
+            throw new NotImplementedException();
+        }
+
         protected override Task ExecuteInternal(DeviceBase device, IAction action, IDictionary<string, string> values)
         {
             throw new NotImplementedException();
-        }
-
-        protected override Task SetInternal(DeviceBase device, PropertyBase property, string value)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override Task<string> GetInternal(DeviceBase device, PropertyBase property)
-        {
-            return Task.FromResult<string>(null);
         }
 
         private async Task Observe()
@@ -31,8 +26,6 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.GoogleCalendar
             while (true)
             {
                 await Task.Delay(TimeSpan.FromMinutes(1));
-
-                //OnDevicePropertyChanged(_devices.Single(), "property", "value");
             }
         }
     }

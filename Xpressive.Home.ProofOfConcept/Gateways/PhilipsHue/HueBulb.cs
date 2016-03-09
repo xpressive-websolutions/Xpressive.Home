@@ -4,9 +4,11 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.PhilipsHue
     {
         private readonly HueBridge _bridge;
 
-        public HueBulb(string id, HueBridge bridge, string name) : base(id, name)
+        public HueBulb(string id, HueBridge bridge, string name)
         {
             _bridge = bridge;
+            Id = id;
+            Name = name;
         }
 
         public HueBridge Bridge => _bridge;

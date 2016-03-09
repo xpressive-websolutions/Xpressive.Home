@@ -35,6 +35,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Jint, Version=2.7.1.0, Culture=neutral, PublicKeyToken=2e92ba9c8d81157f, processorArchitecture=MSIL">
+      <HintPath>..\packages\Jint.2.8\lib\portable-net40+sl50+win+WindowsPhoneApp81+wp80\Jint.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Jishi.Intel.SonosUPnP, Version=0.0.0.2, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Libs\Jishi.Intel.SonosUPnP\Jishi.Intel.SonosUPnP.dll</HintPath>
@@ -81,9 +85,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Action.cs" />
+    <Compile Include="Automation\AutomationEngine.cs" />
     <Compile Include="Contracts\IGatewayDeviceFactory.cs" />
-    <Compile Include="Gateways\DateTime\DateTimeDevice.cs" />
-    <Compile Include="Gateways\DateTime\DateTimeGateway.cs" />
     <Compile Include="Gateways\Daylight\DaylightDevice.cs" />
     <Compile Include="Gateways\Daylight\DaylightGateway.cs" />
     <Compile Include="DeviceAction.cs" />
@@ -96,9 +99,8 @@
     <Compile Include="Contracts\DeviceWriteStatus.cs" />
     <Compile Include="GatewayBase.cs" />
     <Compile Include="GatewayResolver.cs" />
-    <Compile Include="Gateways\Daylight\DaylightGatewayFactory.cs" />
+    <Compile Include="Gateways\Denon\DenonGateway.cs" />
     <Compile Include="Gateways\GoogleCalendar\GoogleCalendarGateway.cs" />
-    <Compile Include="Gateways\Ifttt\IftttGatewayFactory.cs" />
     <Compile Include="Gateways\Netatmo\NetatmoGateway.cs" />
     <Compile Include="Gateways\PhilipsHue\HueAppKeyStore.cs" />
     <Compile Include="Gateways\PhilipsHue\HueBridge.cs" />
@@ -120,9 +122,7 @@
     <Compile Include="Gateways\MyStrom\MyStromGateway.cs" />
     <Compile Include="Gateways\PhilipsHue\IHueAppKeyStore.cs" />
     <Compile Include="Gateways\PhilipsHue\IHueBridgeLocator.cs" />
-    <Compile Include="Gateways\Pushalot\PushalotGatewayFactory.cs" />
     <Compile Include="Gateways\Sonos\SonosGateway.cs" />
-    <Compile Include="Gateways\TextToSpeech\TextToSpeechGatewayFactory.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Gateways\Pushalot\PushalotDevice.cs" />
@@ -132,7 +132,6 @@
     <Compile Include="SubscriptionPropertyObserver.cs" />
     <Compile Include="SubscriptionService.cs" />
     <Compile Include="Gateways\Daylight\SunsetCalculator.cs" />
-    <Compile Include="Gateways\TextToSpeech\TextToSpeechDevice.cs" />
     <Compile Include="Gateways\TextToSpeech\TextToSpeechGateway.cs" />
   </ItemGroup>
   <ItemGroup>

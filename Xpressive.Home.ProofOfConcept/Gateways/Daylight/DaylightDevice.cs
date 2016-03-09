@@ -2,16 +2,28 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.Daylight
 {
     internal class DaylightDevice : DeviceBase
     {
-        private readonly double _latitude;
-        private readonly double _longitude;
+        [DeviceProperty]
+        public double Latitude { get; set; }
 
-        public DaylightDevice(double latitude, double longitude) : base("DaylightDevice", "DaylightDevice")
+        [DeviceProperty]
+        public double Longitude { get; set; }
+
+        [DeviceProperty]
+        public int Offset { get; set; }
+
+        public override bool IsConfigurationValid()
         {
-            _latitude = latitude;
-            _longitude = longitude;
-        }
+            if (Longitude < -180 || Longitude > 180)
+            {
+                return false;
+            }
 
-        public double Latitude => _latitude;
-        public double Longitude => _longitude;
+            if (Latitude < -90 || Latitude > 90)
+            {
+                return false;
+            }
+
+            return base.IsConfigurationValid();
+        }
     }
 }

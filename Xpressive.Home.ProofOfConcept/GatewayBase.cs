@@ -8,6 +8,7 @@ namespace Xpressive.Home.ProofOfConcept
     internal abstract class GatewayBase : IGateway
     {
         private readonly string _name;
+        private bool _canCreateDevices;
         protected readonly IList<DeviceBase> _devices;
         protected readonly IList<Action> _actions;
         protected readonly IList<PropertyBase> _properties;
@@ -20,62 +21,18 @@ namespace Xpressive.Home.ProofOfConcept
             _properties = new List<PropertyBase>();
         }
 
-        public event EventHandler<DevicePropertyEventArgs> DevicePropertyChanged;
-
         public IEnumerable<IDevice> Devices => _devices.ToList();
         public IEnumerable<IAction> Actions => _actions.ToList();
         public IEnumerable<IProperty> Properties => _properties.ToList();
         public string Name => _name;
+        public bool CanCreateDevices { get; protected set; }
 
-        public DeviceBase AddDevice(DeviceBase device)
+        public abstract bool IsConfigurationValid();
+
+        public virtual DeviceBase AddDevice(DeviceBase device)
         {
             _devices.Add(device);
             return device;
-        }
-
-        public async Task<string> Get(IDevice device, string property)
-        {
-            var deviceBase = GetDevice(device);
-
-            try
-            {
-                var prop = _properties.SingleOrDefault(p => p.Name.Equals(property, StringComparison.Ordinal));
-                if (deviceBase != null && prop != null)
-                {
-                    await GetInternal(deviceBase, prop);
-                    deviceBase.ReadStatus = DeviceReadStatus.Ok;
-                }
-            }
-            catch (Exception e)
-            {
-                // TODO: log
-                Console.WriteLine(e);
-                deviceBase.ReadStatus = DeviceReadStatus.Erroneous;
-            }
-
-            return null;
-        }
-
-        public async Task Set(IDevice device, string property, string value)
-        {
-            var deviceBase = GetDevice(device);
-
-            try
-            {
-                var prop = _properties.SingleOrDefault(p => p.Name.Equals(property, StringComparison.Ordinal));
-                if (deviceBase != null && prop != null && !prop.IsReadOnly && prop.IsValidValue(value))
-                {
-                    Console.WriteLine($"Set {property} of {device.Name} to {value}");
-                    await SetInternal(deviceBase, prop, value);
-                    deviceBase.WriteStatus = DeviceWriteStatus.Ok;
-                }
-            }
-            catch (Exception e)
-            {
-                // TODO: log
-                Console.WriteLine(e);
-                deviceBase.WriteStatus = DeviceWriteStatus.Erroneous;
-            }
         }
 
         public async Task Execute(IDeviceAction action)
@@ -111,25 +68,11 @@ namespace Xpressive.Home.ProofOfConcept
             }
         }
 
-        protected virtual void OnDevicePropertyChanged(DeviceBase device, PropertyBase property, string value)
-        {
-            DevicePropertyChanged?.Invoke(this, new DevicePropertyEventArgs(Name, device.Id, property.Name, value));
-        }
-
         protected PropertyBase GetProperty(string property)
         {
             return _properties.Single(p => p.Name.Equals(property, StringComparison.Ordinal));
         }
 
-        protected abstract Task<string> GetInternal(DeviceBase device, PropertyBase property);
-
-        protected abstract Task SetInternal(DeviceBase device, PropertyBase property, string value);
-
         protected abstract Task ExecuteInternal(DeviceBase device, IAction action, IDictionary<string, string> values);
-
-        private DeviceBase GetDevice(IDevice device)
-        {
-            return _devices.SingleOrDefault(d => d.Equals(device));
-        }
     }
 }

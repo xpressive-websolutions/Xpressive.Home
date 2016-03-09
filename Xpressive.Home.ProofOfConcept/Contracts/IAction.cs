@@ -131,43 +131,43 @@ namespace Xpressive.Home.ProofOfConcept
         }
     }
 
-    public class DateProperty : PropertyBase
-    {
-        public DateProperty(string name, bool isReadOnly = true) : base(name, isReadOnly) { }
+    //public class DateProperty : PropertyBase
+    //{
+    //    public DateProperty(string name, bool isReadOnly = true) : base(name, isReadOnly) { }
 
-        public override bool IsValidValue(string value)
-        {
-            return true;
-        }
-    }
+    //    public override bool IsValidValue(string value)
+    //    {
+    //        return true;
+    //    }
+    //}
 
-    public class DateTimeProperty : PropertyBase
-    {
-        public DateTimeProperty(string name, bool isReadOnly = true) : base(name, isReadOnly) { }
+    //public class DateTimeProperty : PropertyBase
+    //{
+    //    public DateTimeProperty(string name, bool isReadOnly = true) : base(name, isReadOnly) { }
 
-        public override bool IsValidValue(string value)
-        {
-            return true;
-        }
-    }
+    //    public override bool IsValidValue(string value)
+    //    {
+    //        return true;
+    //    }
+    //}
 
-    public class TimeProperty : PropertyBase
-    {
-        public TimeProperty(string name, bool isReadOnly = true) : base(name, isReadOnly) { }
+    //public class TimeProperty : PropertyBase
+    //{
+    //    public TimeProperty(string name, bool isReadOnly = true) : base(name, isReadOnly) { }
 
-        public override bool IsValidValue(string value)
-        {
-            return true;
-        }
-    }
+    //    public override bool IsValidValue(string value)
+    //    {
+    //        return true;
+    //    }
+    //}
 
-    public class WeekdayProperty : PropertyBase
-    {
-        public WeekdayProperty(string name, bool isReadOnly = true) : base(name, isReadOnly) { }
+    //public class WeekdayProperty : PropertyBase
+    //{
+    //    public WeekdayProperty(string name, bool isReadOnly = true) : base(name, isReadOnly) { }
 
-        public override bool IsValidValue(string value)
-        {
-            return true;
-        }
-    }
+    //    public override bool IsValidValue(string value)
+    //    {
+    //        return true;
+    //    }
+    //}
 }

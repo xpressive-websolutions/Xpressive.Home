@@ -1,19 +1,34 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Xpressive.Home.ProofOfConcept.Gateways.Netatmo
 {
     internal class NetatmoGateway : GatewayBase
     {
-        private const string _clientId = "";
-        private const string _clientSecret = "";
-
         public NetatmoGateway() : base("Netatmo")
         {
-            
+            ClientId = "56ce1c1aacb39b8fa9c2a7b0";
+            ClientSecret = "4oGyMDqaZuEbkycuoiu72rAVM4";
+
+            Setup();
+        }
+
+        [GatewayProperty]
+        public string ClientId { get; set; }
+
+        [GatewayProperty]
+        public string ClientSecret { get; set; }
+
+        public override bool IsConfigurationValid()
+        {
+            if (string.IsNullOrEmpty(ClientId) || string.IsNullOrEmpty(ClientSecret))
+            {
+                return false;
+            }
+
+            // check connection to the cloud
+            return true;
         }
 
         protected override Task ExecuteInternal(DeviceBase device, IAction action, IDictionary<string, string> values)
@@ -21,22 +36,23 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.Netatmo
             throw new NotImplementedException();
         }
 
-        protected override Task<string> GetInternal(DeviceBase device, PropertyBase property)
+        private async Task Setup()
         {
-            throw new NotImplementedException();
-        }
+            while (!IsConfigurationValid())
+            {
+                await Task.Delay(1000);
+            }
 
-        protected override Task SetInternal(DeviceBase device, PropertyBase property, string value)
-        {
-            throw new NotImplementedException();
+            // find devices
         }
     }
 
     internal class NetatmoDevice : DeviceBase
     {
-        public NetatmoDevice() : base("", "")
+        public NetatmoDevice(string id, string name)
         {
-            
+            Id = id;
+            Name = name;
         }
     }
 }

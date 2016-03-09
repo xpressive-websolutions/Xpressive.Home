@@ -1,32 +1,39 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Xpressive.Home.ProofOfConcept.Gateways.Daylight
 {
     internal class DaylightGateway : GatewayBase
     {
-        public DaylightGateway() : base("Daylight")
+        private readonly IVariableRepository _variableRepository;
+        private readonly IMessageQueue _messageQueue;
+
+        public DaylightGateway(IVariableRepository variableRepository, IMessageQueue messageQueue) : base("Daylight")
         {
-            _properties.Add(new BoolProperty("Daylight"));
+            _variableRepository = variableRepository;
+            _messageQueue = messageQueue;
+            _properties.Add(new BoolProperty("Daylight", isReadOnly: true));
+
+            CanCreateDevices = true;
 
             Observe();
         }
 
-        protected override Task<string> GetInternal(DeviceBase device, PropertyBase property)
+        public override bool IsConfigurationValid()
         {
-            if (property.Name.Equals("Daylight", StringComparison.Ordinal))
-            {
-                return Task.FromResult(IsDaylight((DaylightDevice)device).ToString());
-            }
-
-            return Task.FromResult<string>(null);
+            return true;
         }
 
-        protected override Task SetInternal(DeviceBase device, PropertyBase property, string value)
+        public override DeviceBase AddDevice(DeviceBase device)
         {
-            return Task.CompletedTask;
+            if (device.IsConfigurationValid())
+            {
+                _variableRepository.Register(new BooleanVariable($"{Name}.{device.Name}.Daylight"));
+                return base.AddDevice(device);
+            }
+
+            return null;
         }
 
         protected override Task ExecuteInternal(DeviceBase device, IAction action, IDictionary<string, string> values)
@@ -36,20 +43,21 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.Daylight
 
         private async Task Observe()
         {
-            var device = (DaylightDevice)_devices.Single();
-
             while (true)
             {
                 await Task.Delay(TimeSpan.FromMinutes(1));
 
-                var daylight = IsDaylight(device);
-                OnDevicePropertyChanged(device, _properties.Single(), daylight.ToString());
+                foreach (DaylightDevice device in Devices)
+                {
+                    var daylight = IsDaylight(device);
+                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Name, "Daylight", daylight));
+                }
             }
         }
 
         private bool IsDaylight(DaylightDevice device)
         {
-            var time = System.DateTime.UtcNow.TimeOfDay;
+            var time = DateTime.UtcNow.AddMinutes(device.Offset).TimeOfDay;
             var sunrise = SunsetCalculator.GetSunrise(device.Latitude, device.Longitude);
             var sunset = SunsetCalculator.GetSunset(device.Latitude, device.Longitude);
 

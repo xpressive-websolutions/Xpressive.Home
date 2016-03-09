@@ -42,17 +42,12 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.Sonos
             _discovery.StartScan();
         }
 
+        public override bool IsConfigurationValid()
+        {
+            throw new NotImplementedException();
+        }
+
         protected override Task ExecuteInternal(DeviceBase device, IAction action, IDictionary<string, string> values)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override Task<string> GetInternal(DeviceBase device, PropertyBase property)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override Task SetInternal(DeviceBase device, PropertyBase property, string value)
         {
             throw new NotImplementedException();
         }
@@ -62,9 +57,11 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.Sonos
     {
         private readonly string _ipAddress;
 
-        public SonosDevice(string id, string ipAddress, string name) : base(id, name)
+        public SonosDevice(string id, string ipAddress, string name)
         {
             _ipAddress = ipAddress;
+            Id = id;
+            Name = name;
         }
 
         public string IpAddress => _ipAddress;

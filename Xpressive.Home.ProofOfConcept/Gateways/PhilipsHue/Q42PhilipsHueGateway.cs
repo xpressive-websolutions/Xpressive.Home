@@ -9,11 +9,15 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.PhilipsHue
     {
         private readonly IHueBridgeLocator _hueBridgeLocator;
         private readonly IHueAppKeyStore _hueAppKeyStore;
+        private readonly IVariableRepository _variableRepository;
+        private readonly IMessageQueue _messageQueue;
 
-        public Q42PhilipsHueGateway(IHueBridgeLocator hueBridgeLocator, IHueAppKeyStore hueAppKeyStore) : base("Philips Hue")
+        public Q42PhilipsHueGateway(IHueBridgeLocator hueBridgeLocator, IHueAppKeyStore hueAppKeyStore, IVariableRepository variableRepository, IMessageQueue messageQueue) : base("PhilipsHue")
         {
             _hueBridgeLocator = hueBridgeLocator;
             _hueAppKeyStore = hueAppKeyStore;
+            _variableRepository = variableRepository;
+            _messageQueue = messageQueue;
 
             _properties.Add(new NumericProperty("Brightness", 0, 255, isReadOnly: false));
             _properties.Add(new ColorProperty("Color", isReadOnly: false));
@@ -30,8 +34,14 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.PhilipsHue
             {
                 Fields = { "Color", "Transition time in seconds" }
             });
+            _actions.Add(new Action("Change Brightness")
+            {
+                Fields = { "Brightness", "Transition time in seconds" }
+            });
             _actions.Add(new Action("Alarm Once"));
             _actions.Add(new Action("Alarm Multiple"));
+
+            _messageQueue.Subscribe((CommandMessage message) => HandleMessage(message));
 
             FindBridges().ContinueWith(_ =>
             {
@@ -44,43 +54,58 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.PhilipsHue
             });
         }
 
-        protected override async Task<string> GetInternal(DeviceBase device, PropertyBase property)
+        private void HandleMessage(CommandMessage message)
         {
-            var bulb = (HueBulb)device;
-            var client = GetHueClient(bulb.Bridge);
-            var light = await client.GetLightAsync(bulb.Id);
-
-            switch (property.Name.ToLowerInvariant())
-            {
-                case "brightness":
-                    return light.State.Brightness.ToString();
-                case "color":
-                    return light.State.ToHex(light.ModelId);
-                default:
-                    throw new NotSupportedException(property.Name);
-            }
+            throw new NotImplementedException();
         }
 
-        protected override async Task SetInternal(DeviceBase device, PropertyBase property, string value)
+        public override bool IsConfigurationValid()
         {
-            var bulb = (HueBulb)device;
-            var client = GetHueClient(bulb.Bridge);
-            var command = new LightCommand();
-
-            switch (property.Name.ToLowerInvariant())
-            {
-                case "brightness":
-                    command.Brightness = byte.Parse(value);
-                    break;
-                case "color":
-                    command.SetColor(value);
-                    break;
-                default:
-                    throw new NotSupportedException(property.Name);
-            }
-
-            await client.SendCommandAsync(command, new[] { bulb.Id });
+            return true;
         }
+
+        public override DeviceBase AddDevice(DeviceBase device)
+        {
+            throw new NotSupportedException();
+        }
+
+        //protected override async Task<string> GetInternal(DeviceBase device, PropertyBase property)
+        //{
+        //    var bulb = (HueBulb)device;
+        //    var client = GetHueClient(bulb.Bridge);
+        //    var light = await client.GetLightAsync(bulb.Id);
+
+        //    switch (property.Name.ToLowerInvariant())
+        //    {
+        //        case "brightness":
+        //            return light.State.Brightness.ToString();
+        //        case "color":
+        //            return light.State.ToHex(light.ModelId);
+        //        default:
+        //            throw new NotSupportedException(property.Name);
+        //    }
+        //}
+
+        //protected override async Task SetInternal(DeviceBase device, PropertyBase property, string value)
+        //{
+        //    var bulb = (HueBulb)device;
+        //    var client = GetHueClient(bulb.Bridge);
+        //    var command = new LightCommand();
+
+        //    switch (property.Name.ToLowerInvariant())
+        //    {
+        //        case "brightness":
+        //            command.Brightness = byte.Parse(value);
+        //            break;
+        //        case "color":
+        //            command.SetColor(value);
+        //            break;
+        //        default:
+        //            throw new NotSupportedException(property.Name);
+        //    }
+
+        //    await client.SendCommandAsync(command, new[] { bulb.Id });
+        //}
 
         protected override async Task ExecuteInternal(DeviceBase device, IAction action, IDictionary<string, string> values)
         {
@@ -96,8 +121,14 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.PhilipsHue
                 command.TransitionTime = TimeSpan.FromSeconds(s);
             }
 
-            command.Alert = Alert.Multiple;
-            //command.Effect = Effect.ColorLoop;
+            string brightness;
+            byte b;
+            if (action.Fields.Contains("Brightness") &&
+                values.TryGetValue("Brightness", out brightness) &&
+                byte.TryParse(brightness, out b))
+            {
+                command.Brightness = b;
+            }
 
             switch (action.Name.ToLowerInvariant())
             {
@@ -109,6 +140,8 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.PhilipsHue
                     break;
                 case "change color":
                     command.SetColor(values["Color"]);
+                    break;
+                case "change brightness":
                     break;
                 case "alarm once":
                     command.Alert = Alert.Once;
@@ -136,7 +169,7 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.PhilipsHue
                 }
                 else
                 {
-                    // TODO: ask user to push the button
+                    _messageQueue.Publish(new UserNotificationMessage("Philips Hue: Please press Button"));
                     await ConnectToBridge(bridge);
                 }
             }
@@ -165,11 +198,11 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.PhilipsHue
 
         private async Task<string> GetApiKeyWithBridgeButtonClick(HueBridge bridge)
         {
-            var endTime = System.DateTime.UtcNow.AddSeconds(30);
+            var endTime = DateTime.UtcNow.AddSeconds(30);
             var client = new LocalHueClient(bridge.InternalIpAddress);
             var computerName = Environment.MachineName;
 
-            while (System.DateTime.UtcNow < endTime)
+            while (DateTime.UtcNow < endTime)
             {
                 try
                 {

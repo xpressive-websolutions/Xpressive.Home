@@ -1,33 +1,28 @@
-using System;
-
 namespace Xpressive.Home.ProofOfConcept
 {
     public abstract class DeviceBase : IDevice
     {
-        private readonly Guid _guid;
-        private readonly string _id;
-        private readonly string _name;
-
-        public DeviceBase(string id, string name)
+        public DeviceBase()
         {
-            _guid = Guid.NewGuid();
-            _id = id;
-            _name = name;
-
             BatteryStatus = DeviceBatteryStatus.Full;
             WriteStatus = DeviceWriteStatus.Ok;
             ReadStatus = DeviceReadStatus.Ok;
         }
 
-        public string Id => _id;
-        public string Name => _name;
+        public string Id { get; set; }
+        public string Name { get; set; }
         public DeviceBatteryStatus BatteryStatus { get; set; }
         public DeviceWriteStatus WriteStatus { get; set; }
         public DeviceReadStatus ReadStatus { get; set; }
 
+        public virtual bool IsConfigurationValid()
+        {
+            return !string.IsNullOrEmpty(Id) && !string.IsNullOrEmpty(Name);
+        }
+
         protected bool Equals(DeviceBase other)
         {
-            return _guid.Equals(other._guid);
+            return Id.Equals(other.Id);
         }
 
         public override bool Equals(object obj)
@@ -49,7 +44,7 @@ namespace Xpressive.Home.ProofOfConcept
 
         public override int GetHashCode()
         {
-            return _guid.GetHashCode();
+            return Id.GetHashCode();
         }
     }
 }

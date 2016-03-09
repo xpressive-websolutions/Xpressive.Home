@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Net.Sockets;
 using System.Threading.Tasks;
 using RestSharp;
 
@@ -11,45 +10,29 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.MyStrom
     internal class MyStromGateway : GatewayBase
     {
         private readonly IIpAddressService _ipAddressService;
+        private readonly IMessageQueue _messageQueue;
+        private readonly IVariableRepository _variableRepository;
         private readonly object _deviceListLock = new object();
 
-        public MyStromGateway(IIpAddressService ipAddressService) : base("myStrom")
+        public MyStromGateway(IIpAddressService ipAddressService, IMessageQueue messageQueue, IVariableRepository variableRepository) : base("myStrom")
         {
             _ipAddressService = ipAddressService;
+            _messageQueue = messageQueue;
+            _variableRepository = variableRepository;
 
             _actions.Add(new Action("Switch On"));
             _actions.Add(new Action("Switch Off"));
 
-            _properties.Add(new NumericProperty("Power", double.MinValue, double.MaxValue));
-            _properties.Add(new BoolProperty("Relay"));
+            _properties.Add(new NumericProperty("Power", double.MinValue, double.MaxValue, isReadOnly: true));
+            _properties.Add(new BoolProperty("Relay", isReadOnly: true));
 
             Observe();
             FindDevices();
         }
 
-        protected override async Task<string> GetInternal(DeviceBase device, PropertyBase property)
+        public override bool IsConfigurationValid()
         {
-            var dto = await GetReport(((MyStromDevice)device).IpAddress);
-
-            if (dto == null)
-            {
-                return null;
-            }
-
-            switch (property.Name.ToLowerInvariant())
-            {
-                case "power":
-                    return dto.Power.ToString("F6");
-                case "relay":
-                    return dto.Relay.ToString();
-            }
-
-            return null;
-        }
-
-        protected override Task SetInternal(DeviceBase device, PropertyBase property, string value)
-        {
-            throw new NotImplementedException();
+            return true;
         }
 
         protected override async Task ExecuteInternal(DeviceBase device, IAction action, IDictionary<string, string> values)
@@ -112,7 +95,10 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.MyStrom
                 }
 
                 Console.WriteLine($"Found myStrom device {ipAddress} - {response.Data.Mac}");
-                _devices.Add(new MyStromDevice(ipAddress, response.Data.Mac));
+
+                _variableRepository.Register(new DoubleVariable($"{Name}.mystromdevicename.Power"));
+                _variableRepository.Register(new BooleanVariable($"{Name}.mystromdevicename.Relay"));
+                _devices.Add(new MyStromDevice("mystromdevicename", ipAddress, response.Data.Mac));
             }
         }
 
@@ -154,18 +140,21 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.MyStrom
                         continue;
                     }
 
-                    OnDevicePropertyChanged(device, relayProperty, dto.Relay.ToString());
+                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Name, "Relay", dto.Relay));
 
                     double previousPower;
                     if (previousPowers.TryGetValue(device.Id, out previousPower))
                     {
                         if (Math.Abs(previousPower - dto.Power) > 0.01)
                         {
-                            OnDevicePropertyChanged(device, powerProperty, dto.Power.ToString("F6"));
+                            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Name, "Power", dto.Power));
+                            previousPowers[device.Id] = dto.Power;
                         }
                     }
-
-                    previousPowers[device.Id] = dto.Power;
+                    else
+                    {
+                        previousPowers[device.Id] = dto.Power;
+                    }
                 }
             }
         }
