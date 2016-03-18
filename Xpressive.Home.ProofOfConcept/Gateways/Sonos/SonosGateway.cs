@@ -22,6 +22,8 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.Sonos
             _actions.Add(new Action("Play"));
             _actions.Add(new Action("Pause"));
             _actions.Add(new Action("Stop"));
+            _actions.Add(new Action("Play Radio") { Fields = { "Stream" } });
+            _actions.Add(new Action("Play File") { Fields = { "File" } });
 
             new SonosDeviceDiscoverer().Discover();
 
@@ -146,6 +148,29 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.Sonos
     {
         public async Task Discover()
         {
+            var devices = await FindUpnpDevices();
+            var sonosXmlFiles = GetSonosXmlFiles(devices);
+
+            // TODO: create devices
+        }
+
+        private IEnumerable<string> GetSonosXmlFiles(IEnumerable<string> upnpDevices)
+        {
+            foreach (var device in upnpDevices)
+            {
+                if (device.Contains("sonos"))
+                {
+                    var locationStart = device.IndexOf("location:", StringComparison.Ordinal) + 10;
+                    var locationEnd = device.IndexOf("\r", locationStart, StringComparison.Ordinal);
+                    var location = device.Substring(locationStart, locationEnd - locationStart);
+
+                    yield return location;
+                }
+            }
+        }
+
+        private async Task<List<string>> FindUpnpDevices()
+        {
             const string broadcastIpAddress = "239.255.255.250";
             const int broadcastPort = 1900;
 
@@ -180,17 +205,7 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.Sonos
             socket.Shutdown(SocketShutdown.Both);
             socket.Close();
 
-            foreach (var response in responses)
-            {
-                if (response.Contains("sonos"))
-                {
-                    var locationStart = response.IndexOf("location:", StringComparison.Ordinal) + 10;
-                    var locationEnd = response.IndexOf("\r", locationStart, StringComparison.Ordinal);
-                    var location = response.Substring(locationStart, locationEnd - locationStart);
-
-                    location.ToString();
-                }
-            }
+            return responses;
         }
     }
 
