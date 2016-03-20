@@ -7,7 +7,6 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
-using Jishi.Intel.SonosUPnP;
 using Xpressive.Home.ProofOfConcept.Contracts;
 
 namespace Xpressive.Home.ProofOfConcept.Gateways.Sonos
@@ -15,7 +14,6 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.Sonos
     internal class SonosGateway : GatewayBase
     {
         private readonly object _deviceLock = new object();
-        private readonly SonosDiscovery _discovery;
 
         public SonosGateway() : base("Sonos")
         {
@@ -25,32 +23,21 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.Sonos
             _actions.Add(new Action("Play Radio") { Fields = { "Stream" } });
             _actions.Add(new Action("Play File") { Fields = { "File" } });
 
-            new SonosDeviceDiscoverer().Discover();
-
-            _discovery = new SonosDiscovery();
-            _discovery.TopologyChanged += () =>
+            var sonosDeviceDiscoverer = new SonosDeviceDiscoverer();
+            sonosDeviceDiscoverer.DeviceFound += (s, e) =>
             {
-                Console.WriteLine("SONOS topoloy changed");
-
-                foreach (var sonosPlayer in _discovery.Players)
+                lock (_deviceLock)
                 {
-                    lock (_deviceLock)
+                    if (_devices.Any(d => d.Id.Equals(e.Id, StringComparison.Ordinal)))
                     {
-                        if (_devices.Any(d => d.Name.Equals(sonosPlayer.Name, StringComparison.Ordinal)))
-                        {
-                            continue;
-                        }
-
-                        if (sonosPlayer.Device == null)
-                        {
-                            continue;
-                        }
-
-                        _devices.Add(new SonosDevice(sonosPlayer.UUID, sonosPlayer.BaseUrl.Host, sonosPlayer.Name));
+                        return;
                     }
+
+                    _devices.Add(e);
                 }
             };
-            _discovery.StartScan();
+            
+            sonosDeviceDiscoverer.Discover();
         }
 
         public override bool IsConfigurationValid()
@@ -146,12 +133,35 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.Sonos
 
     internal class SonosDeviceDiscoverer
     {
+        public event EventHandler<SonosDevice> DeviceFound;
+
         public async Task Discover()
         {
-            var devices = await FindUpnpDevices();
-            var sonosXmlFiles = GetSonosXmlFiles(devices);
+            var responses = await FindUpnpDevices();
+            var sonosXmlFiles = GetSonosXmlFiles(responses);
+            var soapClient = new SonosSoapClient();
 
-            // TODO: create devices
+            foreach (var sonosXmlFile in sonosXmlFiles)
+            {
+                var document = new XmlDocument();
+                document.Load(sonosXmlFile);
+
+                var namespaceManager = new XmlNamespaceManager(document.NameTable);
+                namespaceManager.AddNamespace("upnp", "urn:schemas-upnp-org:device-1-0");
+
+                var id = document.SelectSingleNode("//upnp:UDN", namespaceManager).InnerText;
+                var ip = new Uri(sonosXmlFile, UriKind.Absolute).Host;
+
+                var uri = new Uri($"http://{ip}:1400/DeviceProperties/Control");
+                var action = "\"urn:upnp-org:serviceId:DeviceProperties#GetZoneAttributes\"";
+                var body = "<u:GetZoneAttributes xmlns:u=\"urn:schemas-upnp-org:service:DeviceProperties:1\"></u:GetZoneAttributes>";
+
+                var deviceProperties = await soapClient.PostRequest(uri, action, body);
+                var name = deviceProperties.SelectSingleNode("//CurrentZoneName").InnerText;
+
+                var device = new SonosDevice(id, ip, name);
+                OnDeviceFound(device);
+            }
         }
 
         private IEnumerable<string> GetSonosXmlFiles(IEnumerable<string> upnpDevices)
@@ -169,7 +179,7 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.Sonos
             }
         }
 
-        private async Task<List<string>> FindUpnpDevices()
+        private async Task<IEnumerable<string>> FindUpnpDevices()
         {
             const string broadcastIpAddress = "239.255.255.250";
             const int broadcastPort = 1900;
@@ -185,7 +195,7 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.Sonos
                 "HeaderEnd: CRLF";
             var data = Encoding.ASCII.GetBytes(payload);
             var responses = new List<string>();
-            var timeout = DateTime.UtcNow + TimeSpan.FromSeconds(10);
+            var timeout = DateTime.UtcNow + TimeSpan.FromSeconds(5);
             var buffer = new byte[32768];
 
             socket.SendTo(data, new IPEndPoint(IPAddress.Parse(broadcastIpAddress), 1900));
@@ -206,6 +216,11 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.Sonos
             socket.Close();
 
             return responses;
+        }
+
+        private void OnDeviceFound(SonosDevice e)
+        {
+            DeviceFound?.Invoke(this, e);
         }
     }
 
