@@ -84,6 +84,8 @@
     <Compile Include="Automation\AutomationEngine.cs" />
     <Compile Include="Contracts\IGatewayDeviceFactory.cs" />
     <Compile Include="Contracts\IIpAddressService.cs" />
+    <Compile Include="Gateways\Sonos\SonosDeviceDiscoverer.cs" />
+    <Compile Include="Gateways\Sonos\SonosSoapClient.cs" />
     <Compile Include="IpAddressService.cs" />
     <Compile Include="Gateways\Daylight\DaylightDevice.cs" />
     <Compile Include="Gateways\Daylight\DaylightGateway.cs" />
