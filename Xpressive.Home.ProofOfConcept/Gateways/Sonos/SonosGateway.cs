@@ -137,20 +137,31 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.Sonos
 
         public async Task Discover()
         {
-            var responses = await FindUpnpDevices();
-            var sonosXmlFiles = GetSonosXmlFiles(responses);
-            var soapClient = new SonosSoapClient();
+            var ssdpResponses = await FindUpnpDevices();
+            var sonosXmlFiles = GetSonosXmlFiles(ssdpResponses);
+            var devices = await CreateDevices(sonosXmlFiles);
 
-            foreach (var sonosXmlFile in sonosXmlFiles)
+            foreach (var device in devices)
+            {
+                OnDeviceFound(device);
+            }
+        }
+
+        private async Task<IEnumerable<SonosDevice>> CreateDevices(IEnumerable<string> xmlFiles)
+        {
+            var soapClient = new SonosSoapClient();
+            var devices = new List<SonosDevice>();
+
+            foreach (var xmlFile in xmlFiles)
             {
                 var document = new XmlDocument();
-                document.Load(sonosXmlFile);
+                document.Load(xmlFile);
 
                 var namespaceManager = new XmlNamespaceManager(document.NameTable);
                 namespaceManager.AddNamespace("upnp", "urn:schemas-upnp-org:device-1-0");
 
                 var id = document.SelectSingleNode("//upnp:UDN", namespaceManager).InnerText;
-                var ip = new Uri(sonosXmlFile, UriKind.Absolute).Host;
+                var ip = new Uri(xmlFile, UriKind.Absolute).Host;
 
                 var uri = new Uri($"http://{ip}:1400/DeviceProperties/Control");
                 var action = "\"urn:upnp-org:serviceId:DeviceProperties#GetZoneAttributes\"";
@@ -160,8 +171,10 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.Sonos
                 var name = deviceProperties.SelectSingleNode("//CurrentZoneName").InnerText;
 
                 var device = new SonosDevice(id, ip, name);
-                OnDeviceFound(device);
+                devices.Add(device);
             }
+
+            return devices;
         }
 
         private IEnumerable<string> GetSonosXmlFiles(IEnumerable<string> upnpDevices)
@@ -181,14 +194,14 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.Sonos
 
         private async Task<IEnumerable<string>> FindUpnpDevices()
         {
-            const string broadcastIpAddress = "239.255.255.250";
-            const int broadcastPort = 1900;
+            const string multicastIpAddress = "239.255.255.250";
+            const int multicastPort = 1900;
 
             var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, 1);
             var payload =
                 "M-SEARCH * HTTP/1.1\r\n" +
-                $"HOST: {broadcastIpAddress}:{broadcastPort}\r\n" +
+                $"HOST: {multicastIpAddress}:{multicastPort}\r\n" +
                 "ST:upnp:rootdevice\r\n" +
                 "MAN:\"ssdp:discover\"\r\n" +
                 "MX:2\r\n\r\n" +
@@ -198,7 +211,7 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.Sonos
             var timeout = DateTime.UtcNow + TimeSpan.FromSeconds(5);
             var buffer = new byte[32768];
 
-            socket.SendTo(data, new IPEndPoint(IPAddress.Parse(broadcastIpAddress), 1900));
+            socket.SendTo(data, new IPEndPoint(IPAddress.Parse(multicastIpAddress), 1900));
 
             while (DateTime.UtcNow < timeout)
             {
