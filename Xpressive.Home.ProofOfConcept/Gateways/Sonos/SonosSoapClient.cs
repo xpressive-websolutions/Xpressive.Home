@@ -12,6 +12,19 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.Sonos
     {
         public async Task<XmlDocument> PostRequest(Uri uri, string action, string body)
         {
+            try
+            {
+                return await PostRequestInternal(uri, action, body);
+            }
+            catch(Exception ex)
+            {
+                ex.ToString();
+                throw;
+            }
+        }
+
+        private async Task<XmlDocument> PostRequestInternal(Uri uri, string action, string body)
+        {
             var request = WebRequest.CreateHttp(uri);
             request.Method = "POST";
             request.Headers.Add("SOAPACTION", $"\"{action}\"");

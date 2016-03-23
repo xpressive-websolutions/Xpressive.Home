@@ -37,6 +37,7 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.Sonos
             var namespaceManager = new XmlNamespaceManager(document.NameTable);
             namespaceManager.AddNamespace("upnp", "urn:schemas-upnp-org:device-1-0");
             var id = document.SelectSingleNode("//upnp:UDN", namespaceManager)?.InnerText;
+            var name = document.SelectSingleNode("//upnp:modelName", namespaceManager)?.InnerText;
 
             lock (_lock)
             {
@@ -48,14 +49,12 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.Sonos
                 _detectedSonosIds.Add(id);
             }
 
-            var name = await GetZoneNameAsync(ip, port) ?? string.Empty;
+            var zoneName = await GetZoneNameAsync(ip, port) ?? string.Empty;
             var isMaster = await GetIsMaster(ip, port);
-
-            // TODO: name should not be the zoneName
 
             var device = new SonosDevice(id, ip, name)
             {
-                Zone = name,
+                Zone = zoneName,
                 IsMaster = isMaster
             };
 
@@ -64,7 +63,7 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.Sonos
 
         private async Task<string> GetZoneNameAsync(string ip, int port)
         {
-            const string action = "urn:upnp-org:serviceId:DeviceProperties#GetZoneAttribute";
+            const string action = "urn:upnp-org:serviceId:DeviceProperties#GetZoneAttributes";
             const string body = "<u:GetZoneAttributes xmlns:u=\"urn:schemas-upnp-org:service:DeviceProperties:1\"></u:GetZoneAttributes>";
             var uri = new Uri($"http://{ip}:{port}/DeviceProperties/Control");
 
@@ -81,14 +80,11 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.Sonos
             var document = await _soapClient.PostRequest(uri, action, body);
             var track = document.SelectSingleNode("//TrackURI")?.InnerText?.ToLowerInvariant();
 
-            return !string.IsNullOrEmpty(track) && !track.StartsWith("x-rincon");
+            return string.IsNullOrEmpty(track) || !track.StartsWith("x-rincon");
         }
 
         private void HandleSsdpResponse(string ssdpResponse, Action<string> handleSonosDeviceDescription)
         {
-            Console.WriteLine(ssdpResponse);
-            Console.WriteLine();
-
             if (!ssdpResponse.Contains("sonos"))
             {
                 return;

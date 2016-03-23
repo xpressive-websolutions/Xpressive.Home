@@ -40,7 +40,7 @@ namespace Xpressive.Home.ProofOfConcept
             //{
             //    Thread.Sleep(1000);
             //}
-            while (!sonos.Devices.Any())
+            while (!sonos.Devices.Cast<SonosDevice>().Any(d => d.Zone.Equals("Schlafzimmer")))
             {
                 Thread.Sleep(1000);
             }
@@ -48,8 +48,16 @@ namespace Xpressive.Home.ProofOfConcept
             //var denonDevice = denon.Devices.Single();
             //denon.Execute(new DeviceAction("Denon", denonDevice.Id, "Volume Up"));
 
-            var sonosDevice = sonos.Devices.First(d => d.Name.Equals("Schlafzimmer"));
-            sonos.Execute(new DeviceAction("Sonos", sonosDevice.Id, "Stop"));
+            var sonosDevice = sonos.Devices.Cast<SonosDevice>().First(d => d.Zone.Equals("Schlafzimmer"));
+            sonos.Execute(new DeviceAction("Sonos", sonosDevice.Id, "Play Radio")
+            {
+                ActionFieldValues =
+                {
+                    // x-rincon-mp3radio://stream.srg-ssr.ch/m/drs3/mp3_128
+                    { "Stream", "x-rincon-mp3radio://stream.srg-ssr.ch/drs3/mp3_128.m3u" },
+                    { "Title", "Radio SRF 3" }
+                }
+            });
 
             Console.ReadLine();
         }
