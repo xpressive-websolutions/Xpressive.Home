@@ -61,7 +61,8 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.Sonos
                     if (!string.IsNullOrEmpty(stream) && !string.IsNullOrEmpty(title))
                     {
                         var metadata = GetRadioMetadata(title);
-                        await SendUrl(d, stream, metadata);
+                        var url = ReplaceScheme(stream, "x-rincon-mp3radio");
+                        await SendUrl(d, url, metadata);
                         await SendAvTransportControl(d, "Play");
                     }
                     break;
@@ -69,11 +70,19 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.Sonos
                     if (!string.IsNullOrEmpty(file))
                     {
                         var metadata = GetFileMetadata(file, album);
-                        await SendUrl(d, file, metadata);
+                        var url = ReplaceScheme(file, "x-file-cifs");
+                        await SendUrl(d, url, metadata);
                         await SendAvTransportControl(d, "Play");
                     }
                     break;
             }
+        }
+
+        private string ReplaceScheme(string url, string scheme)
+        {
+            var uri = new Uri(url);
+            var path = HttpUtility.UrlDecode(uri.PathAndQuery);
+            return $"{scheme}://{uri.Authority}{path}";
         }
 
         private async Task SendUrl(SonosDevice device, string url, string metadata)
