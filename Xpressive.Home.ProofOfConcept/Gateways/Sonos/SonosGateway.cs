@@ -62,13 +62,15 @@ namespace Xpressive.Home.ProofOfConcept.Gateways.Sonos
                     {
                         var metadata = GetRadioMetadata(title);
                         await SendUrl(d, stream, metadata);
+                        await SendAvTransportControl(d, "Play");
                     }
                     break;
                 case "play file":
                     if (!string.IsNullOrEmpty(file))
                     {
-                        var metadata = GetFileMetadata("file", "filealbum");
+                        var metadata = GetFileMetadata(file, album);
                         await SendUrl(d, file, metadata);
+                        await SendAvTransportControl(d, "Play");
                     }
                     break;
             }

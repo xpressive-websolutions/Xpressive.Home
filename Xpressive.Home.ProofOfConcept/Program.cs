@@ -49,13 +49,23 @@ namespace Xpressive.Home.ProofOfConcept
             //denon.Execute(new DeviceAction("Denon", denonDevice.Id, "Volume Up"));
 
             var sonosDevice = sonos.Devices.Cast<SonosDevice>().First(d => d.Zone.Equals("Schlafzimmer"));
-            sonos.Execute(new DeviceAction("Sonos", sonosDevice.Id, "Play Radio")
+            //sonos.Execute(new DeviceAction("Sonos", sonosDevice.Id, "Play Radio")
+            //{
+            //    ActionFieldValues =
+            //    {
+            //        // x-rincon-mp3radio://stream.srg-ssr.ch/m/drs3/mp3_128
+            //        { "Stream", "x-rincon-mp3radio://stream.srg-ssr.ch/drs3/mp3_128.m3u" },
+            //        { "Title", "Radio SRF 3" }
+            //    }
+            //});
+            sonos.Execute(new DeviceAction("Sonos", sonosDevice.Id, "Play File")
             {
                 ActionFieldValues =
                 {
                     // x-rincon-mp3radio://stream.srg-ssr.ch/m/drs3/mp3_128
-                    { "Stream", "x-rincon-mp3radio://stream.srg-ssr.ch/drs3/mp3_128.m3u" },
-                    { "Title", "Radio SRF 3" }
+                    { "File", @"x-file-cifs://diskstation/music/Hillsong/No Other Name/04 No Other Name.mp3" },
+                    { "Title", "No Other Name" },
+                    { "Album", "No Other Name" }
                 }
             });
 
