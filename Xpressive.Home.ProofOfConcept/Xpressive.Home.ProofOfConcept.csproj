@@ -80,54 +80,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Action.cs" />
-    <Compile Include="Automation\AutomationEngine.cs" />
-    <Compile Include="Contracts\IGatewayDeviceFactory.cs" />
-    <Compile Include="Contracts\IIpAddressService.cs" />
-    <Compile Include="Contracts\IRadioStationService.cs" />
-    <Compile Include="Gateways\Sonos\SonosDeviceDiscoverer.cs" />
-    <Compile Include="Gateways\Sonos\SonosSoapClient.cs" />
-    <Compile Include="IpAddressService.cs" />
-    <Compile Include="Gateways\Daylight\DaylightDevice.cs" />
-    <Compile Include="Gateways\Daylight\DaylightGateway.cs" />
-    <Compile Include="DeviceAction.cs" />
-    <Compile Include="DeviceBase.cs" />
-    <Compile Include="Contracts\DeviceBatteryStatus.cs" />
-    <Compile Include="DevicePropertyEventArgs.cs" />
-    <Compile Include="DevicePropertyStore.cs" />
-    <Compile Include="Contracts\DeviceReadStatus.cs" />
-    <Compile Include="DeviceSubscription.cs" />
-    <Compile Include="Contracts\DeviceWriteStatus.cs" />
-    <Compile Include="GatewayBase.cs" />
-    <Compile Include="GatewayResolver.cs" />
-    <Compile Include="Gateways\Denon\DenonGateway.cs" />
-    <Compile Include="Gateways\GoogleCalendar\GoogleCalendarGateway.cs" />
-    <Compile Include="Gateways\Netatmo\NetatmoGateway.cs" />
-    <Compile Include="Gateways\PhilipsHue\HueAppKeyStore.cs" />
-    <Compile Include="Gateways\PhilipsHue\HueBridge.cs" />
-    <Compile Include="Gateways\PhilipsHue\HueBridgeLocator.cs" />
-    <Compile Include="Gateways\PhilipsHue\HueBulb.cs" />
-    <Compile Include="Contracts\IAction.cs" />
-    <Compile Include="Contracts\IDevice.cs" />
-    <Compile Include="Contracts\IDeviceAction.cs" />
-    <Compile Include="Contracts\IDevicePropertyStore.cs" />
-    <Compile Include="Contracts\IDeviceSubscription.cs" />
-    <Compile Include="Gateways\Ifttt\IftttDevice.cs" />
-    <Compile Include="Gateways\Ifttt\IftttGateway.cs" />
-    <Compile Include="Contracts\IGateway.cs" />
-    <Compile Include="Contracts\IGatewayResolver.cs" />
-    <Compile Include="Gateways\MyStrom\MyStromDevice.cs" />
-    <Compile Include="Gateways\MyStrom\MyStromGateway.cs" />
-    <Compile Include="Gateways\PhilipsHue\IHueAppKeyStore.cs" />
-    <Compile Include="Gateways\PhilipsHue\IHueBridgeLocator.cs" />
-    <Compile Include="Gateways\Sonos\SonosGateway.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Gateways\Pushalot\PushalotDevice.cs" />
-    <Compile Include="Gateways\Pushalot\PushalotGateway.cs" />
-    <Compile Include="Gateways\PhilipsHue\Q42PhilipsHueGateway.cs" />
-    <Compile Include="Gateways\Daylight\SunsetCalculator.cs" />
-    <Compile Include="Gateways\TextToSpeech\TextToSpeechGateway.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
