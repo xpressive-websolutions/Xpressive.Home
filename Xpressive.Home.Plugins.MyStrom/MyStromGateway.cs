@@ -13,14 +13,15 @@ namespace Xpressive.Home.Plugins.MyStrom
 {
     internal class MyStromGateway : GatewayBase, IMyStromGateway
     {
-        private readonly IIpAddressService _ipAddressService;
         private readonly IMessageQueue _messageQueue;
         private readonly IMyStromDeviceNameService _myStromDeviceNameService;
         private readonly object _deviceListLock = new object();
 
-        public MyStromGateway(IIpAddressService ipAddressService, IMessageQueue messageQueue, IMyStromDeviceNameService myStromDeviceNameService) : base("myStrom")
+        public MyStromGateway(
+            IMessageQueue messageQueue,
+            IMyStromDeviceNameService myStromDeviceNameService,
+            IUpnpDeviceDiscoveringService upnpDeviceDiscoveringService) : base("myStrom")
         {
-            _ipAddressService = ipAddressService;
             _messageQueue = messageQueue;
             _myStromDeviceNameService = myStromDeviceNameService;
 
@@ -29,8 +30,19 @@ namespace Xpressive.Home.Plugins.MyStrom
             _actions.Add(new Action("Switch On"));
             _actions.Add(new Action("Switch Off"));
 
+            upnpDeviceDiscoveringService.DeviceFound += OnUpnpDeviceFound;
+
             Observe();
-            FindDevices();
+        }
+
+        private async void OnUpnpDeviceFound(object sender, IUpnpDeviceResponse e)
+        {
+            if (e.Usn.IndexOf("wifi-switch", StringComparison.OrdinalIgnoreCase) < 0)
+            {
+                return;
+            }
+
+            await RegisterDevice(e.IpAddress);
         }
 
         public IEnumerable<MyStromDevice> GetDevices()
@@ -69,28 +81,7 @@ namespace Xpressive.Home.Plugins.MyStrom
             await client.ExecuteTaskAsync(request);
         }
 
-        private async Task FindDevices()
-        {
-            while (true)
-            {
-                var addresses = _ipAddressService.GetOtherIpAddresses();
-                var deviceNames = await _myStromDeviceNameService.GetDeviceNamesByMacAsync();
-
-                Parallel.ForEach(addresses, async address =>
-                {
-                    var dto = await GetReport(address);
-
-                    if (dto != null)
-                    {
-                        await RegisterDevice(address, deviceNames);
-                    }
-                });
-
-                await Task.Delay(TimeSpan.FromMinutes(30));
-            }
-        }
-
-        private async Task RegisterDevice(string ipAddress, IDictionary<string, string> namesByMacAddress)
+        private async Task RegisterDevice(string ipAddress)
         {
             var client = new RestClient($"http://{ipAddress}/");
             var request = new RestRequest("info.json", Method.GET);
@@ -100,6 +91,8 @@ namespace Xpressive.Home.Plugins.MyStrom
             {
                 return;
             }
+
+            var namesByMacAddress = await _myStromDeviceNameService.GetDeviceNamesByMacAsync();
 
             lock (_deviceListLock)
             {
