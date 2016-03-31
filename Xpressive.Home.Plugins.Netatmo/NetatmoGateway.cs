@@ -17,6 +17,7 @@ namespace Xpressive.Home.Plugins.Netatmo
         private readonly string _clientSecret;
         private readonly string _username;
         private readonly string _password;
+        private readonly bool _isValidConfiguration;
 
         public NetatmoGateway(IMessageQueue messageQueue) : base("Netatmo")
         {
@@ -25,6 +26,12 @@ namespace Xpressive.Home.Plugins.Netatmo
             _clientSecret = ConfigurationManager.AppSettings["netatmo.clientsecret"];
             _username = ConfigurationManager.AppSettings["netatmo.username"];
             _password = ConfigurationManager.AppSettings["netatmo.password"];
+
+            _isValidConfiguration =
+                !string.IsNullOrEmpty(_clientId) &&
+                !string.IsNullOrEmpty(_clientSecret) &&
+                !string.IsNullOrEmpty(_username) &&
+                !string.IsNullOrEmpty(_password);
 
             _canCreateDevices = false;
         }
@@ -36,6 +43,12 @@ namespace Xpressive.Home.Plugins.Netatmo
 
         public async Task ScanDeviceAndDataAsync()
         {
+            if (!_isValidConfiguration)
+            {
+                _messageQueue.Publish(new NotifyUserMessage("Add netatmo configuration to config file."));
+                return;
+            }
+
             var token = await GetTokenAsync();
 
             while (true)

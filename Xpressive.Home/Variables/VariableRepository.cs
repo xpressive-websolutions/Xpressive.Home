@@ -59,6 +59,8 @@ namespace Xpressive.Home.Variables
                     variable.Value = message.Value;
                     _variables.Add(message.Name, variable);
                 }
+
+                _variablePersistingService.Save(variable);
             }
         }
 

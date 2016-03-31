@@ -31,8 +31,6 @@ namespace Xpressive.Home.Plugins.MyStrom
             _actions.Add(new Action("Switch Off"));
 
             upnpDeviceDiscoveringService.DeviceFound += OnUpnpDeviceFound;
-
-            Observe();
         }
 
         private async void OnUpnpDeviceFound(object sender, IUpnpDeviceResponse e)
@@ -58,6 +56,43 @@ namespace Xpressive.Home.Plugins.MyStrom
         public async void SwitchOff(MyStromDevice device)
         {
             await ExecuteInternal(device, new Action("Switch Off"), null);
+        }
+
+        public async Task Observe()
+        {
+            var previousPowers = new Dictionary<string, double>();
+
+            while (true)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(10));
+
+                foreach (MyStromDevice device in _devices)
+                {
+                    var dto = await GetReport(device.IpAddress);
+
+                    if (dto == null)
+                    {
+                        device.ReadStatus = DeviceReadStatus.Erroneous;
+                        continue;
+                    }
+
+                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Relay", dto.Relay));
+
+                    double previousPower;
+                    if (previousPowers.TryGetValue(device.Id, out previousPower))
+                    {
+                        if (Math.Abs(previousPower - dto.Power) > 0.01)
+                        {
+                            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Power", dto.Power));
+                            previousPowers[device.Id] = dto.Power;
+                        }
+                    }
+                    else
+                    {
+                        previousPowers[device.Id] = dto.Power;
+                    }
+                }
+            }
         }
 
         protected override async Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values)
@@ -96,7 +131,7 @@ namespace Xpressive.Home.Plugins.MyStrom
 
             lock (_deviceListLock)
             {
-                if (_devices.Any(d => d.Id.Equals(ipAddress)))
+                if (_devices.Cast<MyStromDevice>().Any(d => d.MacAddress.Equals(response.Data.Mac)))
                 {
                     return;
                 }
@@ -127,43 +162,6 @@ namespace Xpressive.Home.Plugins.MyStrom
             }
 
             return null;
-        }
-
-        private async Task Observe()
-        {
-            var previousPowers = new Dictionary<string, double>();
-
-            while (true)
-            {
-                await Task.Delay(TimeSpan.FromSeconds(10));
-
-                foreach (MyStromDevice device in _devices)
-                {
-                    var dto = await GetReport(device.IpAddress);
-
-                    if (dto == null)
-                    {
-                        device.ReadStatus = DeviceReadStatus.Erroneous;
-                        continue;
-                    }
-
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Relay", dto.Relay));
-
-                    double previousPower;
-                    if (previousPowers.TryGetValue(device.Id, out previousPower))
-                    {
-                        if (Math.Abs(previousPower - dto.Power) > 0.01)
-                        {
-                            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Power", dto.Power));
-                            previousPowers[device.Id] = dto.Power;
-                        }
-                    }
-                    else
-                    {
-                        previousPowers[device.Id] = dto.Power;
-                    }
-                }
-            }
         }
 
         private class Dto

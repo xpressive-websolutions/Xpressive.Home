@@ -6,6 +6,7 @@ using Xpressive.Home.Contracts.Messaging;
 using Xpressive.Home.Contracts.Variables;
 using Xpressive.Home.Messaging;
 using Xpressive.Home.Variables;
+using Module = Autofac.Module;
 
 namespace Xpressive.Home
 {
@@ -20,6 +21,12 @@ namespace Xpressive.Home
             builder.RegisterType<ScriptRepository>().As<IScriptRepository>();
             builder.RegisterType<ScriptEngine>().As<IScriptEngine>();
             builder.RegisterType<VariableScriptObjectProvider>().As<IScriptObjectProvider>();
+
+            builder.RegisterType<MessageQueueLogListener>()
+                .As<IMessageQueueListener<UpdateVariableMessage>>()
+                .As<IMessageQueueListener<NotifyUserMessage>>()
+                .As<IMessageQueueListener<CommandMessage>>()
+                .SingleInstance();
 
             builder.RegisterType<VariableRepository>()
                 .As<IVariableRepository>()

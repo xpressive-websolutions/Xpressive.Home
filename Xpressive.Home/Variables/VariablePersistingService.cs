@@ -81,7 +81,7 @@ namespace Xpressive.Home.Variables
         {
             switch (dataType.ToLowerInvariant())
             {
-                case "bool": return bool.Parse(value);
+                case "boolean": return bool.Parse(value);
                 case "double": return double.Parse(value);
                 case "string": return value;
             }
@@ -93,7 +93,7 @@ namespace Xpressive.Home.Variables
         {
             switch (dataType.ToLowerInvariant())
             {
-                case "bool": return new BooleanVariable();
+                case "boolean": return new BooleanVariable();
                 case "double": return new DoubleVariable();
                 case "string": return new StringVariable();
             }
