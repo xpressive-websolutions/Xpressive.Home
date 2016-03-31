@@ -1,0 +1,78 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{67EF15D9-6555-400B-A10D-00FDC9AA5A02}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Xpressive.Home.ConsoleHost</RootNamespace>
+    <AssemblyName>Xpressive.Home.ConsoleHost</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Xpressive.Home\Properties\AssemblyInfo.shared.cs">
+      <Link>Properties\AssemblyInfo.shared.cs</Link>
+    </Compile>
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Xpressive.Home.Services\Xpressive.Home.Services.csproj">
+      <Project>{a689610d-764c-478c-8ee7-b4d1c2caa97d}</Project>
+      <Name>Xpressive.Home.Services</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Xpressive.Home\Xpressive.Home.csproj">
+      <Project>{0d0c6ae1-ef4f-426c-835a-6c491a6395f9}</Project>
+      <Name>Xpressive.Home</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>xcopy "$(SolutionDir)Xpressive.Home.Plugins.Daylight\bin\$(ConfigurationName)" "$(TargetDir)Plugins\" /Y
+xcopy "$(SolutionDir)Xpressive.Home.Plugins.Denon\bin\$(ConfigurationName)" "$(TargetDir)Plugins\" /Y
+xcopy "$(SolutionDir)Xpressive.Home.Plugins.Email\bin\$(ConfigurationName)" "$(TargetDir)Plugins\" /Y
+xcopy "$(SolutionDir)Xpressive.Home.Plugins.MyStrom\bin\$(ConfigurationName)" "$(TargetDir)Plugins\" /Y
+xcopy "$(SolutionDir)Xpressive.Home.Plugins.Netatmo\bin\$(ConfigurationName)" "$(TargetDir)Plugins\" /Y
+xcopy "$(SolutionDir)Xpressive.Home.Plugins.PhilipsHue\bin\$(ConfigurationName)" "$(TargetDir)Plugins\" /Y
+xcopy "$(SolutionDir)Xpressive.Home.Plugins.Pushalot\bin\$(ConfigurationName)" "$(TargetDir)Plugins\" /Y
+xcopy "$(SolutionDir)Xpressive.Home.Plugins.Sonos\bin\$(ConfigurationName)" "$(TargetDir)Plugins\" /Y
+xcopy "$(SolutionDir)Xpressive.Home.WebApi\bin\$(ConfigurationName)" "$(TargetDir)" /Y</PostBuildEvent>
+  </PropertyGroup>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

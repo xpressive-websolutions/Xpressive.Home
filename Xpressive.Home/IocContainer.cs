@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using Autofac;
+using Xpressive.Home.Contracts.Gateway;
 
 namespace Xpressive.Home
 {
@@ -12,9 +14,12 @@ namespace Xpressive.Home
         public static void Build()
         {
             var builder = new ContainerBuilder();
+            _container = builder.Build();
 
+            builder = new ContainerBuilder();
             builder.RegisterAssemblyModules(Assembly.Load("Xpressive.Home"));
             builder.RegisterAssemblyModules(Assembly.Load("Xpressive.Home.Services"));
+            builder.RegisterAssemblyModules(Assembly.Load("Xpressive.Home.WebApi"));
 
             var directory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
             var plugins = Directory.GetFiles(directory, "Xpressive.Home.Plugins.*.dll", SearchOption.TopDirectoryOnly);
@@ -28,16 +33,27 @@ namespace Xpressive.Home
                     continue;
                 }
 
-                pluginFileName = pluginFileName.Substring(0, pluginFileName.Length - 4);
-                builder.RegisterAssemblyModules(Assembly.Load(pluginFileName));
+                builder.RegisterAssemblyModules(Assembly.LoadFile(plugin));
             }
 
-            _container = builder.Build();
+            builder.Register(cc => _container);
+            builder.Update(_container);
         }
 
         public static T Resolve<T>()
         {
             return _container.Resolve<T>();
+        }
+    }
+
+    public static class Setup
+    {
+        public static void Run()
+        {
+            IocContainer.Build();
+
+            // start all gateways
+            IocContainer.Resolve<IList<IGateway>>();
         }
     }
 }
