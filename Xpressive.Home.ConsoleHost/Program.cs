@@ -1,4 +1,5 @@
 ﻿using System;
+using log4net;
 
 namespace Xpressive.Home.ConsoleHost
 {
@@ -6,7 +7,8 @@ namespace Xpressive.Home.ConsoleHost
     {
         public static void Main(string[] args)
         {
-            Console.WriteLine("Start Xpressive.Home");
+            var log = LogManager.GetLogger(typeof (Program));
+            log.Info("Start Xpressive.Home");
 
             Setup.Run();
 

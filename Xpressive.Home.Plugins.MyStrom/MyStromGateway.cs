@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using log4net;
 using RestSharp;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
@@ -13,6 +14,7 @@ namespace Xpressive.Home.Plugins.MyStrom
 {
     internal class MyStromGateway : GatewayBase, IMyStromGateway
     {
+        private static readonly ILog _log = LogManager.GetLogger(typeof (MyStromGateway));
         private readonly IMessageQueue _messageQueue;
         private readonly IMyStromDeviceNameService _myStromDeviceNameService;
         private readonly object _deviceListLock = new object();
@@ -31,16 +33,6 @@ namespace Xpressive.Home.Plugins.MyStrom
             _actions.Add(new Action("Switch Off"));
 
             upnpDeviceDiscoveringService.DeviceFound += OnUpnpDeviceFound;
-        }
-
-        private async void OnUpnpDeviceFound(object sender, IUpnpDeviceResponse e)
-        {
-            if (e.Usn.IndexOf("wifi-switch", StringComparison.OrdinalIgnoreCase) < 0)
-            {
-                return;
-            }
-
-            await RegisterDevice(e.IpAddress);
         }
 
         public IEnumerable<MyStromDevice> GetDevices()
@@ -116,6 +108,16 @@ namespace Xpressive.Home.Plugins.MyStrom
             await client.ExecuteTaskAsync(request);
         }
 
+        private async void OnUpnpDeviceFound(object sender, IUpnpDeviceResponse e)
+        {
+            if (e.Usn.IndexOf("wifi-switch", StringComparison.OrdinalIgnoreCase) < 0)
+            {
+                return;
+            }
+
+            await RegisterDevice(e.IpAddress);
+        }
+
         private async Task RegisterDevice(string ipAddress)
         {
             var client = new RestClient($"http://{ipAddress}/");
@@ -142,7 +144,7 @@ namespace Xpressive.Home.Plugins.MyStrom
                     name = ipAddress;
                 }
 
-                Console.WriteLine($"Found myStrom device {ipAddress} - {response.Data.Mac}");
+                _log.Debug($"Found myStrom device {ipAddress} - {response.Data.Mac}");
                 _devices.Add(new MyStromDevice(name, ipAddress, response.Data.Mac));
             }
         }

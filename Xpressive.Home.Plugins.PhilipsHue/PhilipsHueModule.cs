@@ -7,7 +7,10 @@ namespace Xpressive.Home.Plugins.PhilipsHue
     {
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterType<PhilipsHueGateway>().As<IGateway>().SingleInstance();
+            builder.RegisterType<PhilipsHueGateway>()
+                .As<IGateway>()
+                .SingleInstance()
+                .OnActivating(async h => await h.Instance.UpdateBulbVariables());
 
             builder.RegisterType<PhilipsHueDeviceDiscoveringService>()
                 .As<IPhilipsHueDeviceDiscoveringService>()

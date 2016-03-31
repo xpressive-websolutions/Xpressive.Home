@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using log4net;
 using Xpressive.Home.Contracts.Messaging;
 
 namespace Xpressive.Home.Messaging
 {
     internal sealed class MessageQueue : IMessageQueue
     {
+        private static readonly ILog _log = LogManager.GetLogger(typeof (MessageQueue));
         private static readonly object _lock = new object();
         private readonly Dictionary<Type, List<Action<object>>> _subscriptions = new Dictionary<Type, List<Action<object>>>();
 
@@ -55,7 +57,7 @@ namespace Xpressive.Home.Messaging
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
+                    _log.Error(e);
                 }
             });
         }

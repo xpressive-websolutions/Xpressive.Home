@@ -83,16 +83,17 @@ namespace Xpressive.Home.Plugins.PhilipsHue
         {
             var endTime = DateTime.UtcNow.AddSeconds(30);
             var client = new LocalHueClient(bridge.IpAddress);
-            var computerName = Environment.MachineName;
 
             while (DateTime.UtcNow < endTime)
             {
                 try
                 {
-                    var appKey = await client.RegisterAsync("Xpressive.Home", computerName);
+                    var appKey = await client.RegisterAsync("Xpressive.Home", Environment.MachineName);
                     return appKey;
                 }
-                catch (Exception) { }
+                catch { }
+
+                await Task.Delay(TimeSpan.FromSeconds(1));
             }
 
             return null;

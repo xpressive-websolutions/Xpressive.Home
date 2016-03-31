@@ -31,8 +31,6 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                 {
                     var bulb = new PhilipsHueDevice(light.Id, light.Name, bridge);
 
-                    // TODO: register variables
-
                     OnBulbFound(bulb);
                 }
             }

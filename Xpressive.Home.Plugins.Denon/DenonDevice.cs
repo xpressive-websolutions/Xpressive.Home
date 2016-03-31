@@ -6,12 +6,12 @@ namespace Xpressive.Home.Plugins.Denon
     {
         private readonly string _ipAddress;
 
-        public DenonDevice(string ipAddress, DenonDeviceDto dto)
+        public DenonDevice(string id, string ipAddress, DenonDeviceDto dto)
         {
             _ipAddress = ipAddress;
 
             Name = dto.FriendlyName.Value;
-            Id = ipAddress.Replace(".", string.Empty);
+            Id = id;
         }
 
         public string IpAddress => _ipAddress;

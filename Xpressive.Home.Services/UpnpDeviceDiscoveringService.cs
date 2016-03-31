@@ -68,7 +68,7 @@ namespace Xpressive.Home.Services
 
                 if (pair.Length == 2)
                 {
-                    dict.Add(pair[0], pair[1]);
+                    dict.Add(pair[0], pair[1].Trim());
                 }
             }
 
