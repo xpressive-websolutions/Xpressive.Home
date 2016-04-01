@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Threading.Tasks;
 using NPoco;
@@ -13,6 +14,21 @@ namespace Xpressive.Home.Variables
         private static readonly BlockingCollection<IVariable> _variablesToSave = new BlockingCollection<IVariable>();
         private static readonly SingleTaskRunner _taskRunner = new SingleTaskRunner();
         private static readonly HashSet<string> _persistedVariables = new HashSet<string>(StringComparer.Ordinal);
+        private readonly bool _isInMemory;
+
+        public VariablePersistingService()
+        {
+            _isInMemory = true;
+
+            foreach (ConnectionStringSettings cs in ConfigurationManager.ConnectionStrings)
+            {
+                if (cs.Name.Equals("ConnectionString"))
+                {
+                    _isInMemory = false;
+                    break;
+                }
+            }
+        }
 
         public void Save(IVariable variable)
         {
@@ -22,6 +38,11 @@ namespace Xpressive.Home.Variables
 
         public async Task<IEnumerable<IVariable>> LoadAsync()
         {
+            if (_isInMemory)
+            {
+                return new List<IVariable>(0);
+            }
+
             List<PersistedVariable> persistedVariables;
 
             using (var database = new Database("ConnectionString"))
@@ -43,6 +64,11 @@ namespace Xpressive.Home.Variables
 
         private async Task SaveVariables()
         {
+            if (_isInMemory)
+            {
+                return;
+            }
+
             using (var database = new Database("ConnectionString"))
             {
                 while (_variablesToSave.Count > 0)
