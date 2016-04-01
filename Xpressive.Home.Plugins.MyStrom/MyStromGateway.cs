@@ -87,6 +87,11 @@ namespace Xpressive.Home.Plugins.MyStrom
             }
         }
 
+        public override IDevice CreateEmptyDevice()
+        {
+            throw new NotSupportedException();
+        }
+
         protected override async Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values)
         {
             var d = (MyStromDevice)device;

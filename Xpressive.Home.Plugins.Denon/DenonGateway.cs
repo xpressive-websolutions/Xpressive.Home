@@ -38,6 +38,11 @@ namespace Xpressive.Home.Plugins.Denon
             upnpDeviceDiscoveringService.DeviceFound += OnUpnpDeviceFound;
         }
 
+        public override IDevice CreateEmptyDevice()
+        {
+            throw new NotSupportedException();
+        }
+
         protected override async Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values)
         {
             string command = null;

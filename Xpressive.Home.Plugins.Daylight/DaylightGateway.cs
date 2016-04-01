@@ -15,26 +15,14 @@ namespace Xpressive.Home.Plugins.Daylight
             _messageQueue = messageQueue;
 
             _canCreateDevices = true;
-
-            Observe();
         }
 
-        public override DeviceBase AddDevice(DeviceBase device)
+        public override IDevice CreateEmptyDevice()
         {
-            if (device.IsConfigurationValid())
-            {
-                return base.AddDevice(device);
-            }
-
-            return null;
+            return new DaylightDevice();
         }
 
-        protected override Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values)
-        {
-            throw new NotImplementedException();
-        }
-
-        private async Task Observe()
+        public async Task StartObservationAsync()
         {
             while (true)
             {
@@ -48,9 +36,14 @@ namespace Xpressive.Home.Plugins.Daylight
             }
         }
 
+        protected override Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values)
+        {
+            throw new NotImplementedException();
+        }
+
         private bool IsDaylight(DaylightDevice device)
         {
-            var time = DateTime.UtcNow.AddMinutes(device.Offset).TimeOfDay;
+            var time = DateTime.UtcNow.AddMinutes(device.OffsetInMinutes).TimeOfDay;
             var sunrise = SunsetCalculator.GetSunrise(device.Latitude, device.Longitude);
             var sunset = SunsetCalculator.GetSunset(device.Latitude, device.Longitude);
 

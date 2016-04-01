@@ -47,7 +47,12 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             deviceDiscoveringService.BulbFound += OnBulbFound;
         }
 
-        public async Task UpdateBulbVariables()
+        public override IDevice CreateEmptyDevice()
+        {
+            throw new NotSupportedException();
+        }
+
+        public async Task ObserveBulbStatusAsync()
         {
             while (true)
             {

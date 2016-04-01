@@ -36,6 +36,11 @@ namespace Xpressive.Home.Plugins.Netatmo
             _canCreateDevices = false;
         }
 
+        public override IDevice CreateEmptyDevice()
+        {
+            throw new NotSupportedException();
+        }
+
         protected override Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values)
         {
             throw new NotSupportedException();

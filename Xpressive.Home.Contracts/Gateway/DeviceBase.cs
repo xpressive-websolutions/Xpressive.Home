@@ -9,8 +9,12 @@ namespace Xpressive.Home.Contracts.Gateway
             ReadStatus = DeviceReadStatus.Ok;
         }
 
+        [DeviceProperty(1)]
         public string Id { get; set; }
+
+        [DeviceProperty(1)]
         public string Name { get; set; }
+
         public DeviceBatteryStatus BatteryStatus { get; set; }
         public DeviceWriteStatus WriteStatus { get; set; }
         public DeviceReadStatus ReadStatus { get; set; }

@@ -20,7 +20,13 @@ namespace Xpressive.Home.Plugins.Sonos
             _actions.Add(new Action("Play Radio") { Fields = { "Stream", "Title" } });
             _actions.Add(new Action("Play File") { Fields = { "File", "Title", "Album" } });
 
+            _canCreateDevices = false;
             deviceDiscoverer.DeviceFound += (s, e) => _devices.Add(e);
+        }
+
+        public override IDevice CreateEmptyDevice()
+        {
+            throw new NotSupportedException();
         }
 
         protected override async Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values)

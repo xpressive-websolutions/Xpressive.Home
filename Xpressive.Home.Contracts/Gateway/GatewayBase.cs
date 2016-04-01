@@ -25,18 +25,13 @@ namespace Xpressive.Home.Contracts.Gateway
         public IEnumerable<IAction> Actions => _actions.ToList();
         public bool CanCreateDevices => _canCreateDevices;
 
-        public virtual DeviceBase AddDevice(DeviceBase device)
+        public bool AddDevice(IDevice device)
         {
-            if (!_canCreateDevices)
-            {
-                return null;
-            }
-
-            _devices.Add(device);
-            return device;
+            var d = device as DeviceBase;
+            return AddDeviceInternal(d);
         }
 
-        public virtual async void Notify(CommandMessage message)
+        public async void Notify(CommandMessage message)
         {
             if (!message.ActionId.StartsWith(_name, StringComparison.Ordinal))
             {
@@ -62,6 +57,19 @@ namespace Xpressive.Home.Contracts.Gateway
 
             await ExecuteInternal(device, action, message.Parameters);
         }
+
+        private bool AddDeviceInternal(DeviceBase device)
+        {
+            if (!_canCreateDevices || device == null || !device.IsConfigurationValid())
+            {
+                return false;
+            }
+
+            _devices.Add(device);
+            return true;
+        }
+
+        public abstract IDevice CreateEmptyDevice();
 
         protected abstract Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values);
     }

@@ -5,14 +5,14 @@ namespace Xpressive.Home.Plugins.Daylight
 {
     internal class DaylightDevice : DeviceBase
     {
-        [DeviceProperty]
+        [DeviceProperty(3)]
         public double Latitude { get; set; }
 
-        [DeviceProperty]
+        [DeviceProperty(4)]
         public double Longitude { get; set; }
 
-        [DeviceProperty]
-        public int Offset { get; set; }
+        [DeviceProperty(5)]
+        public int OffsetInMinutes { get; set; }
 
         public override bool IsConfigurationValid()
         {
