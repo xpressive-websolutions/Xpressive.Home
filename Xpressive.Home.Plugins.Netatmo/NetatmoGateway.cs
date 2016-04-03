@@ -92,10 +92,24 @@ namespace Xpressive.Home.Plugins.Netatmo
 
                     var module = dataDevice.ModuleName;
                     PublishVariables(device, module, dataDevice.DashboardData, dataDevice.DataType);
+                    var batteryPercent = dataDevice.Modules.Min(m => m.BatteryPercent);
 
                     foreach (var moduleDto in dataDevice.Modules)
                     {
                         PublishVariables(device, moduleDto.ModuleName, moduleDto.DashboardData, moduleDto.DataType);
+                    }
+
+                    if (batteryPercent > 85)
+                    {
+                        device.BatteryStatus = DeviceBatteryStatus.Full;
+                    }
+                    else if (batteryPercent > 25)
+                    {
+                        device.BatteryStatus = DeviceBatteryStatus.Good;
+                    }
+                    else
+                    {
+                        device.BatteryStatus = DeviceBatteryStatus.Low;
                     }
                 }
             }

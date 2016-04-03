@@ -9,6 +9,7 @@ namespace Xpressive.Home.Services
         {
             builder.RegisterType<IpAddressService>().As<IIpAddressService>();
             builder.RegisterType<RadioStationService>().As<IRadioStationService>();
+            builder.RegisterType<LowBatteryDeviceObserver>().As<IStartable>().SingleInstance();
 
             builder.RegisterType<UpnpDeviceDiscoveringService>()
                 .As<IUpnpDeviceDiscoveringService>()

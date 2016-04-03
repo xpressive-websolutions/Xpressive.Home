@@ -42,6 +42,7 @@
     <Compile Include="..\Xpressive.Home\Properties\AssemblyInfo.shared.cs">
       <Link>Properties\AssemblyInfo.shared.cs</Link>
     </Compile>
+    <Compile Include="LowBatteryDeviceObserver.cs" />
     <Compile Include="RadioStationService.cs" />
     <Compile Include="ServiceModule.cs" />
     <Compile Include="IpAddressService.cs" />
