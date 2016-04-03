@@ -66,6 +66,7 @@
     <PostBuildEvent>xcopy "$(SolutionDir)Xpressive.Home.Plugins.Daylight\bin\$(ConfigurationName)" "$(TargetDir)Plugins\" /Y
 xcopy "$(SolutionDir)Xpressive.Home.Plugins.Denon\bin\$(ConfigurationName)" "$(TargetDir)Plugins\" /Y
 xcopy "$(SolutionDir)Xpressive.Home.Plugins.Email\bin\$(ConfigurationName)" "$(TargetDir)Plugins\" /Y
+xcopy "$(SolutionDir)Xpressive.Home.Plugins.Lifx\bin\$(ConfigurationName)" "$(TargetDir)Plugins\" /Y
 xcopy "$(SolutionDir)Xpressive.Home.Plugins.MyStrom\bin\$(ConfigurationName)" "$(TargetDir)Plugins\" /Y
 xcopy "$(SolutionDir)Xpressive.Home.Plugins.Netatmo\bin\$(ConfigurationName)" "$(TargetDir)Plugins\" /Y
 xcopy "$(SolutionDir)Xpressive.Home.Plugins.PhilipsHue\bin\$(ConfigurationName)" "$(TargetDir)Plugins\" /Y
