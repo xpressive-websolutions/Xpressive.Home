@@ -57,6 +57,14 @@ namespace Xpressive.Home.Automation
             }
         }
 
+        public async Task DeleteAsync(Script script)
+        {
+            using (var database = new Database("ConnectionString"))
+            {
+                await database.DeleteAsync(script);
+            }
+        }
+
         private async Task InsertAsync(Script script)
         {
             script.Id = Guid.NewGuid().ToString("n");

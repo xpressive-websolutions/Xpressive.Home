@@ -30,13 +30,13 @@ namespace Xpressive.Home.Automation
             await _scheduledScriptRepository.InsertAsync(id, scriptId, cronTab);
         }
 
-        public async Task DeleteSchedule(string id)
+        public async Task DeleteScheduleAsync(string id)
         {
             _scheduler.DeleteJob(new JobKey(id));
             await _scheduledScriptRepository.DeleteAsync(id);
         }
 
-        public async Task<IEnumerable<ScheduledScript>> GetSchedules()
+        public async Task<IEnumerable<ScheduledScript>> GetSchedulesAsync()
         {
             return await _scheduledScriptRepository.GetAsync();
         }

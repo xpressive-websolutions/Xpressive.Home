@@ -1,5 +1,8 @@
 ﻿using Autofac;
+using Xpressive.Home.Contracts.Gateway;
+using Xpressive.Home.Contracts.Rooms;
 using Xpressive.Home.Contracts.Services;
+using Module = Autofac.Module;
 
 namespace Xpressive.Home.Services
 {
@@ -10,6 +13,10 @@ namespace Xpressive.Home.Services
             builder.RegisterType<IpAddressService>().As<IIpAddressService>();
             builder.RegisterType<RadioStationService>().As<IRadioStationService>();
             builder.RegisterType<LowBatteryDeviceObserver>().As<IStartable>().SingleInstance();
+            builder.RegisterType<DevicePersistingService>().As<IDevicePersistingService>();
+            builder.RegisterType<RoomRepository>().As<IRoomRepository>();
+            builder.RegisterType<RoomScriptGroupRepository>().As<IRoomScriptGroupRepository>();
+            builder.RegisterType<RoomScriptRepository>().As<IRoomScriptRepository>();
 
             builder.RegisterType<UpnpDeviceDiscoveringService>()
                 .As<IUpnpDeviceDiscoveringService>()

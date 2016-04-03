@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
@@ -24,14 +25,16 @@ namespace Xpressive.Home.Plugins.Daylight
 
         public async Task StartObservationAsync()
         {
+            await LoadDevicesAsync((id, name) => new DaylightDevice { Id = id, Name = name });
+
             while (true)
             {
                 await Task.Delay(TimeSpan.FromMinutes(1));
 
-                foreach (DaylightDevice device in Devices)
+                foreach (var device in Devices.Cast<DaylightDevice>())
                 {
                     var daylight = IsDaylight(device);
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Daylight", daylight));
+                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsDaylight", daylight));
                 }
             }
         }

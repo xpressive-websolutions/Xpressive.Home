@@ -5,10 +5,10 @@ namespace Xpressive.Home.Contracts.Automation
 {
     public interface ICronService
     {
-        Task<IEnumerable<ScheduledScript>> GetSchedules();
+        Task<IEnumerable<ScheduledScript>> GetSchedulesAsync();
 
         Task ScheduleAsync(string scriptId, string cronTab);
 
-        Task DeleteSchedule(string id);
+        Task DeleteScheduleAsync(string id);
     }
 }

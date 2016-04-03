@@ -6,7 +6,7 @@ namespace Xpressive.Home.Contracts.Automation
     [PrimaryKey("Id", AutoIncrement = false)]
     public class Script
     {
-        internal string Id { get; set; }
+        public string Id { get; internal set; }
 
         public string Name { get; set; }
 

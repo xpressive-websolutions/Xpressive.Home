@@ -1,5 +1,9 @@
+using NPoco;
+
 namespace Xpressive.Home.Contracts.Gateway
 {
+    [TableName("Device")]
+    [PrimaryKey("Id", AutoIncrement = false)]
     public abstract class DeviceBase : IDevice
     {
         protected DeviceBase()

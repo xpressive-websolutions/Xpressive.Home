@@ -24,6 +24,8 @@ namespace Xpressive.Home.Contracts.Gateway
         public IEnumerable<IDevice> Devices => _devices.ToList();
         public IEnumerable<IAction> Actions => _actions.ToList();
         public bool CanCreateDevices => _canCreateDevices;
+        
+        public IDevicePersistingService PersistingService { get; set; }
 
         public bool AddDevice(IDevice device)
         {
@@ -58,6 +60,16 @@ namespace Xpressive.Home.Contracts.Gateway
             await ExecuteInternal(device, action, message.Parameters);
         }
 
+        protected async Task LoadDevicesAsync(Func<string, string, DeviceBase> emptyDevice)
+        {
+            var devices = await PersistingService.GetAsync(Name, emptyDevice);
+
+            foreach (var device in devices)
+            {
+                _devices.Add(device);
+            }
+        }
+
         private bool AddDeviceInternal(DeviceBase device)
         {
             if (!_canCreateDevices || device == null || !device.IsConfigurationValid())
@@ -66,6 +78,7 @@ namespace Xpressive.Home.Contracts.Gateway
             }
 
             _devices.Add(device);
+            PersistingService.SaveAsync(Name, device);
             return true;
         }
 
