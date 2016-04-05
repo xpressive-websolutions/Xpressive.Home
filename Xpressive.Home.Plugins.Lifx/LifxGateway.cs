@@ -120,23 +120,24 @@ namespace Xpressive.Home.Plugins.Lifx
             {
                 case "switch on":
                     await client.SetPower(light, true, seconds);
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Name, "IsOn", true));
+                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", true));
                     break;
                 case "switch off":
                     await client.SetPower(light, false, seconds);
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Name, "IsOn", false));
+                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", false));
                     break;
                 case "change color":
                     var rgb = values["Color"].ParseRgb();
                     await client.SetColor(light, rgb, seconds);
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Name, "IsOn", true));
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Name, "Color", rgb.ToString()));
+                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", true));
+                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Color", rgb.ToString()));
                     break;
                 case "change brightness":
                     color = new LifxColor.HSBK(color.Hue, color.Saturation, brightness / 100f, color.Kelvin);
                     await client.SetColor(light, color, seconds);
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Name, "Brightness", (double)brightness));
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Name, "IsOn", true));
+                    var db = Math.Round((double)brightness, 0);
+                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Brightness", db));
+                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", true));
                     break;
                 default:
                     return;
@@ -145,17 +146,17 @@ namespace Xpressive.Home.Plugins.Lifx
 
         private void UpdateDeviceVariables(LifxDevice device, Light light)
         {
-            var brightness = light.Brightness * 100d;
+            var brightness = Math.Round(light.Brightness * 100d, 0);
             var groupName = light.GroupName;
             var name = light.Label;
             var isOn = light.PowerState == PowerState.On;
             var color = light.Color.ToRgb().ToString();
 
-            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Name, "Brightness", brightness));
-            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Name, "IsOn", isOn));
-            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Name, "Name", name));
-            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Name, "GroupName", groupName));
-            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Name, "Color", color));
+            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Brightness", brightness));
+            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", isOn));
+            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Name", name));
+            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "GroupName", groupName));
+            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Color", color));
         }
     }
 }

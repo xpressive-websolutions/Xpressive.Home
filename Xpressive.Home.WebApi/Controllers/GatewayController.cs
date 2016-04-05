@@ -206,12 +206,10 @@ namespace Xpressive.Home.WebApi.Controllers
     public class ScriptController : ApiController
     {
         private readonly IScriptRepository _repository;
-        private readonly IScriptEngine _engine;
 
-        public ScriptController(IScriptRepository repository, IScriptEngine engine)
+        public ScriptController(IScriptRepository repository)
         {
             _repository = repository;
-            _engine = engine;
         }
 
         [HttpGet, Route("")]

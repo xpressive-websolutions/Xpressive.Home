@@ -69,6 +69,7 @@ namespace Xpressive.Home.Plugins.MyStrom
                     }
 
                     _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Relay", dto.Relay));
+                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Name", device.Name));
 
                     double previousPower;
                     if (previousPowers.TryGetValue(device.Id, out previousPower))

@@ -76,8 +76,9 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                         var bulb = tuple.Item1;
                         var light = tuple.Item2;
                         var state = light.State;
+                        var brightness = Math.Round((double) state.Brightness, 0);
 
-                        UpdateVariable($"{Name}.{bridge.Id}_{bulb.Id}.Brightness", (double)state.Brightness);
+                        UpdateVariable($"{Name}.{bridge.Id}_{bulb.Id}.Brightness", brightness);
                         UpdateVariable($"{Name}.{bridge.Id}_{bulb.Id}.IsOn", state.On);
                         UpdateVariable($"{Name}.{bridge.Id}_{bulb.Id}.IsReachable", state.IsReachable);
                         UpdateVariable($"{Name}.{bridge.Id}_{bulb.Id}.Name", light.Name);
@@ -144,7 +145,8 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 
             if (command.Brightness.HasValue)
             {
-                UpdateVariable($"{Name}.{bulb.Bridge.Id}_{bulb.Id}.Brightness", (double) command.Brightness.Value);
+                var db = Math.Round((double)command.Brightness.Value, 0);
+                UpdateVariable($"{Name}.{bulb.Bridge.Id}_{bulb.Id}.Brightness", db);
             }
         }
 

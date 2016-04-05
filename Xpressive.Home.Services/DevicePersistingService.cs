@@ -17,7 +17,7 @@ namespace Xpressive.Home.Services
             var dto = new DeviceDto
             {
                 Gateway = gatewayName,
-                Id = device.Id,
+                Id = $"{gatewayName}.{device.Id}",
                 Name = device.Name,
                 Properties = JsonConvert.SerializeObject(properties)
             };
@@ -58,6 +58,8 @@ namespace Xpressive.Home.Services
                             property.SetValue(device, converted);
                         }
                     }
+
+                    device.Id = device.Id.Substring(dto.Gateway.Length + 1);
 
                     devices.Add(device);
                 }
