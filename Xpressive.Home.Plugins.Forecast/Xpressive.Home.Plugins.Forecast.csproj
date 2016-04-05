@@ -51,7 +51,9 @@
     <Compile Include="..\Xpressive.Home\Properties\AssemblyInfo.shared.cs">
       <Link>Properties\AssemblyInfo.shared.cs</Link>
     </Compile>
-    <Compile Include="Class1.cs" />
+    <Compile Include="ForecastGateway.cs" />
+    <Compile Include="ForecastDevice.cs" />
+    <Compile Include="ForegastModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

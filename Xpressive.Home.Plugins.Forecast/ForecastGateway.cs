@@ -4,7 +4,6 @@ using System.Configuration;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
-using Autofac;
 using ForecastIO;
 using log4net;
 using Xpressive.Home.Contracts.Gateway;
@@ -12,19 +11,6 @@ using Xpressive.Home.Contracts.Messaging;
 
 namespace Xpressive.Home.Plugins.Forecast
 {
-    public class ForegastModule : Module
-    {
-        protected override void Load(ContainerBuilder builder)
-        {
-            builder.RegisterType<ForecastGateway>()
-                .As<IGateway>()
-                .SingleInstance()
-                .OnActivated(async h => await h.Instance.StartAsync());
-
-            base.Load(builder);
-        }
-    }
-
     public class ForecastGateway : GatewayBase
     {
         private static readonly ILog _log = LogManager.GetLogger(typeof(ForecastGateway));
@@ -45,14 +31,6 @@ namespace Xpressive.Home.Plugins.Forecast
 
         public async Task StartAsync()
         {
-            _devices.Add(new ForecastDevice
-            {
-                Id = "Dinhard",
-                Name = "Dinhard",
-                Latitude = 47.5652116,
-                Longitude = 8.7512703,
-            });
-
             while (true)
             {
                 var recentUpdate = DateTime.UtcNow;
@@ -147,14 +125,5 @@ namespace Xpressive.Home.Plugins.Forecast
                 _messageQueue.Publish(new UpdateVariableMessage(Name, deviceId, name, converted));
             }
         }
-    }
-
-    public class ForecastDevice : DeviceBase
-    {
-        [DeviceProperty(3)]
-        public double Latitude { get; set; }
-
-        [DeviceProperty(4)]
-        public double Longitude { get; set; }
     }
 }
