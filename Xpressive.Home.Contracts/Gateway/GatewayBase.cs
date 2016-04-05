@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using log4net;
 using Xpressive.Home.Contracts.Messaging;
 
 namespace Xpressive.Home.Contracts.Gateway
 {
     public abstract class GatewayBase : IGateway, IMessageQueueListener<CommandMessage>
     {
+        private readonly ILog _log;
         private readonly string _name;
         protected readonly IList<DeviceBase> _devices;
         protected readonly IList<IAction> _actions;
@@ -15,6 +17,7 @@ namespace Xpressive.Home.Contracts.Gateway
 
         protected GatewayBase(string name)
         {
+            _log = LogManager.GetLogger(GetType());
             _name = name;
             _devices = new List<DeviceBase>();
             _actions = new List<IAction>();
@@ -62,11 +65,18 @@ namespace Xpressive.Home.Contracts.Gateway
 
         protected async Task LoadDevicesAsync(Func<string, string, DeviceBase> emptyDevice)
         {
-            var devices = await PersistingService.GetAsync(Name, emptyDevice);
-
-            foreach (var device in devices)
+            try
             {
-                _devices.Add(device);
+                var devices = await PersistingService.GetAsync(Name, emptyDevice);
+
+                foreach (var device in devices)
+                {
+                    _devices.Add(device);
+                }
+            }
+            catch (Exception e)
+            {
+                _log.Error("Unable to load persisted devices.", e);
             }
         }
 
