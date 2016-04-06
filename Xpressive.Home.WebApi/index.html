@@ -1,22 +1,99 @@
 ﻿<!DOCTYPE html>
-
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<html lang="en" class="full" xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="utf-8">
     <title>Xpressive.Home</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <link rel="stylesheet" href="/wwwroot/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/wwwroot/lib/components-font-awesome/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="/Styles/Custom.min.css"/>
+    <link rel="stylesheet" href="//seiyria.com/bootstrap-slider/css/bootstrap-slider.css" />
+    <link href='https://fonts.googleapis.com/css?family=Ubuntu' rel='stylesheet' type='text/css' />
 </head>
 <body>
-<div class="navbar navbar-default navbar-fixed-top">
-    <div class="container">
-        <div class="navbar-header">
-            <a href="/" class="navbar-brand">Xpressive.Home</a>
-        </div>
-        <div class="nav navbar-nav navbar-right">
-            Dienstag 06.04.2016 07:39
+
+    <div class="site-wrapper">
+        <div class="site-wrapper-inner">
+            <div class="container-fluid">
+                <div class="masthead clearfix">
+                    <div class="inner">
+                        <h3 class="masthead-brand">Xpressive.Home</h3>
+                        <div class="nav navbar-nav navbar-right">
+                            <div class="row date">
+                                <div class="col-md-6 datetime-date">
+                                    <div class="col-md-12">
+                                        Mittwoch
+                                    </div>
+                                    <div class="col-md-12">
+                                        6. April 2016
+                                    </div>
+                                </div>
+                                <div class="col-md-4 datetime-time">
+                                    10:21&nbsp;Uhr
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mastfoot">
+                    <div class="inner">
+                        <div class="row">
+                            <div class="col-md-4 col-xs-4 col-sm-4 center-block text-center">
+                                Show current song with cover and artist
+                            </div>
+                            <div class="col-md-4 col-xs-4 col-sm-4 center-block text-center">
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-default" style="border-radius: 50%; height: 40px; width: 40px; margin-top: 6px;">
+                                        <span class="glyphicon glyphicon-backward"></span>
+                                    </button>
+                                    <button type="button" class="btn btn-default btn-lg" style="border-radius: 50%; height: 55px; width: 55px; margin-left: 10px; margin-right: 10px;">
+                                        <span class="glyphicon glyphicon-play"></span>
+                                    </button>
+                                    <button type="button" class="btn btn-default" style="border-radius: 50%; height: 40px; width: 40px; margin-top: 6px;">
+                                        <span class="glyphicon glyphicon-forward"></span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-4 col-xs-4 col-sm-4 center-block text-center">
+                                <input id="ex5" type="text" data-slider-min="-5" data-slider-max="20" data-slider-step="1" data-slider-value="0" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="inner cover center-block">
+                    <div class="row" style="display: flex; align-items: center;">
+
+
+                        <div style="height: 120px; width: 130px; background-color: rgba(255, 255, 255, .4); border-radius: 3px; float: left; margin: 2px;">
+                            <span style="font-size: 3.5em;padding-top: 30px;" class="glyphicon glyphicon-home"></span>
+                        </div>
+                        <div style="height: 120px; width: 130px; background-color: rgba(255, 255, 255, .4); border-radius: 3px; float: left; margin: 2px;">
+                            <span style="font-size: 3.5em;padding-top: 30px;" class="glyphicon glyphicon-music"></span>
+                        </div>
+                        <div style="height: 120px; width: 130px; background-color: rgba(255, 255, 255, .4); border-radius: 3px; float: left; margin: 2px;">
+                            <span style="font-size: 3.5em;padding-top: 30px;" class="glyphicon glyphicon-adjust"></span>
+                        </div>
+
+
+                        <div class="clearfix"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-</div>
+
+
+
+
+
+<!--<script src="/wwwroot/lib/modernizr/modernizr.js"></script>-->
+<script src="/wwwroot/lib/jquery/dist/jquery.min.js"></script>
+<script src="/wwwroot/lib/bootstrap/dist/js/bootstrap.min.js"></script>
+<script src="/wwwroot/lib/respond/dest/respond.min.js"></script>
+    <script src="//seiyria.com/bootstrap-slider/js/bootstrap-slider.js"></script>
+<script>
+    $("#ex5").slider();
+</script>
 </body>
 </html>

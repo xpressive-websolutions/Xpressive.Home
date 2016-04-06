@@ -1,0 +1,12 @@
+{
+    "version": "1.0.0",
+    "name": "ASP.NET",
+    "private": true,
+    "dependencies": {
+        "angular2": "2.0.0-beta.13"
+    },
+    "devDependencies": {
+        "bower": "1.4.1",
+        "typescript": "^1.8.9"
+    }
+}

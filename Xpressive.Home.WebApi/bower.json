@@ -1,0 +1,13 @@
+{
+    "name": "ASP.NET",
+    "private": true,
+    "dependencies": {
+        "bootstrap": "*",
+        "jquery": "*",
+        "modernizr": "*",
+        "respond": "*",
+        "components-font-awesome": "*",
+        "angular2": "*",
+        "underscore": "*"
+    }
+}

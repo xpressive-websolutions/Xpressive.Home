@@ -122,8 +122,16 @@
     <Compile Include="WebApiModule.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include=".bowerrc" />
     <None Include="app.config" />
+    <None Include="bower.json" />
+    <None Include="compilerconfig.json" />
+    <None Include="compilerconfig.json.defaults">
+      <DependentUpon>compilerconfig.json</DependentUpon>
+    </None>
+    <None Include="package.json" />
     <None Include="packages.config" />
+    <None Include="Styles\Custom.less" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Xpressive.Home.Contracts\Xpressive.Home.Contracts.csproj">
@@ -138,6 +146,12 @@
     <Content Include="Scripts\jquery-1.6.4.min.js" />
     <Content Include="Scripts\jquery.signalR-2.2.0.js" />
     <Content Include="Scripts\jquery.signalR-2.2.0.min.js" />
+    <Content Include="Styles\Custom.css">
+      <DependentUpon>Custom.less</DependentUpon>
+    </Content>
+    <Content Include="Styles\Custom.min.css">
+      <DependentUpon>Custom.css</DependentUpon>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
