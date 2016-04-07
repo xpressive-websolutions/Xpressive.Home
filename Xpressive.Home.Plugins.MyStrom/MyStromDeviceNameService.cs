@@ -65,9 +65,17 @@ namespace Xpressive.Home.Plugins.MyStrom
 
                 var dataResponse = await client.ExecutePostTaskAsync<List<EcnsDto>>(request);
 
-                foreach (var device in dataResponse.Data[0].ecns)
+                if (dataResponse.Data != null && dataResponse.Data.Count > 0)
                 {
-                    result.Add(device.mac, device.name);
+                    foreach (var device in dataResponse.Data[0].ecns)
+                    {
+                        result.Add(device.mac, device.name);
+                    }
+                }
+                else
+                {
+                    // TODO: retry
+                    dataResponse.ToString();
                 }
 
                 _recentResult = new Dictionary<string, string>(result, StringComparer.OrdinalIgnoreCase);
