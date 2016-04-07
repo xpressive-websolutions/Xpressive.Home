@@ -2,6 +2,19 @@
 import {Observable} from 'rxjs/Rx';
 import {DateFormatPipe} from 'angular2-moment/DateFormatPipe';
 
+// todo
+// - app component
+//   - dashboard [/]
+//     - date
+//     - time
+//     - button groups
+//     - buttons
+//     - playbar
+//     - ...
+//   - admin [/admin]
+//     - header
+//     - navigation
+//     - rooms, scripts, scriptgroups, gateways, devices
 
 @Component({
     selector: 'my-app',
