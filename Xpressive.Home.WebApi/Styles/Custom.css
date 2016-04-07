@@ -68,6 +68,11 @@ body {
 .inner {
   padding: 30px;
 }
+.mastfoot {
+  color: #999;
+  /* IE8 proofing */
+  color: rgba(255, 255, 255, 0.5);
+}
 .mastfoot .inner {
   padding-bottom: 10px;
 }
@@ -143,14 +148,6 @@ body {
 .cover .btn-lg {
   padding: 10px 20px;
   font-weight: bold;
-}
-/*
- * Footer
- */
-.mastfoot {
-  color: #999;
-  /* IE8 proofing */
-  color: rgba(255, 255, 255, 0.5);
 }
 /*
  * Affix and center

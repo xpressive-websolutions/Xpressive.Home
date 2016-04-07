@@ -142,18 +142,19 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="admin.html" />
     <Content Include="index.html" />
-    <Content Include="Scripts\jquery-1.6.4-vsdoc.js" />
-    <Content Include="Scripts\jquery-1.6.4.js" />
-    <Content Include="Scripts\jquery-1.6.4.min.js" />
+    <Content Include="Scripts\adminlte.min.js" />
     <Content Include="Scripts\jquery.signalR-2.2.0.js" />
     <Content Include="Scripts\jquery.signalR-2.2.0.min.js" />
+    <Content Include="Styles\AdminLTE.min.css" />
     <Content Include="Styles\Custom.css">
       <DependentUpon>Custom.less</DependentUpon>
     </Content>
     <Content Include="Styles\Custom.min.css">
       <DependentUpon>Custom.css</DependentUpon>
     </Content>
+    <Content Include="Styles\skin-black-light.min.css" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
