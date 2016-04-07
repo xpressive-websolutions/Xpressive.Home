@@ -124,6 +124,8 @@
   <ItemGroup>
     <None Include=".bowerrc" />
     <None Include="app.config" />
+    <None Include="tsconfig.json" />
+    <None Include="typings.json" />
     <None Include="bower.json" />
     <None Include="compilerconfig.json" />
     <None Include="compilerconfig.json.defaults">
@@ -152,6 +154,11 @@
     <Content Include="Styles\Custom.min.css">
       <DependentUpon>Custom.css</DependentUpon>
     </Content>
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <TypeScriptCompile Include="app\app.component.ts" />
+    <TypeScriptCompile Include="app\main.ts" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

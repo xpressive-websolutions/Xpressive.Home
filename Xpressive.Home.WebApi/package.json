@@ -1,12 +1,28 @@
 {
-    "version": "1.0.0",
-    "name": "ASP.NET",
-    "private": true,
-    "dependencies": {
-        "angular2": "2.0.0-beta.13"
-    },
-    "devDependencies": {
-        "bower": "1.4.1",
-        "typescript": "^1.8.9"
-    }
+  "version": "1.0.0",
+  "name": "ASP.NET",
+  "private": true,
+  "scripts": {
+    "start": "concurrently \"npm run tsc:w\"",
+    "tsc": "tsc",
+    "tsc:w": "tsc -w",
+    "typings": "typings",
+    "postinstall": "typings install"
+  },
+  "dependencies": {
+    "angular2": "2.0.0-beta.13",
+    "angular2-moment": "^0.4.3",
+    "es6-shim": "^0.35.0",
+    "moment": "^2.12.0",
+    "reflect-metadata": "0.1.2",
+    "rxjs": "5.0.0-beta.2",
+    "systemjs": "0.19.25",
+    "zone.js": "0.6.6"
+  },
+  "devDependencies": {
+    "bower": "1.4.1",
+    "concurrently": "^2.0.0",
+    "typescript": "^1.8.9",
+    "typings": "^0.7.11"
+  }
 }

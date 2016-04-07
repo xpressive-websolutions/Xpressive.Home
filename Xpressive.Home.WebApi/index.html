@@ -4,84 +4,190 @@
     <meta charset="utf-8">
     <title>Xpressive.Home</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <link rel="stylesheet" href="/wwwroot/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="/wwwroot/lib/components-font-awesome/css/font-awesome.min.css" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <link rel="stylesheet" href="/wwwroot/lib/bootstrap/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="/wwwroot/lib/components-font-awesome/css/font-awesome.min.css"/>
     <link rel="stylesheet" href="/Styles/Custom.min.css"/>
-    <link rel="stylesheet" href="//seiyria.com/bootstrap-slider/css/bootstrap-slider.css" />
-    <link href='https://fonts.googleapis.com/css?family=Ubuntu' rel='stylesheet' type='text/css' />
+    <link rel="stylesheet" href="//seiyria.com/bootstrap-slider/css/bootstrap-slider.css"/>
+    <link href="https://fonts.googleapis.com/css?family=Ubuntu" rel="stylesheet" type="text/css"/>
+
+    <script src="/node_modules/es6-shim/es6-shim.min.js"></script>
+    <script src="/node_modules/systemjs/dist/system-polyfills.js"></script>
+    <script src="/node_modules/angular2/es6/dev/src/testing/shims_for_IE.js"></script>
+    <script src="/node_modules/moment/moment.js"/>
+    <script src="/node_modules/reflect-metadata/Reflect.js"></script>
+
+    <script src="/node_modules/angular2/bundles/angular2-polyfills.js"></script>
+    <script src="/node_modules/systemjs/dist/system.src.js"></script>
+    <script src="/node_modules/rxjs/bundles/Rx.js"></script>
+    <script src="/node_modules/angular2/bundles/angular2.dev.js"></script>
+
+    <script>
+        System.config({
+            packageConfigPaths: ['node_modules/*/package.json'],
+            packages: {
+                app: {
+                    format: 'register',
+                    defaultExtension: 'js'
+                }
+            },
+            paths: {
+                'moment': '/node_modules/moment/min/moment-with-locales.min.js',
+                "angular2-moment/*": "/node_modules/angular2-moment/*",
+            },
+            meta: {
+                moment: {
+                    format: 'amd'
+                }
+            }
+        });
+      System.import('app/main')
+            .then(null, console.error.bind(console));
+    </script>
+
+    <style>
+        div.btn-blog {
+            float: left;
+            margin: 4px;
+        }
+
+        div.btn-blog button {
+            width: 130px;
+            height: 120px;
+            background-color: #ffffff;
+            background-color: rgba(255, 255, 255, .4);
+        }
+
+        div.btn-blog ul.dropdown-menu {
+            overflow: auto;
+            position: fixed;
+            min-width: 130px;
+        }
+
+        div.btn-blog ul.dropdown-menu li {
+            text-align: center;
+        }
+    </style>
+
 </head>
 <body>
 
-    <div class="site-wrapper">
-        <div class="site-wrapper-inner">
-            <div class="container-fluid">
-                <div class="masthead clearfix">
-                    <div class="inner">
-                        <h3 class="masthead-brand">Xpressive.Home</h3>
-                        <div class="nav navbar-nav navbar-right">
-                            <div class="row date">
-                                <div class="col-md-6 datetime-date">
-                                    <div class="col-md-12">
-                                        Mittwoch
-                                    </div>
-                                    <div class="col-md-12">
-                                        6. April 2016
-                                    </div>
-                                </div>
-                                <div class="col-md-4 datetime-time">
-                                    10:21&nbsp;Uhr
-                                </div>
-                            </div>
+<div class="site-wrapper">
+    <div class="site-wrapper-inner">
+        <div class="container-fluid">
+            <div class="masthead clearfix">
+                <div class="inner">
+                    <h3 class="masthead-brand">Xpressive.Home</h3>
+                    <div class="nav navbar-nav navbar-right">
+                        <div class="row date">
+                            <my-app></my-app>
                         </div>
                     </div>
                 </div>
-                <div class="mastfoot">
-                    <div class="inner">
-                        <div class="row">
-                            <div class="col-md-4 col-xs-4 col-sm-4 center-block text-center">
-                                Show current song with cover and artist
+            </div>
+            <div class="mastfoot">
+                <div class="inner">
+                    <div class="row">
+                        <div class="col-md-4 col-xs-4 col-sm-4 center-block text-center">
+                            Show current song with cover and artist
+                        </div>
+                        <div class="col-md-4 col-xs-4 col-sm-4 center-block text-center">
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-default" style="border-radius: 50%; height: 40px; width: 40px; margin-top: 6px;">
+                                    <span class="glyphicon glyphicon-backward"></span>
+                                </button>
+                                <button type="button" class="btn btn-default btn-lg" style="border-radius: 50%; height: 55px; width: 55px; margin-left: 10px; margin-right: 10px;">
+                                    <span class="glyphicon glyphicon-play"></span>
+                                </button>
+                                <button type="button" class="btn btn-default" style="border-radius: 50%; height: 40px; width: 40px; margin-top: 6px;">
+                                    <span class="glyphicon glyphicon-forward"></span>
+                                </button>
                             </div>
-                            <div class="col-md-4 col-xs-4 col-sm-4 center-block text-center">
-                                <div class="btn-group">
-                                    <button type="button" class="btn btn-default" style="border-radius: 50%; height: 40px; width: 40px; margin-top: 6px;">
-                                        <span class="glyphicon glyphicon-backward"></span>
-                                    </button>
-                                    <button type="button" class="btn btn-default btn-lg" style="border-radius: 50%; height: 55px; width: 55px; margin-left: 10px; margin-right: 10px;">
-                                        <span class="glyphicon glyphicon-play"></span>
-                                    </button>
-                                    <button type="button" class="btn btn-default" style="border-radius: 50%; height: 40px; width: 40px; margin-top: 6px;">
-                                        <span class="glyphicon glyphicon-forward"></span>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="col-md-4 col-xs-4 col-sm-4 center-block text-center">
-                                <input id="ex5" type="text" data-slider-min="-5" data-slider-max="20" data-slider-step="1" data-slider-value="0" />
-                            </div>
+                        </div>
+                        <div class="col-md-4 col-xs-4 col-sm-4 center-block text-center">
+                            <input id="ex5" type="text" data-slider-min="-5" data-slider-max="20" data-slider-step="1" data-slider-value="0"/>
                         </div>
                     </div>
                 </div>
-                <div class="inner cover center-block">
-                    <div class="row" style="display: flex; align-items: center;">
+            </div>
+            <div class="inner cover center-block">
+                <div class="row" style="display: flex; align-items: center;">
 
 
-                        <div style="height: 120px; width: 130px; background-color: rgba(255, 255, 255, .4); border-radius: 3px; float: left; margin: 2px;">
-                            <span style="font-size: 3.5em;padding-top: 30px;" class="glyphicon glyphicon-home"></span>
-                        </div>
-                        <div style="height: 120px; width: 130px; background-color: rgba(255, 255, 255, .4); border-radius: 3px; float: left; margin: 2px;">
-                            <span style="font-size: 3.5em;padding-top: 30px;" class="glyphicon glyphicon-music"></span>
-                        </div>
-                        <div style="height: 120px; width: 130px; background-color: rgba(255, 255, 255, .4); border-radius: 3px; float: left; margin: 2px;">
-                            <span style="font-size: 3.5em;padding-top: 30px;" class="glyphicon glyphicon-adjust"></span>
-                        </div>
-
-
-                        <div class="clearfix"></div>
+                    <div class="btn-group btn-blog">
+                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                            <span class="selection"><h1><span class="glyphicon glyphicon-home"></span></h1><span>Wohnzimmer</span></span>
+                        </button>
+                        <ul class="dropdown-menu" role="menu">
+                            <li><a href="#">
+                                <h1><span class="glyphicon glyphicon-home"></span></h1><span>Wohnzimmer</span></a></li>
+                            <li><a href="#">
+                                <h1><span class="glyphicon glyphicon-globe"></span></h1><span>Küche</span></a></li>
+                            <li><a href="#">
+                                <h1><span class="glyphicon glyphicon-cutlery"></span></h1><span>Esszimmer</span></a></li>
+                            <li><a href="#">
+                                <h1><span class="glyphicon glyphicon-globe"></span></h1><span>WC EG</span></a></li>
+                            <li role="separator" class="divider"></li>
+                            <li><a href="#">
+                                <h1><span class="glyphicon glyphicon-bed"></span></h1><span>Schlafzimmer</span></a></li>
+                            <li><a href="#">
+                                <h1><span class="glyphicon glyphicon-globe"></span></h1><span>Kinderzimmer</span></a></li>
+                            <li><a href="#">
+                                <h1><span class="glyphicon glyphicon-education"></span></h1><span>Büro</span></a></li>
+                            <li><a href="#">
+                                <h1><span class="glyphicon glyphicon-globe"></span></h1><span>WC OG</span></a></li>
+                            <li role="separator" class="divider"></li>
+                            <li><a href="#">
+                                <h1><span class="glyphicon glyphicon-globe"></span></h1><span>Dachgeschoss</span></a></li>
+                        </ul>
                     </div>
+
+
+                    <div class="btn-group btn-blog">
+                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                            <span class="selection"><h1><span class="glyphicon glyphicon-lamp"></span></h1><span>Beleuchtung</span></span>
+                        </button>
+                        <ul class="dropdown-menu" role="menu">
+                            <li><a href="#">Ein</a></li>
+                            <li><a href="#">Romantik</a></li>
+                            <li><a href="#">Aus</a></li>
+                        </ul>
+                    </div>
+
+
+                    <div class="btn-group btn-blog">
+                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                            <span class="selection"><h1><span class="glyphicon glyphicon-lamp"></span></h1><span>Beleuchtung</span></span>
+                        </button>
+                        <ul class="dropdown-menu" role="menu">
+                            <li><a href="#">Test 00</a></li>
+                            <li><a href="#">Test 01</a></li>
+                            <li><a href="#">Test 02</a></li>
+                            <li><a href="#">Test 03</a></li>
+                            <li><a href="#">Test 04</a></li>
+                            <li><a href="#">Test 05</a></li>
+                            <li><a href="#">Test 06</a></li>
+                            <li><a href="#">Test 07</a></li>
+                            <li><a href="#">Test 08</a></li>
+                            <li><a href="#">Test 09</a></li>
+                            <li><a href="#">Test 10</a></li>
+                            <li><a href="#">Test 11</a></li>
+                            <li><a href="#">Test 12</a></li>
+                            <li><a href="#">Test 13</a></li>
+                            <li><a href="#">Test 14</a></li>
+                            <li><a href="#">Test 15</a></li>
+                            <li><a href="#">Test 16</a></li>
+                            <li><a href="#">Test 17</a></li>
+                        </ul>
+                    </div>
+
+
+                    <div class="clearfix"></div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
 
 
@@ -91,9 +197,54 @@
 <script src="/wwwroot/lib/jquery/dist/jquery.min.js"></script>
 <script src="/wwwroot/lib/bootstrap/dist/js/bootstrap.min.js"></script>
 <script src="/wwwroot/lib/respond/dest/respond.min.js"></script>
-    <script src="//seiyria.com/bootstrap-slider/js/bootstrap-slider.js"></script>
+<script src="//seiyria.com/bootstrap-slider/js/bootstrap-slider.js"></script>
 <script>
     $("#ex5").slider();
+
+    $(".btn-blog button").on("click", function() {
+        var offsets = this.getBoundingClientRect();
+        var dd = $(this).parent("div").find(".dropdown-menu")[0];
+        var maxHeight = $(window).height();
+        var height = $(dd).actualHeight() * 1.3 + 12;
+        var hp = "90%";
+        var tp = "5%";
+
+        if (height < 120) {
+            height = 120;
+        }
+        if (height < (maxHeight * 0.9)) {
+            var h = height / maxHeight;
+            var t = (1 - h) / 2;
+            hp = Math.round(height) + "px";
+            tp = Math.round(t * 100) + "%";
+        }
+
+        dd.style.left = offsets.left + "px";
+        dd.style.height = hp;
+        dd.style.top = tp;
+    });
+
+    $(".dropdown-menu").on('click', 'li a', function() {
+        var selText = $(this).html();
+        $(this).parent('li').siblings().removeClass('active');
+        $(this).parents('.btn-group').find('.selection').html(selText);
+        $(this).parents('li').addClass("active");
+    });
+
+    $.fn.actualHeight = function() {
+        var height = 0;
+
+        $(this).find("li").each(function(i, s) {
+            var clone = $(s).clone();
+            clone.css("visibility", "hidden");
+            $('body').append(clone);
+            height += clone.outerHeight();
+            clone.remove();
+        });
+
+        return height;
+    };
+
 </script>
 </body>
 </html>

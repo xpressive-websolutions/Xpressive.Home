@@ -7,7 +7,7 @@ using Microsoft.Owin;
 using Microsoft.Owin.FileSystems;
 using Microsoft.Owin.Hosting;
 using Microsoft.Owin.StaticFiles;
-using Microsoft.Owin.StaticFiles.Infrastructure;
+using Microsoft.Owin.StaticFiles.ContentTypes;
 using Owin;
 
 namespace Xpressive.Home.WebApi
@@ -32,13 +32,14 @@ namespace Xpressive.Home.WebApi
                 config.EnsureInitialized();
 
                 var root = AppDomain.CurrentDomain.BaseDirectory;
-                var fileServerOptions = new FileServerOptions()
+                var fileServerOptions = new FileServerOptions
                 {
                     EnableDefaultFiles = true,
                     EnableDirectoryBrowsing = false,
                     RequestPath = new PathString(""),
                     FileSystem = new PhysicalFileSystem(Path.Combine(root, @"..\..\..\Xpressive.Home.WebApi"))
                 };
+                fileServerOptions.StaticFileOptions.ContentTypeProvider = new CustomContentTypeProvider();
                 app.UseFileServer(fileServerOptions);
 
                 app.UseAutofacMiddleware(_container);
@@ -51,6 +52,14 @@ namespace Xpressive.Home.WebApi
         public void Dispose()
         {
             _webApp.Dispose();
+        }
+    }
+
+    public class CustomContentTypeProvider : FileExtensionContentTypeProvider
+    {
+        public CustomContentTypeProvider()
+        {
+            Mappings.Add(".json", "application/json");
         }
     }
 }
