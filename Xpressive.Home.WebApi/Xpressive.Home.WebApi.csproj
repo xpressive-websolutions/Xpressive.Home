@@ -143,6 +143,11 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="admin.html" />
+    <Content Include="app\admin\admin.component.html" />
+    <Content Include="app\app.component.html" />
+    <Content Include="app\dashboard\dashboard.component.html" />
+    <Content Include="app\dashboard\datetime.component.html" />
+    <Content Include="app\dashboard\playbar.component.html" />
     <Content Include="index.html" />
     <Content Include="Scripts\adminlte.min.js" />
     <Content Include="Scripts\jquery.signalR-2.2.0.js" />
@@ -158,7 +163,13 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <TypeScriptCompile Include="app\admin\admin.component.ts" />
+    <TypeScriptCompile Include="app\admin\admin.ts" />
     <TypeScriptCompile Include="app\app.component.ts" />
+    <TypeScriptCompile Include="app\dashboard\dashboard.component.ts" />
+    <TypeScriptCompile Include="app\dashboard\dashboard.ts" />
+    <TypeScriptCompile Include="app\dashboard\datetime.component.ts" />
+    <TypeScriptCompile Include="app\dashboard\playbar.component.ts" />
     <TypeScriptCompile Include="app\main.ts" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

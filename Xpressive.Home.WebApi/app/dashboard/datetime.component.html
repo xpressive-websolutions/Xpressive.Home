@@ -1,0 +1,11 @@
+﻿<div class="col-md-6 datetime-date">
+    <div class="col-md-12">
+        {{ date | amDateFormat:'dddd' }}
+    </div>
+    <div class="col-md-12">
+        {{ date | amDateFormat:'DD. MMMM YYYY' }}
+    </div>
+</div>
+<div class="col-md-4 datetime-time">
+    {{ date | amDateFormat:'HH:mm' }}&nbsp;Uhr
+</div>
