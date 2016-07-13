@@ -62,8 +62,18 @@ namespace Xpressive.Home.Plugins.Forecast
         {
             var latitude = (float)device.Latitude;
             var longitude = (float)device.Longitude;
-            var request = new ForecastIORequest(_apiKey, latitude, longitude, Unit.si);
-            var response = request.Get();
+            ForecastIOResponse response;
+
+            try
+            {
+                var request = new ForecastIORequest(_apiKey, latitude, longitude, Unit.si);
+                response = request.Get();
+            }
+            catch (Exception e)
+            {
+                _log.Error(e.Message, e);
+                return;
+            }
 
             UpdateVariables(device.Id, response.currently);
 
