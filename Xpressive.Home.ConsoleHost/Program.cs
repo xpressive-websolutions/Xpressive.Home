@@ -10,9 +10,10 @@ namespace Xpressive.Home.ConsoleHost
             var log = LogManager.GetLogger(typeof (Program));
             log.Info("Start Xpressive.Home");
 
-            Setup.Run();
-
-            Console.ReadLine();
+            using (Setup.Run())
+            {
+                Console.ReadLine();
+            }
         }
     }
 }

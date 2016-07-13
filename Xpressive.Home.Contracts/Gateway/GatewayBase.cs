@@ -95,5 +95,17 @@ namespace Xpressive.Home.Contracts.Gateway
         public abstract IDevice CreateEmptyDevice();
 
         protected abstract Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values);
+
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+
+        protected virtual void Dispose(bool disposing) { }
+
+        ~GatewayBase()
+        {
+            Dispose(false);
+        }
     }
 }

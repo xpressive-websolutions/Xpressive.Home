@@ -1,8 +1,9 @@
+using System;
 using System.Collections.Generic;
 
 namespace Xpressive.Home.Contracts.Gateway
 {
-    public interface IGateway
+    public interface IGateway : IDisposable
     {
         string Name { get; }
         bool CanCreateDevices { get; }

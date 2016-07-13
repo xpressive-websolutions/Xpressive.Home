@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using Autofac;
-using Xpressive.Home.Contracts.Gateway;
 
 namespace Xpressive.Home
 {
@@ -43,17 +41,6 @@ namespace Xpressive.Home
         public static T Resolve<T>()
         {
             return _container.Resolve<T>();
-        }
-    }
-
-    public static class Setup
-    {
-        public static void Run()
-        {
-            IocContainer.Build();
-
-            // start all gateways
-            IocContainer.Resolve<IList<IGateway>>();
         }
     }
 }
