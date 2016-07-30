@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
 using System.Threading.Tasks;
+using log4net;
 using LifxHttp;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
@@ -12,6 +13,7 @@ namespace Xpressive.Home.Plugins.Lifx
 {
     internal sealed class LifxGateway : GatewayBase
     {
+        private static readonly ILog _log = LogManager.GetLogger(typeof (LifxGateway));
         private readonly IMessageQueue _messageQueue;
         private readonly string _token;
         private readonly object _deviceLock = new object();
@@ -54,25 +56,32 @@ namespace Xpressive.Home.Plugins.Lifx
 
             while (true)
             {
-                var client = new LifxClient(_token);
-                var lights = await client.ListLights();
-
-                foreach (var light in lights.Where(l => l.IsConnected))
+                try
                 {
-                    LifxDevice device;
+                    var client = new LifxClient(_token);
+                    var lights = await client.ListLights();
 
-                    lock (_deviceLock)
+                    foreach (var light in lights.Where(l => l.IsConnected))
                     {
-                        device = _devices.Cast<LifxDevice>().SingleOrDefault(d => d.Id.Equals(light.Id));
+                        LifxDevice device;
 
-                        if (device == null)
+                        lock (_deviceLock)
                         {
-                            device = new LifxDevice(light);
-                            _devices.Add(device);
-                        }
-                    }
+                            device = _devices.Cast<LifxDevice>().SingleOrDefault(d => d.Id.Equals(light.Id));
 
-                    UpdateDeviceVariables(device, light);
+                            if (device == null)
+                            {
+                                device = new LifxDevice(light);
+                                _devices.Add(device);
+                            }
+                        }
+
+                        UpdateDeviceVariables(device, light);
+                    }
+                }
+                catch (Exception e)
+                {
+                    _log.Error(e.Message, e);
                 }
 
                 await Task.Delay(TimeSpan.FromMinutes(1));
