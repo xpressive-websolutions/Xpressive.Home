@@ -54,6 +54,17 @@
     <Compile Include="..\Xpressive.Home\Properties\AssemblyInfo.shared.cs">
       <Link>Properties\AssemblyInfo.shared.cs</Link>
     </Compile>
+    <Compile Include="CommandClassHandlers\AlarmCommandClassHandler.cs" />
+    <Compile Include="CommandClassHandlers\BasicCommandClassHandler.cs" />
+    <Compile Include="CommandClassHandlers\BatteryCommandClassHandler.cs" />
+    <Compile Include="CommandClassHandlers\CommandClassHandlerBase.cs" />
+    <Compile Include="CommandClassHandlers\MeterCommandClassHandler.cs" />
+    <Compile Include="CommandClassHandlers\SensorAlarmCommandClassHandler.cs" />
+    <Compile Include="CommandClassHandlers\SensorBinaryCommandClassHandler.cs" />
+    <Compile Include="CommandClassHandlers\SensorMultiLevelCommandClassHandler.cs" />
+    <Compile Include="CommandClassHandlers\SwitchBinaryCommandClassHandler.cs" />
+    <Compile Include="CommandClassHandlers\WakeUpCommandClassHandler.cs" />
+    <Compile Include="ICommandClassHandler.cs" />
     <Compile Include="ZwaveGateway.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ZwaveDevice.cs" />
@@ -70,6 +81,10 @@
       <Project>{d19262be-03d6-415f-b442-eddf9da2d435}</Project>
       <Name>Xpressive.Home.Contracts</Name>
       <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\Xpressive.Home\Xpressive.Home.csproj">
+      <Project>{0D0C6AE1-EF4F-426C-835A-6C491A6395F9}</Project>
+      <Name>Xpressive.Home</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

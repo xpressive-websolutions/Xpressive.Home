@@ -31,5 +31,7 @@ namespace Xpressive.Home.Plugins.Zwave
         public string Manufacturer { get; set; }
         public string ProductDescription { get; set; }
         public string ImagePath { get; set; }
+
+        public bool IsSupportingWakeUp { get; set; }
     }
 }
