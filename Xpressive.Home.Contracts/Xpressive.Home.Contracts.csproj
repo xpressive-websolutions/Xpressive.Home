@@ -86,6 +86,7 @@
     <Compile Include="Services\RadioStationCountry.cs" />
     <Compile Include="Variables\BooleanVariable.cs" />
     <Compile Include="Variables\DoubleVariable.cs" />
+    <Compile Include="Variables\Int32Variable.cs" />
     <Compile Include="Variables\IVariableRepository.cs" />
     <Compile Include="Variables\IVariable.cs" />
     <Compile Include="Variables\StringVariable.cs" />
