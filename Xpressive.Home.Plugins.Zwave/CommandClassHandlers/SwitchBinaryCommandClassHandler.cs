@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Concurrent;
-using System.Threading.Tasks;
 using Xpressive.Home.Contracts.Messaging;
 using ZWave;
 using ZWave.Channel;
@@ -13,13 +11,13 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
         public SwitchBinaryCommandClassHandler(IMessageQueue messageQueue)
             : base(messageQueue, CommandClass.SwitchBinary) { }
 
-        protected override void Handle(ZwaveDevice device, Node node, BlockingCollection<Func<Task>> queue)
+        protected override void Handle(ZwaveDevice device, Node node, BlockingCollection<NodeCommand> queue)
         {
             node.GetCommandClass<SwitchBinary>().Changed += (s, e) =>
             {
                 HandleSwitchBinaryReport(e.Report);
             };
-            queue.Add(async () =>
+            queue.Add("Get SwitchBinary", async () =>
             {
                 var result = await node.GetCommandClass<SwitchBinary>().Get();
                 HandleSwitchBinaryReport(result);

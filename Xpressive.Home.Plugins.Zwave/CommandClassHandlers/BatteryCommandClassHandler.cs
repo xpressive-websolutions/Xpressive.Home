@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
-using log4net;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 using ZWave;
@@ -12,14 +11,13 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
 {
     internal sealed class BatteryCommandClassHandler : CommandClassHandlerBase
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof (BasicCommandClassHandler));
         private static readonly SingleTaskRunner _taskRunner = new SingleTaskRunner();
         private bool _isDisposing;
 
         public BatteryCommandClassHandler(IMessageQueue messageQueue)
             : base(messageQueue, CommandClass.Battery) { }
 
-        protected override void Handle(ZwaveDevice device, Node node, BlockingCollection<Func<Task>> queue)
+        protected override void Handle(ZwaveDevice device, Node node, BlockingCollection<NodeCommand> queue)
         {
             _taskRunner.StartIfNotAlreadyRunning(async () =>
             {
@@ -35,14 +33,13 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
                     }
 
                     lastUpdate = DateTime.UtcNow;
-                    queue.Add(() => UpdateBatteryStatusDaily(device, node));
+                    queue.Add("UpdateBatteryStatusDaily", () => UpdateBatteryStatusDaily(device, node));
                 }
             });
         }
 
         private async Task UpdateBatteryStatusDaily(DeviceBase device, Node node)
         {
-            _log.Debug($"Update battery status for node {node.NodeID}");
             var result = await node.GetCommandClass<Battery>().Get();
 
             if (result.Value > 85)

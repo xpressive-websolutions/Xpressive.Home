@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Concurrent;
-using System.Threading.Tasks;
 using Xpressive.Home.Contracts.Messaging;
 using ZWave;
 using ZWave.Channel;
@@ -13,13 +11,13 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
         public MeterCommandClassHandler(IMessageQueue messageQueue)
             : base(messageQueue, CommandClass.Meter) { }
 
-        protected override void Handle(ZwaveDevice device, Node node, BlockingCollection<Func<Task>> queue)
+        protected override void Handle(ZwaveDevice device, Node node, BlockingCollection<NodeCommand> queue)
         {
             node.GetCommandClass<Meter>().Changed += (s, e) =>
             {
                 HandleMeterReport(e.Report);
             };
-            queue.Add(async () =>
+            queue.Add("Get Meter", async () =>
             {
                 var result = await node.GetCommandClass<Meter>().Get();
                 HandleMeterReport(result);

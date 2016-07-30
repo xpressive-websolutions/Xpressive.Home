@@ -22,7 +22,7 @@ namespace Xpressive.Home.Plugins.Zwave
         private readonly IList<ICommandClassHandler> _commandClassHandlers;
         private readonly string _comPortName;
         private readonly ZwaveDeviceLibrary _library;
-        private readonly Dictionary<byte, BlockingCollection<Func<Task>>> _nodeCommandQueues;
+        private readonly Dictionary<byte, BlockingCollection<NodeCommand>> _nodeCommandQueues;
         private readonly Dictionary<byte, SemaphoreSlim> _nodeCommandSemaphores;
         private readonly Dictionary<byte, DateTime> _lastSemaphoreRelease;
         private readonly object _lastSemaphoreReleaseLock = new object();
@@ -40,7 +40,7 @@ namespace Xpressive.Home.Plugins.Zwave
 
             _comPortName = ConfigurationManager.AppSettings["zwave.port"];
             _library = new ZwaveDeviceLibrary();
-            _nodeCommandQueues = new Dictionary<byte, BlockingCollection<Func<Task>>>();
+            _nodeCommandQueues = new Dictionary<byte, BlockingCollection<NodeCommand>>();
             _nodeCommandSemaphores = new Dictionary<byte, SemaphoreSlim>();
             _lastSemaphoreRelease = new Dictionary<byte, DateTime>();
             _nodeCommandTasks = new List<Task>();
@@ -95,15 +95,15 @@ namespace Xpressive.Home.Plugins.Zwave
             {
                 if (!_nodeCommandQueues.ContainsKey(node.NodeID))
                 {
-                    var queue = new BlockingCollection<Func<Task>>();
+                    var queue = new BlockingCollection<NodeCommand>();
                     _nodeCommandQueues.Add(node.NodeID, queue);
                     _nodeCommandSemaphores.Add(node.NodeID, new SemaphoreSlim(1, int.MaxValue));
                     _lastSemaphoreRelease.Add(node.NodeID, DateTime.UtcNow);
 
                     var device = new ZwaveDevice(node.NodeID);
-                    queue.Add(() => UpdateDeviceProtocolInfo(device, node));
-                    queue.Add(() => InitializeDevice(device, node));
-                    queue.Add(() => GetSupportedCommandClasses(device, node));
+                    queue.Add("UpdateDeviceProtocolInfo", () => UpdateDeviceProtocolInfo(device, node));
+                    queue.Add("InitializeDevice", () => InitializeDevice(device, node));
+                    queue.Add("GetSupportedCommandClasses", () => GetSupportedCommandClasses(device, node));
 
                     var task = Task.Run(() => ProcessQueue(device, node));
                     _nodeCommandTasks.Add(task);
@@ -123,24 +123,27 @@ namespace Xpressive.Home.Plugins.Zwave
 
                 _log.Debug("Start processing queue for node " + node.NodeID);
                 var isException = false;
-                var isEmpty = true;
-                Func<Task> task;
+                var nodeCommands = new List<NodeCommand>();
+                NodeCommand nodeCommand;
 
-                while (queue.TryTake(out task, 100))
+                while (queue.TryTake(out nodeCommand))
                 {
-                    _log.Debug($"Execute task {task?.Method?.Name} for node {node.NodeID}");
-                    isEmpty = false;
+                    nodeCommands.Add(nodeCommand);
+                }
 
-                    if (!await TryExecuteQueueTask(task))
+                foreach (var command in nodeCommands)
+                {
+                    _log.Debug($"Execute task {command.Description} for node {node.NodeID}");
+
+                    if (!await TryExecuteQueueTask(command.Function))
                     {
-                        _log.Debug($"Executing task {task?.Method?.Name} for node {node.NodeID} failed.");
-                        queue.Add(task);
+                        _log.Debug($"Executing task {command.Description} for node {node.NodeID} failed.");
+                        queue.Add(command);
                         isException = true;
-                        break;
                     }
                 }
 
-                if (!isEmpty && !isException && device.IsSupportingWakeUp)
+                if (!isException && device.IsSupportingWakeUp)
                 {
                     _log.Debug($"Execute task NoMoreInformation for node {node.NodeID}");
                     await TryExecuteQueueTask(() => node.GetCommandClass<WakeUp>().NoMoreInformation());
@@ -175,7 +178,6 @@ namespace Xpressive.Home.Plugins.Zwave
 
         private async Task UpdateDeviceProtocolInfo(ZwaveDevice device, Node node)
         {
-            _log.Debug($"UpdateDeviceProtocolInfo for node {node.NodeID}");
             var protocolInfo = await node.GetProtocolInfo();
             device.BasicType = (byte)protocolInfo.BasicType;
             device.GenericType = (byte)protocolInfo.GenericType;
@@ -188,8 +190,7 @@ namespace Xpressive.Home.Plugins.Zwave
             {
                 return;
             }
-
-            _log.Debug($"InitializeDevice for node {node.NodeID}");
+            
             var version = await node.GetCommandClass<Version>().Get();
             var specific = await node.GetCommandClass<ManufacturerSpecific>().Get();
 
@@ -254,12 +255,14 @@ namespace Xpressive.Home.Plugins.Zwave
                 device.Manufacturer = libraryDevice.BrandName;
                 device.ProductDescription = libraryDevice.Description.FirstOrDefault()?.Description;
                 device.ImagePath = libraryDevice.DeviceImage;
+
+                _log.Debug($"Node {device.Id} Manufacturer: {device.Manufacturer}");
+                _log.Debug($"Node {device.Id} Description: {device.ProductDescription}");
             }
         }
 
         private async Task GetSupportedCommandClasses(ZwaveDevice device, Node node)
         {
-            _log.Debug($"GetSupportedCommandClasses for node {node.NodeID}");
             var commandClasses = await node.GetSupportedCommandClasses();
             var handlers = _commandClassHandlers.ToDictionary(h => h.CommandClass);
 

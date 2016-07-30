@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Concurrent;
-using System.Threading.Tasks;
 using Xpressive.Home.Contracts.Messaging;
 using ZWave;
 using ZWave.Channel;
@@ -13,13 +11,13 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
         public BasicCommandClassHandler(IMessageQueue messageQueue)
             : base(messageQueue, CommandClass.Basic) { }
 
-        protected override void Handle(ZwaveDevice device, Node node, BlockingCollection<Func<Task>> queue)
+        protected override void Handle(ZwaveDevice device, Node node, BlockingCollection<NodeCommand> queue)
         {
             node.GetCommandClass<Basic>().Changed += (s, e) =>
             {
                 HandleBasicReport(e.Report);
             };
-            queue.Add(async () =>
+            queue.Add("Get Basic", async () =>
             {
                 var result = await node.GetCommandClass<Basic>().Get();
                 HandleBasicReport(result);

@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Concurrent;
-using System.Threading.Tasks;
 using Xpressive.Home.Contracts.Messaging;
 using ZWave;
 using ZWave.Channel;
@@ -13,13 +11,13 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
         public AlarmCommandClassHandler(IMessageQueue messageQueue)
             : base(messageQueue, CommandClass.Alarm) { }
 
-        protected override void Handle(ZwaveDevice device, Node node, BlockingCollection<Func<Task>> queue)
+        protected override void Handle(ZwaveDevice device, Node node, BlockingCollection<NodeCommand> queue)
         {
             node.GetCommandClass<Alarm>().Changed += (s, e) =>
             {
                 HandleAlarmReport(e.Report);
             };
-            queue.Add(async () =>
+            queue.Add("Get Alarm", async () =>
             {
                 var result = await node.GetCommandClass<Alarm>().Get();
                 HandleAlarmReport(result);

@@ -22,7 +22,7 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
 
         public CommandClass CommandClass => _commandClass;
 
-        public void Handle(IDevice device, Node node, BlockingCollection<Func<Task>> queue)
+        public void Handle(IDevice device, Node node, BlockingCollection<NodeCommand> queue)
         {
             Handle((ZwaveDevice)device, node, queue);
         }
@@ -33,7 +33,7 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
             _messageQueue.Publish(new UpdateVariableMessage("zwave", device, variable, value));
         }
 
-        protected abstract void Handle(ZwaveDevice device, Node node, BlockingCollection<Func<Task>> queue);
+        protected abstract void Handle(ZwaveDevice device, Node node, BlockingCollection<NodeCommand> queue);
 
         public void Dispose()
         {
