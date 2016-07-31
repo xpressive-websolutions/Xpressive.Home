@@ -9,33 +9,27 @@ using ZWave.CommandClasses;
 
 namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
 {
-    internal sealed class BatteryCommandClassHandler : CommandClassHandlerBase
+    internal sealed class BatteryCommandClassHandler : CommandClassHandlerTaskRunnerBase
     {
-        private static readonly SingleTaskRunner _taskRunner = new SingleTaskRunner();
-        private bool _isDisposing;
+        private ZwaveDevice _device;
+        private Node _node;
+        private BlockingCollection<NodeCommand> _queue;
 
         public BatteryCommandClassHandler(IMessageQueue messageQueue)
             : base(messageQueue, CommandClass.Battery) { }
 
         protected override void Handle(ZwaveDevice device, Node node, BlockingCollection<NodeCommand> queue)
         {
-            _taskRunner.StartIfNotAlreadyRunning(async () =>
-            {
-                var lastUpdate = DateTime.MinValue;
+            _device = device;
+            _node = node;
+            _queue = queue;
 
-                while (!_isDisposing)
-                {
-                    await Task.Delay(10);
+            Start(TimeSpan.FromDays(1));
+        }
 
-                    if ((DateTime.UtcNow - lastUpdate).TotalDays < 1)
-                    {
-                        continue;
-                    }
-
-                    lastUpdate = DateTime.UtcNow;
-                    queue.Add("UpdateBatteryStatusDaily", () => UpdateBatteryStatusDaily(device, node));
-                }
-            });
+        protected override void Execute()
+        {
+            _queue.AddDistinct("UpdateBatteryStatusDaily", () => UpdateBatteryStatusDaily(_device, _node));
         }
 
         private async Task UpdateBatteryStatusDaily(DeviceBase device, Node node)
@@ -54,12 +48,6 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
             {
                 device.BatteryStatus = DeviceBatteryStatus.Low;
             }
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            _isDisposing = true;
-            base.Dispose(disposing);
         }
     }
 }

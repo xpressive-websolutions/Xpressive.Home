@@ -10,5 +10,10 @@ namespace Xpressive.Home.Plugins.Zwave
         {
             queue.Add(new NodeCommand(description, task));
         }
+
+        public static void AddDistinct(this BlockingCollection<NodeCommand> queue, string description, Func<Task> task)
+        {
+            queue.Add(new NodeCommand(description, task, isDistinct: true));
+        }
     }
 }

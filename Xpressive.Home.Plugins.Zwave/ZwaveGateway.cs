@@ -122,14 +122,8 @@ namespace Xpressive.Home.Plugins.Zwave
                 await semaphore.WaitAsync();
 
                 _log.Debug("Start processing queue for node " + node.NodeID);
+                var nodeCommands = GetDistinctNodeCommands(queue).ToList();
                 var isException = false;
-                var nodeCommands = new List<NodeCommand>();
-                NodeCommand nodeCommand;
-
-                while (queue.TryTake(out nodeCommand))
-                {
-                    nodeCommands.Add(nodeCommand);
-                }
 
                 foreach (var command in nodeCommands)
                 {
@@ -150,6 +144,26 @@ namespace Xpressive.Home.Plugins.Zwave
                 }
 
                 _log.Debug("Finished processing queue for node " + node.NodeID);
+            }
+        }
+
+        private IEnumerable<NodeCommand> GetDistinctNodeCommands(BlockingCollection<NodeCommand> queue)
+        {
+            var distinctCommands = new HashSet<string>(StringComparer.Ordinal);
+            NodeCommand nodeCommand;
+
+            while (queue.TryTake(out nodeCommand))
+            {
+                if (nodeCommand.IsDistinct)
+                {
+                    if (distinctCommands.Contains(nodeCommand.Description))
+                    {
+                        continue;
+                    }
+                    distinctCommands.Add(nodeCommand.Description);
+                }
+
+                yield return nodeCommand;
             }
         }
 

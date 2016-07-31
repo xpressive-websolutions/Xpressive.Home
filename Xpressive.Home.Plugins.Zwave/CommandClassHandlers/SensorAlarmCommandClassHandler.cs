@@ -7,8 +7,11 @@ using ZWave.CommandClasses;
 
 namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
 {
-    internal sealed class SensorAlarmCommandClassHandler : CommandClassHandlerBase
+    internal sealed class SensorAlarmCommandClassHandler : CommandClassHandlerTaskRunnerBase
     {
+        private Node _node;
+        private BlockingCollection<NodeCommand> _queue;
+
         public SensorAlarmCommandClassHandler(IMessageQueue messageQueue)
             : base(messageQueue, CommandClass.SensorAlarm) { }
 
@@ -18,14 +21,22 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
             {
                 HandleSensorAlarmReport(e.Report);
             };
-            queue.Add("Get SensorAlarm", async () =>
+
+            _node = node;
+            _queue = queue;
+            Start(TimeSpan.FromMinutes(30));
+        }
+
+        protected override void Execute()
+        {
+            foreach (AlarmType alarmType in Enum.GetValues(typeof (AlarmType)))
             {
-                foreach (AlarmType alarmType in Enum.GetValues(typeof(AlarmType)))
+                _queue.AddDistinct("Get SensorAlarm " + alarmType, async () =>
                 {
-                    var result = await node.GetCommandClass<SensorAlarm>().Get(alarmType);
+                    var result = await _node.GetCommandClass<SensorAlarm>().Get(alarmType);
                     HandleSensorAlarmReport(result);
-                }
-            });
+                });
+            }
         }
 
         private void HandleSensorAlarmReport(SensorAlarmReport report)
@@ -33,8 +44,6 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
             var variable = report.Type + "SensorAlarm";
             var value = report.Level != 0;
             UpdateVariable(report, variable, value);
-
-            // TODO: zurücksetzen...
         }
     }
 }

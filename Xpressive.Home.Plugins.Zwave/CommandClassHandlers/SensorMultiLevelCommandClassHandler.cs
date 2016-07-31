@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Concurrent;
 using Xpressive.Home.Contracts.Messaging;
 using ZWave;
@@ -6,8 +7,11 @@ using ZWave.CommandClasses;
 
 namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
 {
-    internal sealed class SensorMultiLevelCommandClassHandler : CommandClassHandlerBase
+    internal sealed class SensorMultiLevelCommandClassHandler : CommandClassHandlerTaskRunnerBase
     {
+        private Node _node;
+        private BlockingCollection<NodeCommand> _queue;
+
         public SensorMultiLevelCommandClassHandler(IMessageQueue messageQueue)
             : base(messageQueue, CommandClass.SensorMultiLevel) { }
 
@@ -17,9 +21,17 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
             {
                 HandleSensorMultiLevelReport(e.Report);
             };
-            queue.Add("Get SensorMultiLevel", async () =>
+
+            _node = node;
+            _queue = queue;
+            Start(TimeSpan.FromMinutes(30));
+        }
+
+        protected override void Execute()
+        {
+            _queue.AddDistinct("Get SensorMultiLevel", async () =>
             {
-                var result = await node.GetCommandClass<SensorMultiLevel>().Get();
+                var result = await _node.GetCommandClass<SensorMultiLevel>().Get();
                 HandleSensorMultiLevelReport(result);
             });
         }

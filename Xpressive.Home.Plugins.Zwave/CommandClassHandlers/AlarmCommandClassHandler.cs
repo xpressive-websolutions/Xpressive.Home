@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Concurrent;
 using Xpressive.Home.Contracts.Messaging;
 using ZWave;
@@ -6,8 +7,11 @@ using ZWave.CommandClasses;
 
 namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
 {
-    internal sealed class AlarmCommandClassHandler : CommandClassHandlerBase
+    internal sealed class AlarmCommandClassHandler : CommandClassHandlerTaskRunnerBase
     {
+        private Node _node;
+        private BlockingCollection<NodeCommand> _queue;
+
         public AlarmCommandClassHandler(IMessageQueue messageQueue)
             : base(messageQueue, CommandClass.Alarm) { }
 
@@ -17,9 +21,17 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
             {
                 HandleAlarmReport(e.Report);
             };
-            queue.Add("Get Alarm", async () =>
+
+            _node = node;
+            _queue = queue;
+            Start(TimeSpan.FromMinutes(10));
+        }
+
+        protected override void Execute()
+        {
+            _queue.AddDistinct("Get Alarm", async () =>
             {
-                var result = await node.GetCommandClass<Alarm>().Get();
+                var result = await _node.GetCommandClass<Alarm>().Get();
                 HandleAlarmReport(result);
             });
         }
@@ -29,8 +41,6 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
             var variable = report.Type + "Alarm";
             var value = report.Level != 0;
             UpdateVariable(report, variable, value);
-
-            // TODO: zurücksetzen...
         }
     }
 }

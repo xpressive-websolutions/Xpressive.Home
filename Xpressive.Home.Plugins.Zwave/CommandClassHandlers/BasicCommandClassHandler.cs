@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Concurrent;
 using Xpressive.Home.Contracts.Messaging;
 using ZWave;
@@ -6,8 +7,11 @@ using ZWave.CommandClasses;
 
 namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
 {
-    internal sealed class BasicCommandClassHandler : CommandClassHandlerBase
+    internal sealed class BasicCommandClassHandler : CommandClassHandlerTaskRunnerBase
     {
+        private Node _node;
+        private BlockingCollection<NodeCommand> _queue;
+
         public BasicCommandClassHandler(IMessageQueue messageQueue)
             : base(messageQueue, CommandClass.Basic) { }
 
@@ -17,16 +21,24 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
             {
                 HandleBasicReport(e.Report);
             };
-            queue.Add("Get Basic", async () =>
-            {
-                var result = await node.GetCommandClass<Basic>().Get();
-                HandleBasicReport(result);
-            });
+
+            _node = node;
+            _queue = queue;
+            Start(TimeSpan.FromMinutes(30));
         }
 
         private void HandleBasicReport(BasicReport report)
         {
             UpdateVariable(report, "Value", (int) report.Value);
+        }
+
+        protected override void Execute()
+        {
+            _queue.AddDistinct("Get Basic", async () =>
+            {
+                var result = await _node.GetCommandClass<Basic>().Get();
+                HandleBasicReport(result);
+            });
         }
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Concurrent;
 using Xpressive.Home.Contracts.Messaging;
 using ZWave;
@@ -6,8 +7,11 @@ using ZWave.CommandClasses;
 
 namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
 {
-    internal sealed class SwitchBinaryCommandClassHandler : CommandClassHandlerBase
+    internal sealed class SwitchBinaryCommandClassHandler : CommandClassHandlerTaskRunnerBase
     {
+        private Node _node;
+        private BlockingCollection<NodeCommand> _queue;
+
         public SwitchBinaryCommandClassHandler(IMessageQueue messageQueue)
             : base(messageQueue, CommandClass.SwitchBinary) { }
 
@@ -17,9 +21,17 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
             {
                 HandleSwitchBinaryReport(e.Report);
             };
-            queue.Add("Get SwitchBinary", async () =>
+
+            _node = node;
+            _queue = queue;
+            Start(TimeSpan.FromMinutes(30));
+        }
+
+        protected override void Execute()
+        {
+            _queue.AddDistinct("Get SwitchBinary", async () =>
             {
-                var result = await node.GetCommandClass<SwitchBinary>().Get();
+                var result = await _node.GetCommandClass<SwitchBinary>().Get();
                 HandleSwitchBinaryReport(result);
             });
         }

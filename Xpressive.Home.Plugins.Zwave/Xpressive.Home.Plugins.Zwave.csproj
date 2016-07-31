@@ -59,6 +59,7 @@
     <Compile Include="CommandClassHandlers\BatteryCommandClassHandler.cs" />
     <Compile Include="BlockingCollectionExtensions.cs" />
     <Compile Include="CommandClassHandlers\CommandClassHandlerBase.cs" />
+    <Compile Include="CommandClassHandlers\CommandClassHandlerTaskRunnerBase.cs" />
     <Compile Include="CommandClassHandlers\MeterCommandClassHandler.cs" />
     <Compile Include="CommandClassHandlers\SensorAlarmCommandClassHandler.cs" />
     <Compile Include="CommandClassHandlers\SensorBinaryCommandClassHandler.cs" />
