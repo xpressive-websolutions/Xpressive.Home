@@ -29,6 +29,7 @@ namespace Xpressive.Home.Plugins.Zwave
         public string Protocol { get; set; }
 
         public string Manufacturer { get; set; }
+        public string ProductName { get; set; }
         public string ProductDescription { get; set; }
         public string ImagePath { get; set; }
 

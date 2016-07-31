@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
@@ -13,12 +12,12 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
     {
         private ZwaveDevice _device;
         private Node _node;
-        private BlockingCollection<NodeCommand> _queue;
+        private ZwaveCommandQueue _queue;
 
         public BatteryCommandClassHandler(IMessageQueue messageQueue)
             : base(messageQueue, CommandClass.Battery) { }
 
-        protected override void Handle(ZwaveDevice device, Node node, BlockingCollection<NodeCommand> queue)
+        protected override void Handle(ZwaveDevice device, Node node, ZwaveCommandQueue queue)
         {
             _device = device;
             _node = node;

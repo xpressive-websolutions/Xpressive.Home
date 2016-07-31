@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using Xpressive.Home.Contracts.Gateway;
 using ZWave;
 using ZWave.Channel;
@@ -10,6 +9,6 @@ namespace Xpressive.Home.Plugins.Zwave
     {
         CommandClass CommandClass { get; }
 
-        void Handle(IDevice device, Node node, BlockingCollection<NodeCommand> queue);
+        void Handle(IDevice device, Node node, ZwaveCommandQueue queue);
     }
 }

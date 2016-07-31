@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using Xpressive.Home.Contracts.Messaging;
 using ZWave;
 using ZWave.Channel;
@@ -11,13 +10,13 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
     {
         private readonly TimeSpan _interval = TimeSpan.FromMinutes(5);
         private Node _node;
-        private BlockingCollection<NodeCommand> _queue;
+        private ZwaveCommandQueue _queue;
         private DateTime _lastUpdate = DateTime.MinValue;
 
         public MeterCommandClassHandler(IMessageQueue messageQueue)
             : base(messageQueue, CommandClass.Meter) { }
 
-        protected override void Handle(ZwaveDevice device, Node node, BlockingCollection<NodeCommand> queue)
+        protected override void Handle(ZwaveDevice device, Node node, ZwaveCommandQueue queue)
         {
             node.GetCommandClass<Meter>().Changed += (s, e) =>
             {

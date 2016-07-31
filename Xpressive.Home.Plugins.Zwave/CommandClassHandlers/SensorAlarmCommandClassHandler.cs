@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using Xpressive.Home.Contracts.Messaging;
 using ZWave;
 using ZWave.Channel;
@@ -10,12 +9,12 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
     internal sealed class SensorAlarmCommandClassHandler : CommandClassHandlerTaskRunnerBase
     {
         private Node _node;
-        private BlockingCollection<NodeCommand> _queue;
+        private ZwaveCommandQueue _queue;
 
         public SensorAlarmCommandClassHandler(IMessageQueue messageQueue)
             : base(messageQueue, CommandClass.SensorAlarm) { }
 
-        protected override void Handle(ZwaveDevice device, Node node, BlockingCollection<NodeCommand> queue)
+        protected override void Handle(ZwaveDevice device, Node node, ZwaveCommandQueue queue)
         {
             node.GetCommandClass<SensorAlarm>().Changed += (s, e) =>
             {
