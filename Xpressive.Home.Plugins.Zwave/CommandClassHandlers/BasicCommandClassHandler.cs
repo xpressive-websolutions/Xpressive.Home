@@ -8,9 +8,6 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
 {
     internal sealed class BasicCommandClassHandler : CommandClassHandlerTaskRunnerBase
     {
-        private Node _node;
-        private ZwaveCommandQueue _queue;
-
         public BasicCommandClassHandler(IMessageQueue messageQueue)
             : base(messageQueue, CommandClass.Basic) { }
 
@@ -21,9 +18,7 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
                 HandleBasicReport(e.Report);
             };
 
-            _node = node;
-            _queue = queue;
-            Start(TimeSpan.FromMinutes(30));
+            Start(TimeSpan.FromMinutes(30), device, node, queue);
         }
 
         private void HandleBasicReport(BasicReport report)
@@ -31,11 +26,11 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
             UpdateVariable(report, "Value", (int) report.Value);
         }
 
-        protected override void Execute()
+        protected override void Execute(ZwaveDevice device, Node node, ZwaveCommandQueue queue)
         {
-            _queue.AddDistinct("Get Basic", async () =>
+            queue.AddDistinct("Get Basic", async () =>
             {
-                var result = await _node.GetCommandClass<Basic>().Get();
+                var result = await node.GetCommandClass<Basic>().Get();
                 HandleBasicReport(result);
             });
         }

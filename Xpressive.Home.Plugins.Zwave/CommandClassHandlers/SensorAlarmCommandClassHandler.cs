@@ -8,9 +8,6 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
 {
     internal sealed class SensorAlarmCommandClassHandler : CommandClassHandlerTaskRunnerBase
     {
-        private Node _node;
-        private ZwaveCommandQueue _queue;
-
         public SensorAlarmCommandClassHandler(IMessageQueue messageQueue)
             : base(messageQueue, CommandClass.SensorAlarm) { }
 
@@ -21,18 +18,16 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
                 HandleSensorAlarmReport(e.Report);
             };
 
-            _node = node;
-            _queue = queue;
-            Start(TimeSpan.FromMinutes(30));
+            Start(TimeSpan.FromMinutes(30), device, node, queue);
         }
 
-        protected override void Execute()
+        protected override void Execute(ZwaveDevice device, Node node, ZwaveCommandQueue queue)
         {
             foreach (AlarmType alarmType in Enum.GetValues(typeof (AlarmType)))
             {
-                _queue.AddDistinct("Get SensorAlarm " + alarmType, async () =>
+                queue.AddDistinct("Get SensorAlarm " + alarmType, async () =>
                 {
-                    var result = await _node.GetCommandClass<SensorAlarm>().Get(alarmType);
+                    var result = await node.GetCommandClass<SensorAlarm>().Get(alarmType);
                     HandleSensorAlarmReport(result);
                 });
             }

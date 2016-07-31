@@ -8,9 +8,6 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
 {
     internal sealed class SensorMultiLevelCommandClassHandler : CommandClassHandlerTaskRunnerBase
     {
-        private Node _node;
-        private ZwaveCommandQueue _queue;
-
         public SensorMultiLevelCommandClassHandler(IMessageQueue messageQueue)
             : base(messageQueue, CommandClass.SensorMultiLevel) { }
 
@@ -21,16 +18,14 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
                 HandleSensorMultiLevelReport(e.Report);
             };
 
-            _node = node;
-            _queue = queue;
-            Start(TimeSpan.FromMinutes(30));
+            Start(TimeSpan.FromMinutes(30), device, node, queue);
         }
 
-        protected override void Execute()
+        protected override void Execute(ZwaveDevice device, Node node, ZwaveCommandQueue queue)
         {
-            _queue.AddDistinct("Get SensorMultiLevel", async () =>
+            queue.AddDistinct("Get SensorMultiLevel", async () =>
             {
-                var result = await _node.GetCommandClass<SensorMultiLevel>().Get();
+                var result = await node.GetCommandClass<SensorMultiLevel>().Get();
                 HandleSensorMultiLevelReport(result);
             });
         }

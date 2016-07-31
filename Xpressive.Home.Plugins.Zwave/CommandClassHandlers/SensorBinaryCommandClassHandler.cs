@@ -8,9 +8,6 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
 {
     internal sealed class SensorBinaryCommandClassHandler : CommandClassHandlerTaskRunnerBase
     {
-        private Node _node;
-        private ZwaveCommandQueue _queue;
-
         public SensorBinaryCommandClassHandler(IMessageQueue messageQueue)
             : base(messageQueue, CommandClass.SensorBinary) { }
 
@@ -21,16 +18,14 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
                 HandleSensorBinaryReport(e.Report);
             };
 
-            _node = node;
-            _queue = queue;
-            Start(TimeSpan.FromMinutes(30));
+            Start(TimeSpan.FromMinutes(30), device, node, queue);
         }
 
-        protected override void Execute()
+        protected override void Execute(ZwaveDevice device, Node node, ZwaveCommandQueue queue)
         {
-            _queue.AddDistinct("Get SensorBinary", async () =>
+            queue.AddDistinct("Get SensorBinary", async () =>
             {
-                var result = await _node.GetCommandClass<SensorBinary>().Get();
+                var result = await node.GetCommandClass<SensorBinary>().Get();
                 HandleSensorBinaryReport(result);
             });
         }

@@ -10,25 +10,17 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
 {
     internal sealed class BatteryCommandClassHandler : CommandClassHandlerTaskRunnerBase
     {
-        private ZwaveDevice _device;
-        private Node _node;
-        private ZwaveCommandQueue _queue;
-
         public BatteryCommandClassHandler(IMessageQueue messageQueue)
             : base(messageQueue, CommandClass.Battery) { }
 
         protected override void Handle(ZwaveDevice device, Node node, ZwaveCommandQueue queue)
         {
-            _device = device;
-            _node = node;
-            _queue = queue;
-
-            Start(TimeSpan.FromDays(1));
+            Start(TimeSpan.FromDays(1), device, node, queue);
         }
 
-        protected override void Execute()
+        protected override void Execute(ZwaveDevice device, Node node, ZwaveCommandQueue queue)
         {
-            _queue.AddDistinct("UpdateBatteryStatusDaily", () => UpdateBatteryStatusDaily(_device, _node));
+            queue.AddDistinct("UpdateBatteryStatusDaily", () => UpdateBatteryStatusDaily(device, node));
         }
 
         private async Task UpdateBatteryStatusDaily(DeviceBase device, Node node)

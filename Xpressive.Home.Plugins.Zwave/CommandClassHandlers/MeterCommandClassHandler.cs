@@ -9,8 +9,6 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
     internal sealed class MeterCommandClassHandler : CommandClassHandlerTaskRunnerBase
     {
         private readonly TimeSpan _interval = TimeSpan.FromMinutes(5);
-        private Node _node;
-        private ZwaveCommandQueue _queue;
         private DateTime _lastUpdate = DateTime.MinValue;
 
         public MeterCommandClassHandler(IMessageQueue messageQueue)
@@ -23,21 +21,19 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
                 HandleMeterReport(e.Report);
             };
 
-            _node = node;
-            _queue = queue;
-            Start(_interval);
+            Start(_interval, device, node, queue);
         }
 
-        protected override void Execute()
+        protected override void Execute(ZwaveDevice device, Node node, ZwaveCommandQueue queue)
         {
-            _queue.AddDistinct("Get Meter", async () =>
+            queue.AddDistinct("Get Meter", async () =>
             {
                 if ((DateTime.UtcNow - _lastUpdate) < _interval)
                 {
                     return;
                 }
 
-                var result = await _node.GetCommandClass<Meter>().Get();
+                var result = await node.GetCommandClass<Meter>().Get();
                 HandleMeterReport(result);
             });
         }

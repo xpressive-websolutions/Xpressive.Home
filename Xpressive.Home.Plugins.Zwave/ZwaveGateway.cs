@@ -133,6 +133,7 @@ namespace Xpressive.Home.Plugins.Zwave
             ZwaveDeviceLibraryResolver.Resolve(_library, device);
 
             _log.Debug($"Node {device.Id} Manufacturer: {device.Manufacturer}");
+            _log.Debug($"Node {device.Id} Product Name: {device.ProductName}");
             _log.Debug($"Node {device.Id} Description: {device.ProductDescription}");
         }
 

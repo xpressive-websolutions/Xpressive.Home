@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Xpressive.Home.Contracts.Messaging;
+using ZWave;
 using ZWave.Channel;
 
 namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
@@ -12,7 +13,7 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
         protected CommandClassHandlerTaskRunnerBase(IMessageQueue messageQueue, CommandClass commandClass)
             : base(messageQueue, commandClass) { }
 
-        protected void Start(TimeSpan interval)
+        protected void Start(TimeSpan interval, ZwaveDevice device, Node node, ZwaveCommandQueue queue)
         {
             Task.Run(async () =>
             {
@@ -28,12 +29,12 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
                     }
 
                     lastUpdate = DateTime.UtcNow;
-                    Execute();
+                    Execute(device, node, queue);
                 }
             });
         }
 
-        protected abstract void Execute();
+        protected abstract void Execute(ZwaveDevice device, Node node, ZwaveCommandQueue queue);
 
         protected override void Dispose(bool disposing)
         {

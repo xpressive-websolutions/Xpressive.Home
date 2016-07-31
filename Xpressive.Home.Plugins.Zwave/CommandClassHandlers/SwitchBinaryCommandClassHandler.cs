@@ -8,9 +8,6 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
 {
     internal sealed class SwitchBinaryCommandClassHandler : CommandClassHandlerTaskRunnerBase
     {
-        private Node _node;
-        private ZwaveCommandQueue _queue;
-
         public SwitchBinaryCommandClassHandler(IMessageQueue messageQueue)
             : base(messageQueue, CommandClass.SwitchBinary) { }
 
@@ -21,16 +18,14 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
                 HandleSwitchBinaryReport(e.Report);
             };
 
-            _node = node;
-            _queue = queue;
-            Start(TimeSpan.FromMinutes(30));
+            Start(TimeSpan.FromMinutes(30), device, node, queue);
         }
 
-        protected override void Execute()
+        protected override void Execute(ZwaveDevice device, Node node, ZwaveCommandQueue queue)
         {
-            _queue.AddDistinct("Get SwitchBinary", async () =>
+            queue.AddDistinct("Get SwitchBinary", async () =>
             {
-                var result = await _node.GetCommandClass<SwitchBinary>().Get();
+                var result = await node.GetCommandClass<SwitchBinary>().Get();
                 HandleSwitchBinaryReport(result);
             });
         }

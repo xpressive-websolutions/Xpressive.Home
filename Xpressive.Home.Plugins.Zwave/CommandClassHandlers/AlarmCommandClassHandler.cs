@@ -8,9 +8,6 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
 {
     internal sealed class AlarmCommandClassHandler : CommandClassHandlerTaskRunnerBase
     {
-        private Node _node;
-        private ZwaveCommandQueue _queue;
-
         public AlarmCommandClassHandler(IMessageQueue messageQueue)
             : base(messageQueue, CommandClass.Alarm) { }
 
@@ -21,16 +18,14 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
                 HandleAlarmReport(e.Report);
             };
 
-            _node = node;
-            _queue = queue;
-            Start(TimeSpan.FromMinutes(10));
+            Start(TimeSpan.FromMinutes(10), device, node, queue);
         }
 
-        protected override void Execute()
+        protected override void Execute(ZwaveDevice device, Node node, ZwaveCommandQueue queue)
         {
-            _queue.AddDistinct("Get Alarm", async () =>
+            queue.AddDistinct("Get Alarm", async () =>
             {
-                var result = await _node.GetCommandClass<Alarm>().Get();
+                var result = await node.GetCommandClass<Alarm>().Get();
                 HandleAlarmReport(result);
             });
         }
