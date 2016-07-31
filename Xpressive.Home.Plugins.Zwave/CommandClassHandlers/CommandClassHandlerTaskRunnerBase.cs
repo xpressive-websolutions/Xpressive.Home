@@ -7,7 +7,6 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
 {
     internal abstract class CommandClassHandlerTaskRunnerBase : CommandClassHandlerBase
     {
-        private static readonly SingleTaskRunner _taskRunner = new SingleTaskRunner();
         private bool _isDisposing;
 
         protected CommandClassHandlerTaskRunnerBase(IMessageQueue messageQueue, CommandClass commandClass)
@@ -15,7 +14,7 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
 
         protected void Start(TimeSpan interval)
         {
-            _taskRunner.StartIfNotAlreadyRunning(async () =>
+            Task.Run(async () =>
             {
                 var lastUpdate = DateTime.MinValue;
 
