@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
 using System.Threading.Tasks;
+using log4net;
 using RestSharp;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
@@ -11,6 +12,7 @@ namespace Xpressive.Home.Plugins.Netatmo
 {
     internal class NetatmoGateway : GatewayBase
     {
+        private static readonly ILog _log = LogManager.GetLogger(typeof (NetatmoGateway));
         private readonly IMessageQueue _messageQueue;
         private readonly object _deviceLock = new object();
         private readonly string _clientId;
@@ -58,14 +60,21 @@ namespace Xpressive.Home.Plugins.Netatmo
 
             while (true)
             {
-                if (token.Expiration - DateTime.UtcNow < TimeSpan.FromSeconds(60))
+                try
                 {
-                    token = await RefreshTokenAsync(token);
+                    if (token.Expiration - DateTime.UtcNow < TimeSpan.FromSeconds(60))
+                    {
+                        token = await RefreshTokenAsync(token);
+                    }
+
+                    await GetDeviceData(token);
+
+                    await Task.Delay(TimeSpan.FromMinutes(1));
                 }
-
-                await GetDeviceData(token);
-
-                await Task.Delay(TimeSpan.FromMinutes(1));
+                catch (Exception e)
+                {
+                    _log.Error(e.Message, e);
+                }
             }
         }
 
