@@ -23,7 +23,7 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
 
         private void HandleBasicReport(BasicReport report)
         {
-            UpdateVariable(report, "Value", (int) report.Value);
+            UpdateVariable(report, "Value", (double) report.Value);
         }
 
         protected override void Execute(ZwaveDevice device, Node node, ZwaveCommandQueue queue)

@@ -94,11 +94,6 @@ namespace Xpressive.Home.Variables
                 return new DoubleVariable();
             }
 
-            if (value is int)
-            {
-                return new Int32Variable();
-            }
-
             throw new NotSupportedException(value.GetType().Name);
         }
     }
