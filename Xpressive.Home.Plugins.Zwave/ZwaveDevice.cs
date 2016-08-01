@@ -1,4 +1,3 @@
-using System;
 using Xpressive.Home.Contracts.Gateway;
 
 namespace Xpressive.Home.Plugins.Zwave
@@ -9,13 +8,9 @@ namespace Xpressive.Home.Plugins.Zwave
         {
             Id = nodeId.ToString("D");
             NodeId = nodeId;
-            LastUpdate = DateTime.MinValue;
         }
 
         public byte NodeId { get; set; }
-        public bool IsUpdating { get; set; }
-        public bool IsInitialized { get; set; }
-        public DateTime LastUpdate { get; set; }
 
         public byte BasicType { get; set; }
         public byte GenericType { get; set; }
@@ -32,7 +27,5 @@ namespace Xpressive.Home.Plugins.Zwave
         public string ProductName { get; set; }
         public string ProductDescription { get; set; }
         public string ImagePath { get; set; }
-
-        public bool IsSupportingWakeUp { get; set; }
     }
 }

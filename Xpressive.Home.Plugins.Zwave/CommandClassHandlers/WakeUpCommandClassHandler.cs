@@ -1,6 +1,7 @@
 using Xpressive.Home.Contracts.Messaging;
 using ZWave;
 using ZWave.Channel;
+using ZWave.CommandClasses;
 
 namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
 {
@@ -11,7 +12,13 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
 
         protected override void Handle(ZwaveDevice device, Node node, ZwaveCommandQueue queue)
         {
-            device.IsSupportingWakeUp = true;
+            node.GetCommandClass<WakeUp>().Changed += (s, e) =>
+            {
+                if (e.Report.Awake)
+                {
+                    queue.StartOrContinueWorker(isWakeUp: true);
+                }
+            };
         }
     }
 }

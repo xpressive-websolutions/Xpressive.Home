@@ -86,12 +86,13 @@ namespace Xpressive.Home.Plugins.Zwave
                 if (!_nodeCommandQueues.ContainsKey(node.NodeID))
                 {
                     var device = new ZwaveDevice(node.NodeID);
-                    var queue = new ZwaveCommandQueue(device, node);
+                    var queue = new ZwaveCommandQueue(node);
                     _nodeCommandQueues.Add(node.NodeID, queue);
                     _devices.Add(device);
 
                     queue.Add("UpdateDeviceProtocolInfo", () => UpdateDeviceProtocolInfo(device, node));
-                    queue.Add("InitializeDevice", () => InitializeDevice(device, node));
+                    queue.Add("GetNodeVersion", () => GetNodeVersion(device, node));
+                    queue.Add("GetNodeProductInformation", () => GetNodeProductInformation(device, node));
                     queue.Add("GetSupportedCommandClasses", () => GetSupportedCommandClasses(device, node));
 
                     queue.StartOrContinueWorker();
@@ -107,29 +108,40 @@ namespace Xpressive.Home.Plugins.Zwave
             device.SpecificType = protocolInfo.SpecificType;
         }
 
-        private async Task InitializeDevice(ZwaveDevice device, Node node)
+        private async Task GetNodeVersion(ZwaveDevice device, Node node)
         {
-            if (device.IsInitialized)
-            {
-                return;
-            }
-            
             var version = await node.GetCommandClass<Version>().Get();
-            var specific = await node.GetCommandClass<ManufacturerSpecific>().Get();
 
             device.Application = version.Application;
             device.Library = version.Library;
             device.Protocol = version.Protocol;
+
+            UpdateDeviceWithLibrary(device);
+        }
+
+        private async Task GetNodeProductInformation(ZwaveDevice device, Node node)
+        {
+            var specific = await node.GetCommandClass<ManufacturerSpecific>().Get();
+
             device.ManufacturerId = specific.ManufacturerID.ToString("x4");
             device.ProductType = specific.ProductType.ToString("x4");
             device.ProductId = specific.ProductID.ToString("x4");
 
             UpdateDeviceWithLibrary(device);
-            device.IsInitialized = true;
         }
 
         private void UpdateDeviceWithLibrary(ZwaveDevice device)
         {
+            if (device.Application == null ||
+                device.Library == null ||
+                device.Protocol == null ||
+                device.ManufacturerId == null ||
+                device.ProductType == null ||
+                device.ProductId == null)
+            {
+                return;
+            }
+
             ZwaveDeviceLibraryResolver.Resolve(_library, device);
 
             _log.Debug($"Node {device.Id} Manufacturer: {device.Manufacturer}");
@@ -163,7 +175,6 @@ namespace Xpressive.Home.Plugins.Zwave
             ZwaveCommandQueue queue;
             if (_nodeCommandQueues.TryGetValue(nodeId, out queue))
             {
-                _log.Debug($"Continue worker for node {nodeId}");
                 queue.StartOrContinueWorker();
             }
         }
@@ -172,17 +183,21 @@ namespace Xpressive.Home.Plugins.Zwave
         {
             _isRunning = false;
 
-            foreach (var commandQueue in _nodeCommandQueues)
+            if (disposing)
             {
-                commandQueue.Value.Dispose();
+                foreach (var commandQueue in _nodeCommandQueues)
+                {
+                    commandQueue.Value.Dispose();
+                }
+
+                foreach (var commandClassHandler in _commandClassHandlers)
+                {
+                    commandClassHandler.Dispose();
+                }
+
+                _controller.Close();
             }
 
-            foreach (var commandClassHandler in _commandClassHandlers)
-            {
-                commandClassHandler.Dispose();
-            }
-
-            _controller.Close();
             base.Dispose(disposing);
         }
     }
