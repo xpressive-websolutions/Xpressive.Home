@@ -68,13 +68,13 @@ namespace Xpressive.Home.Plugins.Netatmo
                     }
 
                     await GetDeviceData(token);
-
-                    await Task.Delay(TimeSpan.FromMinutes(1));
                 }
                 catch (Exception e)
                 {
                     _log.Error(e.Message, e);
                 }
+
+                await Task.Delay(TimeSpan.FromMinutes(1));
             }
         }
 
@@ -85,6 +85,11 @@ namespace Xpressive.Home.Plugins.Netatmo
             request.AddQueryParameter("access_token", token.AccessToken);
 
             var data = await client.GetTaskAsync<StationDataResponseDto>(request);
+
+            if (data?.Body?.Devices == null)
+            {
+                return;
+            }
 
             lock (_deviceLock)
             {
