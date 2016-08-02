@@ -21,13 +21,20 @@ namespace Xpressive.Home.Automation
             _scheduledScriptRepository = scheduledScriptRepository;
         }
 
-        public async Task ScheduleAsync(string scriptId, string cronTab)
+        public async Task<ScheduledScript> ScheduleAsync(string scriptId, string cronTab)
         {
             var id = Guid.NewGuid().ToString("n");
 
             Schedule(id, cronTab);
 
             await _scheduledScriptRepository.InsertAsync(id, scriptId, cronTab);
+
+            return new ScheduledScript
+            {
+                Id = id,
+                ScriptId = scriptId,
+                CronTab = cronTab
+            };
         }
 
         public async Task DeleteScheduleAsync(string id)

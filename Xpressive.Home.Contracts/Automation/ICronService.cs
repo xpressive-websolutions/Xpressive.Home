@@ -7,7 +7,7 @@ namespace Xpressive.Home.Contracts.Automation
     {
         Task<IEnumerable<ScheduledScript>> GetSchedulesAsync();
 
-        Task ScheduleAsync(string scriptId, string cronTab);
+        Task<ScheduledScript> ScheduleAsync(string scriptId, string cronTab);
 
         Task DeleteScheduleAsync(string id);
     }
