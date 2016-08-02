@@ -31,6 +31,7 @@ namespace Xpressive.Home
                 .As<IMessageQueueListener<UpdateVariableMessage>>()
                 .As<IMessageQueueListener<NotifyUserMessage>>()
                 .As<IMessageQueueListener<CommandMessage>>()
+                .As<IMessageQueueListener<LowBatteryMessage>>()
                 .SingleInstance();
 
             builder.RegisterType<VariableRepository>()
