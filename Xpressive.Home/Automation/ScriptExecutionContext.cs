@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Jint;
 using Xpressive.Home.Contracts.Automation;
 
@@ -17,6 +18,11 @@ namespace Xpressive.Home.Automation
         }
 
         public void Execute()
+        {
+            Task.Run(() => ExecuteAsTask());
+        }
+
+        private void ExecuteAsTask()
         {
             var engine = new Engine(cfg => cfg.TimeoutInterval(TimeSpan.FromSeconds(30)));
 

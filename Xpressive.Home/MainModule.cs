@@ -6,7 +6,6 @@ using Xpressive.Home.Contracts.Messaging;
 using Xpressive.Home.Contracts.Variables;
 using Xpressive.Home.Messaging;
 using Xpressive.Home.Variables;
-using Module = Autofac.Module;
 
 namespace Xpressive.Home
 {
@@ -21,6 +20,12 @@ namespace Xpressive.Home
             builder.RegisterType<ScriptRepository>().As<IScriptRepository>();
             builder.RegisterType<ScriptEngine>().As<IScriptEngine>();
             builder.RegisterType<VariableScriptObjectProvider>().As<IScriptObjectProvider>();
+            builder.RegisterType<ScriptTriggerService>().As<IScriptTriggerService>();
+
+            builder.RegisterType<MessageQueueScriptTriggerListener>()
+                .As<IMessageQueueListener<UpdateVariableMessage>>()
+                .OnActivating(e => e.Instance.Init())
+                .SingleInstance();
 
             builder.RegisterType<MessageQueueLogListener>()
                 .As<IMessageQueueListener<UpdateVariableMessage>>()
@@ -36,7 +41,8 @@ namespace Xpressive.Home
 
             builder.RegisterType<CronService>()
                 .As<ICronService>()
-                .OnActivating(async e => await e.Instance.InitAsync());
+                .OnActivating(async e => await e.Instance.InitAsync())
+                .SingleInstance();
 
             base.Load(builder);
         }

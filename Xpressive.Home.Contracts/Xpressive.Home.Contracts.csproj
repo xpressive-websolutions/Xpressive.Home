@@ -51,8 +51,10 @@
     <Compile Include="Automation\IScriptEngine.cs" />
     <Compile Include="Automation\IScriptObjectProvider.cs" />
     <Compile Include="Automation\IScriptRepository.cs" />
+    <Compile Include="Automation\IScriptTriggerService.cs" />
     <Compile Include="Automation\ScheduledScript.cs" />
     <Compile Include="Automation\Script.cs" />
+    <Compile Include="Automation\TriggeredScript.cs" />
     <Compile Include="Gateway\DevicePropertyAttribute.cs" />
     <Compile Include="Gateway\Action.cs" />
     <Compile Include="Gateway\DeviceBase.cs" />

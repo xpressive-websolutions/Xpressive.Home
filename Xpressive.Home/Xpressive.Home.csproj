@@ -64,6 +64,7 @@
   <ItemGroup>
     <Compile Include="Automation\CronService.cs" />
     <Compile Include="Automation\DoNothingJob.cs" />
+    <Compile Include="Automation\MessageQueueScriptTriggerListener.cs" />
     <Compile Include="Automation\ScriptEngine.cs" />
     <Compile Include="Automation\IScheduledScriptRepository.cs" />
     <Compile Include="Automation\RecurrentScriptExecution.cs" />
@@ -71,6 +72,7 @@
     <Compile Include="Automation\ScheduledScriptRepository.cs" />
     <Compile Include="Automation\ScriptExecutionContext.cs" />
     <Compile Include="Automation\ScriptRepository.cs" />
+    <Compile Include="Automation\ScriptTriggerService.cs" />
     <Compile Include="Automation\VariableScriptObjectProvider.cs" />
     <Compile Include="IocContainer.cs" />
     <Compile Include="Messaging\MessageQueueLogListener.cs" />
