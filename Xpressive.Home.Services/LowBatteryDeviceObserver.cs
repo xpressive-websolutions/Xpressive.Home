@@ -8,10 +8,11 @@ using Xpressive.Home.Contracts.Messaging;
 
 namespace Xpressive.Home.Services
 {
-    internal sealed class LowBatteryDeviceObserver : IStartable
+    internal sealed class LowBatteryDeviceObserver : IStartable, IDisposable
     {
         private readonly IMessageQueue _messageQueue;
         private readonly IList<IGateway> _gateways;
+        private bool _isRunning;
 
         public LowBatteryDeviceObserver(IMessageQueue messageQueue, IEnumerable<IGateway> gateways)
         {
@@ -21,14 +22,27 @@ namespace Xpressive.Home.Services
 
         public void Start()
         {
+            _isRunning = true;
             Task.Run(Observe);
+        }
+
+        public void Dispose()
+        {
+            _isRunning = false;
         }
 
         private async Task Observe()
         {
-            while (true)
+            var lastRun = DateTime.MinValue;
+
+            while (_isRunning)
             {
-                await Task.Delay(TimeSpan.FromMinutes(1));
+                while (_isRunning && ((DateTime.UtcNow - lastRun) < TimeSpan.FromMinutes(1)))
+                {
+                    await Task.Delay(10);
+                }
+
+                lastRun = DateTime.UtcNow;
 
                 foreach (var gateway in _gateways)
                 {
