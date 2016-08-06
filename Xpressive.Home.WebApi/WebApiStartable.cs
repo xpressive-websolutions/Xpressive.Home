@@ -8,6 +8,7 @@ using Microsoft.Owin.FileSystems;
 using Microsoft.Owin.Hosting;
 using Microsoft.Owin.StaticFiles;
 using Microsoft.Owin.StaticFiles.ContentTypes;
+using Newtonsoft.Json.Serialization;
 using Owin;
 
 namespace Xpressive.Home.WebApi
@@ -30,6 +31,10 @@ namespace Xpressive.Home.WebApi
                 config.MapHttpAttributeRoutes();
                 config.DependencyResolver = new AutofacWebApiDependencyResolver(_container);
                 config.EnsureInitialized();
+
+                var json = config.Formatters.JsonFormatter;
+                json.SerializerSettings.DateTimeZoneHandling = Newtonsoft.Json.DateTimeZoneHandling.Utc;
+                json.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
 
                 var root = AppDomain.CurrentDomain.BaseDirectory;
                 var fileServerOptions = new FileServerOptions

@@ -185,12 +185,12 @@ namespace Xpressive.Home.WebApi.Controllers
                 return Enumerable.Empty<VariableDto>();
             }
 
-            var prefix = $"{gatewayName}.{deviceId}.";
+            var prefix = $"{gatewayName}.{deviceId}";
             var variables = _variableRepository.Get().Where(v => v.Name.StartsWith(prefix, StringComparison.Ordinal));
 
             return variables.Select(v => new VariableDto
             {
-                Name = v.Name.Substring(0, prefix.Length),
+                Name = v.Name.Substring(prefix.Length + 1),
                 Value = v.Value
             });
         }
@@ -206,23 +206,62 @@ namespace Xpressive.Home.WebApi.Controllers
     public class ScriptController : ApiController
     {
         private readonly IScriptRepository _repository;
+        private readonly IRoomScriptRepository _roomScriptRepository;
+        private readonly IScriptEngine _scriptEngine;
 
-        public ScriptController(IScriptRepository repository)
+        public ScriptController(IScriptRepository repository, IRoomScriptRepository roomScriptRepository, IScriptEngine scriptEngine)
         {
             _repository = repository;
+            _roomScriptRepository = roomScriptRepository;
+            _scriptEngine = scriptEngine;
         }
 
         [HttpGet, Route("")]
         public async Task<IEnumerable<NameIdDto>> GetScripts()
         {
             var scripts = await _repository.GetAsync();
-            return scripts.Select(s => new NameIdDto { Id = s.Id, Name = s.Name });
+            return scripts.Select(s => new NameIdDto { Id = s.Id.ToString("n"), Name = s.Name });
+        }
+
+        [HttpGet, Route("group/{scriptGroupId}")]
+        public async Task<IEnumerable<NameIdDto>> GetByScriptGroup(string scriptGroupId)
+        {
+            Guid groupId;
+            if (!Guid.TryParse(scriptGroupId, out groupId))
+            {
+                return Enumerable.Empty<NameIdDto>();
+            }
+
+            var scripts = await _roomScriptRepository.GetAsync(groupId);
+
+            return scripts
+                .OrderBy(s => s.SortOrder)
+                .ThenBy(s => s.Name)
+                .Select(s => new NameIdDto
+                {
+                    Id = s.ScriptId.ToString("n"),
+                    Name = s.Name
+                });
+        }
+        
+        [HttpPost, Route("execute/{scriptId}")]
+        public async Task Execute(string scriptId)
+        {
+            Guid id;
+            if (Guid.TryParse(scriptId, out id))
+            {
+                await _scriptEngine.ExecuteAsync(id);
+            }
         }
 
         [HttpDelete, Route("{scriptId}")]
         public async Task Delete(string scriptId)
         {
-            await _repository.DeleteAsync(scriptId);
+            Guid id;
+            if (Guid.TryParse(scriptId, out id))
+            {
+                await _repository.DeleteAsync(id);
+            }
         }
 
         public class NameIdDto
@@ -251,13 +290,21 @@ namespace Xpressive.Home.WebApi.Controllers
         [HttpPost, Route("{scriptId}")]
         public async Task Schedule(string scriptId, [FromBody]string cronTab)
         {
-            await _cronService.ScheduleAsync(scriptId, cronTab);
+            Guid id;
+            if (Guid.TryParse(scriptId, out id))
+            {
+                await _cronService.ScheduleAsync(id, cronTab);
+            }
         }
 
         [HttpDelete, Route("{scheduleId}")]
         public async Task DeleteSchedule(string scheduleId)
         {
-            await _cronService.DeleteScheduleAsync(scheduleId);
+            Guid id;
+            if (Guid.TryParse(scheduleId, out id))
+            {
+                await _cronService.DeleteScheduleAsync(id);
+            }
         }
     }
 

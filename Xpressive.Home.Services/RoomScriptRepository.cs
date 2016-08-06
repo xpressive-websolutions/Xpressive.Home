@@ -8,12 +8,12 @@ namespace Xpressive.Home.Services
 {
     internal class RoomScriptRepository : IRoomScriptRepository
     {
-        public async Task<IEnumerable<RoomScript>> GetAsync(RoomScriptGroup group)
+        public async Task<IEnumerable<RoomScript>> GetAsync(Guid groupId)
         {
             using (var database = new Database("ConnectionString"))
             {
-                var sql = "select * from RoomScript where GroupId = @0";
-                return await database.FetchAsync<RoomScript>(sql, group.Id);
+                const string sql = "select * from RoomScript where GroupId = @0";
+                return await database.FetchAsync<RoomScript>(sql, groupId);
             }
         }
 

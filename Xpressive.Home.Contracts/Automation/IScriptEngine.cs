@@ -1,9 +1,10 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 
 namespace Xpressive.Home.Contracts.Automation
 {
     public interface IScriptEngine
     {
-        Task ExecuteAsync(string scriptId);
+        Task ExecuteAsync(Guid scriptId);
     }
 }

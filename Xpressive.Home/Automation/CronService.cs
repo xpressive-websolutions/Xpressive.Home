@@ -21,9 +21,9 @@ namespace Xpressive.Home.Automation
             _scheduledScriptRepository = scheduledScriptRepository;
         }
 
-        public async Task<ScheduledScript> ScheduleAsync(string scriptId, string cronTab)
+        public async Task<ScheduledScript> ScheduleAsync(Guid scriptId, string cronTab)
         {
-            var id = Guid.NewGuid().ToString("n");
+            var id = Guid.NewGuid();
 
             Schedule(id, cronTab);
 
@@ -37,9 +37,9 @@ namespace Xpressive.Home.Automation
             };
         }
 
-        public async Task DeleteScheduleAsync(string id)
+        public async Task DeleteScheduleAsync(Guid id)
         {
-            _scheduler.DeleteJob(new JobKey(id));
+            _scheduler.DeleteJob(new JobKey(id.ToString("n")));
             await _scheduledScriptRepository.DeleteAsync(id);
         }
 
@@ -71,14 +71,14 @@ namespace Xpressive.Home.Automation
             await SchedulePersistedJobsAsync();
         }
 
-        private void Schedule(string id, string cronTab)
+        private void Schedule(Guid id, string cronTab)
         {
             var job = JobBuilder.Create<RecurrentScriptExecution>()
-                .WithIdentity(id)
+                .WithIdentity(id.ToString("n"))
                 .Build();
 
             var trigger = TriggerBuilder.Create()
-                .WithIdentity(id)
+                .WithIdentity(id.ToString("n"))
                 .WithCronSchedule(cronTab)
                 .Build();
 

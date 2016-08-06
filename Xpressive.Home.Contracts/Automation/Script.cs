@@ -1,3 +1,4 @@
+using System;
 using NPoco;
 
 namespace Xpressive.Home.Contracts.Automation
@@ -6,7 +7,7 @@ namespace Xpressive.Home.Contracts.Automation
     [PrimaryKey("Id", AutoIncrement = false)]
     public class Script
     {
-        public string Id { get; internal set; }
+        public Guid Id { get; internal set; }
 
         public string Name { get; set; }
 

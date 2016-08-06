@@ -11,7 +11,7 @@ namespace Xpressive.Home.Automation
     {
         public async Task SaveAsync(Script script)
         {
-            if (string.IsNullOrEmpty(script.Id))
+            if (Guid.Empty.Equals(script.Id))
             {
                 await InsertAsync(script);
             }
@@ -21,7 +21,7 @@ namespace Xpressive.Home.Automation
             }
         }
 
-        public async Task<Script> GetAsync(string id)
+        public async Task<Script> GetAsync(Guid id)
         {
             using (var database = new Database("ConnectionString"))
             {
@@ -29,10 +29,10 @@ namespace Xpressive.Home.Automation
             }
         }
 
-        public async Task<IEnumerable<Script>> GetAsync(IEnumerable<string> ids)
+        public async Task<IEnumerable<Script>> GetAsync(IEnumerable<Guid> ids)
         {
             var scripts = await GetAsync();
-            var scriptIds = new HashSet<string>(ids, StringComparer.Ordinal);
+            var scriptIds = new HashSet<Guid>(ids);
             return scripts.Where(s => scriptIds.Contains(s.Id));
         }
 
@@ -44,7 +44,7 @@ namespace Xpressive.Home.Automation
             }
         }
 
-        public async Task DeleteAsync(string id)
+        public async Task DeleteAsync(Guid id)
         {
             using (var database = new Database("ConnectionString"))
             {
@@ -67,7 +67,7 @@ namespace Xpressive.Home.Automation
 
         private async Task InsertAsync(Script script)
         {
-            script.Id = Guid.NewGuid().ToString("n");
+            script.Id = Guid.NewGuid();
 
             using (var database = new Database("ConnectionString"))
             {

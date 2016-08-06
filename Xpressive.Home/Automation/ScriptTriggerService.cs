@@ -26,7 +26,7 @@ namespace Xpressive.Home.Automation
             }
         }
 
-        public async Task<IEnumerable<TriggeredScript>> GetTriggersByScriptAsync(string scriptId)
+        public async Task<IEnumerable<TriggeredScript>> GetTriggersByScriptAsync(Guid scriptId)
         {
             using (var database = new Database("ConnectionString"))
             {
@@ -35,11 +35,11 @@ namespace Xpressive.Home.Automation
             }
         }
 
-        public async Task<TriggeredScript> AddTriggerAsync(string scriptId, string variable)
+        public async Task<TriggeredScript> AddTriggerAsync(Guid scriptId, string variable)
         {
             var triggeredScript = new TriggeredScript
             {
-                Id = Guid.NewGuid().ToString("n"),
+                Id = Guid.NewGuid(),
                 ScriptId = scriptId,
                 Variable = variable
             };
@@ -52,7 +52,7 @@ namespace Xpressive.Home.Automation
             return triggeredScript;
         }
 
-        public async Task DeleteTriggerAsync(string id)
+        public async Task DeleteTriggerAsync(Guid id)
         {
             using (var database = new Database("ConnectionString"))
             {

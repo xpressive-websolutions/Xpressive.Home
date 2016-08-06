@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Quartz;
@@ -30,7 +31,13 @@ namespace Xpressive.Home.Automation
 
         private async Task<IJob> FindJobAsync(string id)
         {
-            var scheduledScript = await _repository.GetAsync(id);
+            Guid guid;
+            if (!Guid.TryParse(id, out guid))
+            {
+                return null;
+            }
+
+            var scheduledScript = await _repository.GetAsync(guid);
 
             if (scheduledScript == null)
             {

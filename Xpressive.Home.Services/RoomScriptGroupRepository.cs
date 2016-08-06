@@ -42,7 +42,7 @@ namespace Xpressive.Home.Services
 
         public async Task DeleteAsync(RoomScriptGroup group)
         {
-            var scripts = await _roomScriptRepository.GetAsync(group);
+            var scripts = await _roomScriptRepository.GetAsync(group.Id);
 
             using (var database = new Database("ConnectionString"))
             {

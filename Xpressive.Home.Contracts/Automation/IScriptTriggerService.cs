@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -7,10 +8,10 @@ namespace Xpressive.Home.Contracts.Automation
     {
         Task<IEnumerable<TriggeredScript>> GetTriggersAsync();
         Task<IEnumerable<TriggeredScript>> GetTriggersByVariableAsync(string variable);
-        Task<IEnumerable<TriggeredScript>> GetTriggersByScriptAsync(string scriptId);
+        Task<IEnumerable<TriggeredScript>> GetTriggersByScriptAsync(Guid scriptId);
 
-        Task<TriggeredScript> AddTriggerAsync(string scriptId, string variable);
+        Task<TriggeredScript> AddTriggerAsync(Guid scriptId, string variable);
 
-        Task DeleteTriggerAsync(string id);
+        Task DeleteTriggerAsync(Guid id);
     }
 }

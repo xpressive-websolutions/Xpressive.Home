@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using NPoco;
@@ -7,7 +8,7 @@ namespace Xpressive.Home.Automation
 {
     internal class ScheduledScriptRepository : IScheduledScriptRepository
     {
-        public async Task InsertAsync(string jobId, string scriptId, string cronTab)
+        public async Task InsertAsync(Guid jobId, Guid scriptId, string cronTab)
         {
             using (var database = new Database("ConnectionString"))
             {
@@ -20,7 +21,7 @@ namespace Xpressive.Home.Automation
             }
         }
 
-        public async Task DeleteAsync(string id)
+        public async Task DeleteAsync(Guid id)
         {
             using (var database = new Database("ConnectionString"))
             {
@@ -41,7 +42,7 @@ namespace Xpressive.Home.Automation
             }
         }
 
-        public async Task<ScheduledScript> GetAsync(string id)
+        public async Task<ScheduledScript> GetAsync(Guid id)
         {
             using (var database = new Database("ConnectionString"))
             {

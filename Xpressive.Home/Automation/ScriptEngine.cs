@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Xpressive.Home.Contracts.Automation;
@@ -16,7 +17,7 @@ namespace Xpressive.Home.Automation
             _scriptObjectProviders = scriptObjectProviders.ToList();
         }
 
-        public async Task ExecuteAsync(string scriptId)
+        public async Task ExecuteAsync(Guid scriptId)
         {
             var script = await _scriptRepository.GetAsync(scriptId);
             Execute(script);

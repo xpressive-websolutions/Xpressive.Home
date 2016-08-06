@@ -49,7 +49,7 @@ namespace Xpressive.Home.Services
 
             foreach (var group in groups)
             {
-                scripts.AddRange(await _roomScriptRepository.GetAsync(group));
+                scripts.AddRange(await _roomScriptRepository.GetAsync(group.Id));
             }
 
             using (var database = new Database("ConnectionString"))
