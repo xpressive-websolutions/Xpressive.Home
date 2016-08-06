@@ -3,7 +3,7 @@ html,
 body {
   height: 100%;
 }
-body[xh-dashboard] {
+body {
     background-color: transparent;
     background: linear-gradient(rgba(25, 25, 25, 0.5), rgba(25, 25, 25, 0.5)), url("/styles/bg.jpg") no-repeat center center fixed;
     -webkit-background-size: cover;
@@ -29,14 +29,36 @@ body[xh-dashboard] {
       color: #fff;
     }
 
+    .dropdown-menu>li>a,
+    .dropdown-menu>li>a:active,
+    .dropdown-menu>li>a:hover {
+        color: #fff;
+        background-color: #e8e8e8;
+        background-image: none;
+    }
+
+    ul.dropdown-menu {
+        background-color: #e8e8e8;
+        background-image: none;
+    }
+
     /* Custom default button */
+    div.btn-blog>.btn-default,
     .btn-default,
     .btn-default:hover,
-    .btn-default:focus {
-      color: #333;
+    .btn-default:focus,
+    .btn-default:active,
+    .btn-default:active:hover,
+    .open>.dropdown-toggle.btn-default,
+    .open>.dropdown-toggle.btn-default:hover,
+    .open>.dropdown-toggle.btn-default:focus,
+    .open>.dropdown-toggle.btn-default:active,
+    .open>.dropdown-toggle.btn-default:active:hover {
+      color: #fff;
       text-shadow: none; /* Prevent inheritence from `body` */
-      background-color: #fff;
+      background-color: rgba(255, 255, 255, 0.4);
       border: 1px solid #fff;
+      background-image: none;
     }
 
     /* Extra markup and styles for table-esque vertical and horizontal centering */
@@ -131,7 +153,7 @@ body[xh-dashboard] {
 }
 
 @media (min-width: 768px) {
-    body[xh-dashboard] {
+    body {
         .masthead-brand {
             float: left;
         }
@@ -160,7 +182,7 @@ body[xh-dashboard] {
  */
 
 @media (min-width: 768px) {
-    body[xh-dashboard] {
+    body {
         /* Pull out the header and footer */
         .masthead {
             position: fixed;
