@@ -1,0 +1,40 @@
+﻿
+<section class="content-header">
+    <h1>
+        Devices
+    </h1>
+</section>
+
+<section class="content" style="min-height: 20px;">
+    <div class="btn-group" uib-dropdown>
+        <button id="single-button" type="button" class="btn btn-default" uib-dropdown-toggle>
+            Add device <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu" uib-dropdown-menu role="menu">
+            <li ng-repeat="g in gatewaysWithFactory" role="menuitem"><a ng-click="addDevice(g)">{{ g }}</a></li>
+        </ul>
+    </div>
+</section>
+
+<section class="content" ng-repeat="gateway in gateways" style="min-height: 20px;" ng-if="gateway.devices.length > 0" >
+
+    <h4>
+        {{ gateway.name }}
+        <span class="label label-default">{{ gateway.devices.length }}</span>
+    </h4>
+
+    <div class="row">
+        <div class="col-md-3 col-sm-6 col-xs-12" ng-repeat="device in gateway.devices">
+            <div class="info-box">
+                <span class="info-box-icon bg-aqua"><i class="fa fa-envelope-o"></i></span>
+
+                <div class="info-box-content">
+                    <span class="info-box-text">{{ device.name }}</span>
+                    <span class="info-box-text">Bookmarks1</span>
+                    <span class="info-box-number">1,410</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</section>

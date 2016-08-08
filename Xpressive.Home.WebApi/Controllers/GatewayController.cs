@@ -26,9 +26,13 @@ namespace Xpressive.Home.WebApi.Controllers
         }
 
         [HttpGet, Route("")]
-        public IEnumerable<string> GetGatewayNames()
+        public IEnumerable<GatewayDto> GetGateways()
         {
-            return _gateways.Keys;
+            return _gateways.Select(g => new GatewayDto
+            {
+                Name = g.Key,
+                CanCreateDevices = g.Value.CanCreateDevices
+            });
         }
 
         [HttpGet, Route("{gatewayName}")]
@@ -73,6 +77,7 @@ namespace Xpressive.Home.WebApi.Controllers
             {
                 var device = gateway.CreateEmptyDevice();
                 var properties = GetDeviceProperties(device);
+                dto = dto.ToDictionary(k => k.Key, k => k.Value, StringComparer.OrdinalIgnoreCase);
 
                 foreach (var property in properties)
                 {
@@ -92,7 +97,7 @@ namespace Xpressive.Home.WebApi.Controllers
                 }
             }
 
-            return InternalServerError();
+            return BadRequest();
         }
 
         [HttpPut, Route("{gatewayName}/{deviceId}/{actionName}")]
@@ -154,6 +159,12 @@ namespace Xpressive.Home.WebApi.Controllers
             }
 
             return result;
+        }
+
+        public class GatewayDto
+        {
+            public string Name { get; set; }
+            public bool CanCreateDevices { get; set; }
         }
 
         public class ActionDto

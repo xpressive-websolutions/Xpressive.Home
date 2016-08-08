@@ -4,7 +4,7 @@ body {
 }
 body {
   background-color: transparent;
-  background: linear-gradient(rgba(25, 25, 25, 0.5), rgba(25, 25, 25, 0.5)), url("/styles/bg.jpg") no-repeat center center fixed;
+  background: linear-gradient(rgba(25, 25, 25, 0.5), rgba(25, 25, 25, 0.5)), url("/styles/photo-1452794268575-9819db203a5a.jpg") no-repeat center center fixed;
   -webkit-background-size: cover;
   -moz-background-size: cover;
   -o-background-size: cover;
@@ -58,7 +58,7 @@ body .open > .dropdown-toggle.btn-default:active:hover {
   text-shadow: none;
   /* Prevent inheritence from `body` */
   background-color: rgba(255, 255, 255, 0.4);
-  border: 1px solid #fff;
+  border: none;
   background-image: none;
 }
 body .site-wrapper {

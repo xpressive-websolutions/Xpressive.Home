@@ -139,9 +139,12 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="app\app.js" />
-    <Content Include="app\controllers\dateTimeController.js" />
+    <Content Include="admin.html" />
+    <Content Include="app\admin.js" />
+    <Content Include="app\admin\devices.html" />
+    <Content Include="app\dashboard.js" />
     <Content Include="index.html" />
+    <Content Include="Scripts\adminlte.js" />
     <Content Include="Styles\AdminLTE.min.css" />
     <Content Include="Styles\Custom.css">
       <DependentUpon>Custom.less</DependentUpon>
@@ -151,9 +154,7 @@
     </Content>
     <Content Include="Styles\skin-black-light.min.css" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Scripts\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

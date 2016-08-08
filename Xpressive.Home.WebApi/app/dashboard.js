@@ -1,16 +1,18 @@
-﻿(function () {
+﻿(function (jq) {
 
-    var xh = angular.module("xpressivehome");
+    var xh = angular.module("xpressivehome", ['ngRoute', 'ui.bootstrap']);
 
-    xh.controller("dateTimeController", ['$log', '$interval', function($log, $interval) {
+    //var xh = angular.module("xpressivehome");
+
+    xh.controller("dateTimeController", ['$log', '$interval', function ($log, $interval) {
         var c = this;
 
-        $interval(function() {
+        $interval(function () {
             c.date = new Date();
         }, 1000);
     }]);
 
-    xh.controller("roomController", ["$log", "$http", function($log, $http) {
+    xh.controller("roomController", ["$log", "$http", function ($log, $http) {
         var c = this;
 
         c.rooms = [];
@@ -19,38 +21,33 @@
 
         c.selectRoom = function (room) {
             c.room = room;
-            c.groups = [];
 
             $http.get("/api/v1/roomscriptgroup/" + room.id, { cache: false }).then(function (result) {
                 var groups = _.sortBy(result.data, function (g) { return g.sortOrder; });
 
-                _.each(groups, function(g) {
+                _.each(groups, function (g) {
                     g.scripts = [];
                 });
 
                 c.groups = groups;
 
-                _.each(c.groups, function(g) {
-                    $http.get("/api/v1/script/group/" + g.id, { cache: false }).then(function(scripts) {
+                _.each(c.groups, function (g) {
+                    $http.get("/api/v1/script/group/" + g.id, { cache: false }).then(function (scripts) {
                         g.scripts = scripts.data;
-
-                        g.scripts = [{ id: 'asdf', name: 'demo' }];
-
-                        $log.debug(angular.toJson(g.scripts));
                     });
                 });
             });
         };
 
-        c.selectScript = function(script) {
+        c.selectScript = function (script) {
             $http.post("/api/v1/script/execute/" + script.id);
         };
 
         c.toggle = function (caller) {
-            var offsets = jQuery('#' + caller)[0].getBoundingClientRect();
-            var dd = jQuery('#' + caller).find(".dropdown-menu")[0];
-            var maxHeight = jQuery(window).height();
-            var height = jQuery(dd).actualHeight() * 1.3 + 12;
+            var offsets = jq('#' + caller)[0].getBoundingClientRect();
+            var dd = jq('#' + caller).find(".dropdown-menu")[0];
+            var maxHeight = jq(window).height();
+            var height = jq(dd).actualHeight() * 1.3 + 12;
             var hp = "90%";
             var tp = "5%";
 
@@ -78,13 +75,13 @@
         });
     }]);
 
-    xh.controller("weatherController", ["$log", "$http", function($log, $http) {
+    xh.controller("weatherController", ["$log", "$http", function ($log, $http) {
         var c = this;
 
         c.isEnabled = false;
 
-        $http.get("/api/v1/gateway", { cache: false }).then(function(gateways) {
-            if (!_.find(gateways.data, function(g) { return g === "Weather"; })) {
+        $http.get("/api/v1/gateway", { cache: false }).then(function (gateways) {
+            if (!_.find(gateways.data, function (g) { return g === "Weather"; })) {
                 return;
             }
 
@@ -95,7 +92,7 @@
                 if (devices.data) {
                     var device = devices.data[0];
 
-                    $http.get("/api/v1/variable/Weather/" + device.id, { cache: false }).then(function(variables) {
+                    $http.get("/api/v1/variable/Weather/" + device.id, { cache: false }).then(function (variables) {
                         //_.each(variables.data, function(v) {
                         //    $log.debug(v.name + "=" + v.value);
                         //});
@@ -105,24 +102,23 @@
         });
     }]);
 
-    xh.controller("musicController", ["$log", "$http", function($log, $http) {
+    xh.controller("musicController", ["$log", "$http", function ($log, $http) {
         var c = this;
 
         c.isEnabled = false;
 
         $http.get("/api/v1/gateway", { cache: false }).then(function (gateways) {
-            if (!_.find(gateways.data, function(g) { return g === "Sonos"; })) {
+            if (!_.find(gateways.data, function (g) { return g === "Sonos"; })) {
                 return;
             }
 
             c.isEnabled = true;
             $log.debug("Music is enabled");
 
-            $http.get("/api/v1/gateway/Sonos", { cache: false }).then(function(devices) {
+            $http.get("/api/v1/gateway/Sonos", { cache: false }).then(function (devices) {
                 $log.debug(angular.toJson(devices.data));
             });
         });
     }]);
 
-})();
-
+})($);
