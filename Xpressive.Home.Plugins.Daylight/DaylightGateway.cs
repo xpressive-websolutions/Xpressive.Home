@@ -25,6 +25,8 @@ namespace Xpressive.Home.Plugins.Daylight
 
         public async Task StartObservationAsync()
         {
+            await Task.Delay(TimeSpan.FromSeconds(5));
+
             await LoadDevicesAsync((id, name) => new DaylightDevice { Id = id, Name = name });
 
             while (true)

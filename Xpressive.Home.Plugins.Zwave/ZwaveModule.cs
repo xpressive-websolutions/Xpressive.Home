@@ -21,7 +21,7 @@ namespace Xpressive.Home.Plugins.Zwave
             builder.RegisterType<ZwaveGateway>()
                 .As<IGateway>()
                 .SingleInstance()
-                .OnActivating(async g => await g.Instance.Start());
+                .OnActivated(async g => await g.Instance.Start());
 
             base.Load(builder);
         }

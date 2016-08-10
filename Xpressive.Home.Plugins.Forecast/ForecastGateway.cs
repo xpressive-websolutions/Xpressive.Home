@@ -31,6 +31,8 @@ namespace Xpressive.Home.Plugins.Forecast
 
         public async Task StartAsync()
         {
+            await Task.Delay(TimeSpan.FromSeconds(5));
+
             await LoadDevicesAsync((id, name) => new ForecastDevice { Id = id, Name = name });
 
             while (true)

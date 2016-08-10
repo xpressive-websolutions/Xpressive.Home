@@ -49,6 +49,8 @@ namespace Xpressive.Home.Plugins.Lifx
 
         public async Task FindBulbsAsync()
         {
+            await Task.Delay(TimeSpan.FromSeconds(5));
+
             if (string.IsNullOrEmpty(_token))
             {
                 return;

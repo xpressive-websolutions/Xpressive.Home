@@ -42,7 +42,7 @@ namespace Xpressive.Home
 
             builder.RegisterType<CronService>()
                 .As<ICronService>()
-                .OnActivating(async e => await e.Instance.InitAsync())
+                .OnActivated(async e => await e.Instance.InitAsync())
                 .SingleInstance();
 
             base.Load(builder);

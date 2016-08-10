@@ -10,7 +10,7 @@ namespace Xpressive.Home.Plugins.Lifx
             builder.RegisterType<LifxGateway>()
                 .As<IGateway>()
                 .SingleInstance()
-                .OnActivating(async h => await h.Instance.FindBulbsAsync());
+                .OnActivated(async h => await h.Instance.FindBulbsAsync());
 
             base.Load(builder);
         }

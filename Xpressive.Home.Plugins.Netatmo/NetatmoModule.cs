@@ -10,7 +10,7 @@ namespace Xpressive.Home.Plugins.Netatmo
             builder.RegisterType<NetatmoGateway>()
                 .As<IGateway>()
                 .SingleInstance()
-                .OnActivating(async g => await g.Instance.ScanDeviceAndDataAsync());
+                .OnActivated(async g => await g.Instance.ScanDeviceAndDataAsync());
 
             base.Load(builder);
         }

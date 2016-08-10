@@ -50,6 +50,8 @@ namespace Xpressive.Home.Plugins.Netatmo
 
         public async Task ScanDeviceAndDataAsync()
         {
+            await Task.Delay(TimeSpan.FromSeconds(5));
+
             if (!_isValidConfiguration)
             {
                 _messageQueue.Publish(new NotifyUserMessage("Add netatmo configuration to config file."));

@@ -52,6 +52,8 @@ namespace Xpressive.Home.Plugins.MyStrom
 
         public async Task Observe()
         {
+            await Task.Delay(TimeSpan.FromSeconds(5));
+
             var previousPowers = new Dictionary<string, double>();
 
             while (true)

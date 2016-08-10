@@ -54,6 +54,8 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 
         public async Task ObserveBulbStatusAsync()
         {
+            await Task.Delay(TimeSpan.FromSeconds(5));
+
             while (true)
             {
                 List<PhilipsHueDevice> bulbs;
