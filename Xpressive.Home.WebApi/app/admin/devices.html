@@ -1,5 +1,4 @@
-﻿
-<section class="content-header">
+﻿<section class="content-header">
     <h1>
         Devices
     </h1>
@@ -16,7 +15,7 @@
     </div>
 </section>
 
-<section class="content" ng-repeat="gateway in gateways" style="min-height: 20px;" ng-if="gateway.devices.length > 0" >
+<section class="content" ng-repeat="gateway in gateways" style="min-height: 20px;" ng-if="gateway.devices.length > 0">
 
     <h4>
         {{ gateway.name }}
@@ -25,11 +24,11 @@
 
     <div class="row">
         <div class="col-md-3 col-sm-6 col-xs-12" ng-repeat="device in gateway.devices">
-            <div class="info-box">
+            <div class="info-box" ng-click="showVariables(gateway.name, device.id)">
                 <span class="info-box-icon bg-aqua"><i class="fa fa-envelope-o"></i></span>
 
                 <div class="info-box-content">
-                    <span class="info-box-text">{{ device.name }}</span>
+                    <span class="info-box-text" title="{{ device.name }}">{{ device.name }}</span>
                     <span class="info-box-text">Bookmarks1</span>
                     <span class="info-box-number">1,410</span>
                 </div>

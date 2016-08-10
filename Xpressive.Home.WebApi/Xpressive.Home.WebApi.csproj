@@ -141,7 +141,12 @@
   <ItemGroup>
     <Content Include="admin.html" />
     <Content Include="app\admin.js" />
+    <Content Include="app\admin\script.html" />
+    <Content Include="app\admin\singleInputDialog.html" />
+    <Content Include="app\admin\createDeviceDialog.html" />
     <Content Include="app\admin\devices.html" />
+    <Content Include="app\admin\scripts.html" />
+    <Content Include="app\admin\variables.html" />
     <Content Include="app\dashboard.js" />
     <Content Include="index.html" />
     <Content Include="Scripts\adminlte.js" />

@@ -234,6 +234,25 @@ namespace Xpressive.Home.WebApi.Controllers
             return scripts.Select(s => new NameIdDto { Id = s.Id.ToString("n"), Name = s.Name });
         }
 
+        [HttpGet, Route("{id}")]
+        public async Task<IHttpActionResult> Get(string id)
+        {
+            Guid guid;
+            if (Guid.TryParse(id, out guid))
+            {
+                var script = await _repository.GetAsync(guid);
+
+                if (script == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(script);
+            }
+
+            return BadRequest();
+        }
+
         [HttpGet, Route("group/{scriptGroupId}")]
         public async Task<IEnumerable<NameIdDto>> GetByScriptGroup(string scriptGroupId)
         {
@@ -253,6 +272,46 @@ namespace Xpressive.Home.WebApi.Controllers
                     Id = s.ScriptId.ToString("n"),
                     Name = s.Name
                 });
+        }
+
+        [HttpPost, Route("")]
+        public async Task<IHttpActionResult> Create([FromBody] string name)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                return BadRequest();
+            }
+
+            var script = new Script
+            {
+                Name = name,
+                JavaScript = string.Empty
+            };
+
+            await _repository.SaveAsync(script);
+
+            return Ok(script);
+        }
+
+        [HttpPost, Route("{id}")]
+        public async Task Update(string id, [FromBody] Script script)
+        {
+            Guid guid;
+            if (!Guid.TryParse(id, out guid) || script == null)
+            {
+                return;
+            }
+
+            var persisted = await _repository.GetAsync(guid);
+            if (persisted == null)
+            {
+                return;
+            }
+
+            persisted.Name = script.Name;
+            persisted.JavaScript = script.JavaScript;
+
+            await _repository.SaveAsync(persisted);
         }
         
         [HttpPost, Route("execute/{scriptId}")]

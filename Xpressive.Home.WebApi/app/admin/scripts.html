@@ -1,0 +1,32 @@
+﻿<section class="content-header">
+    <h1>
+        Scripts
+    </h1>
+</section>
+
+<section class="content" style="min-height: 20px;">
+    <button type="button" class="btn btn-default" ng-click="createScript()">
+        Add Script
+    </button>
+</section>
+
+<section class="content" style="min-height: 20px;">
+    <div class="row">
+        <div class="col-md-12">
+
+            <div class="box">
+                <table class="table table-striped">
+                    <tbody>
+                        <tr>
+                            <th>Name</th>
+                        </tr>
+                        <tr ng-repeat="script in scripts">
+                            <td ng-click="openScript(script.id)">{{::script.name }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</section>
