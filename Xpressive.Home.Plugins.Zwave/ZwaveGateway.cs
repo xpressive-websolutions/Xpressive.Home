@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.IO.Ports;
 using System.Linq;
 using System.Threading.Tasks;
 using log4net;
@@ -48,30 +49,46 @@ namespace Xpressive.Home.Plugins.Zwave
 
         internal async Task Start()
         {
+            await Task.Delay(TimeSpan.FromSeconds(5));
+
             if (string.IsNullOrEmpty(_comPortName))
             {
                 _messageQueue.Publish(new NotifyUserMessage("Add z-wave configuration (port) to config file."));
                 return;
             }
-            
-            await _library.Load();
 
-            _controller = new ZWaveController(_comPortName);
-            _controller.Open();
-            _controller.Channel.NodeEventReceived += (s, e) => ContinueNodeQueueWorker(e.NodeID);
-
-            var lastNodeDiscovery = DateTime.MinValue;
-
-            while (_isRunning)
+            var validComPorts = new HashSet<string>(SerialPort.GetPortNames(), StringComparer.Ordinal);
+            if (!validComPorts.Contains(_comPortName))
             {
-                await Task.Delay(10);
+                _messageQueue.Publish(new NotifyUserMessage("COM Port for z-wave configuration is invalid."));
+                return;
+            }
 
-                if ((DateTime.UtcNow - lastNodeDiscovery).TotalHours > 1)
+            try
+            {
+                await _library.Load();
+
+                _controller = new ZWaveController(_comPortName);
+                _controller.Open();
+                _controller.Channel.NodeEventReceived += (s, e) => ContinueNodeQueueWorker(e.NodeID);
+
+                var lastNodeDiscovery = DateTime.MinValue;
+
+                while (_isRunning)
                 {
-                    lastNodeDiscovery = DateTime.UtcNow;
-                    _log.Debug("Discover Nodes");
-                    await DiscoverNodes();
+                    await Task.Delay(10);
+
+                    if ((DateTime.UtcNow - lastNodeDiscovery).TotalHours > 1)
+                    {
+                        lastNodeDiscovery = DateTime.UtcNow;
+                        _log.Debug("Discover Nodes");
+                        await DiscoverNodes();
+                    }
                 }
+            }
+            catch (Exception e)
+            {
+                _log.Error(e.Message, e);
             }
         }
 
@@ -195,7 +212,7 @@ namespace Xpressive.Home.Plugins.Zwave
                     commandClassHandler.Dispose();
                 }
 
-                _controller.Close();
+                _controller?.Close();
             }
 
             base.Dispose(disposing);
