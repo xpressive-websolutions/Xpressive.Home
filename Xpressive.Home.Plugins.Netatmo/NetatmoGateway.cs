@@ -95,51 +95,58 @@ namespace Xpressive.Home.Plugins.Netatmo
             {
                 foreach (var dataDevice in data.Body.Devices)
                 {
-                    var deviceName = dataDevice.StationName;
-                    var device = _devices.SingleOrDefault(d => d.Id.Equals(deviceName));
+                    var station = dataDevice.StationName;
+                    dataDevice.BatteryPercent = 100;
 
-                    if (device == null)
-                    {
-                        device = new NetatmoDevice(deviceName, deviceName);
-                        _devices.Add(device);
-                    }
+                    UpdateDevice(station, dataDevice);
 
-                    var module = dataDevice.ModuleName;
-                    PublishVariables(device, module, dataDevice.DashboardData, dataDevice.DataType);
-                    var batteryPercent = dataDevice.Modules.Min(m => m.BatteryPercent);
-
-                    foreach (var moduleDto in dataDevice.Modules)
+                    foreach (var module in dataDevice.Modules)
                     {
-                        PublishVariables(device, moduleDto.ModuleName, moduleDto.DashboardData, moduleDto.DataType);
-                    }
-
-                    if (batteryPercent > 85)
-                    {
-                        device.BatteryStatus = DeviceBatteryStatus.Full;
-                    }
-                    else if (batteryPercent > 25)
-                    {
-                        device.BatteryStatus = DeviceBatteryStatus.Good;
-                    }
-                    else
-                    {
-                        device.BatteryStatus = DeviceBatteryStatus.Low;
+                        UpdateDevice(station, module);
                     }
                 }
             }
         }
 
-        private void PublishVariables(IDevice device, string module, StationDashboardData dashboardData, List<string> dataTypes)
+        private void UpdateDevice(string station, IStationModule module)
         {
-            var properties = dashboardData.GetType().GetProperties();
+            var id = $"{station}-{module.ModuleName}";
+
+            var device = _devices.SingleOrDefault(d => d.Id.Equals(id));
+
+            if (device == null)
+            {
+                device = new NetatmoDevice(id, module.ModuleName);
+                _devices.Add(device);
+            }
+
+            PublishVariables(device, module);
+
+            if (module.BatteryPercent > 85)
+            {
+                device.BatteryStatus = DeviceBatteryStatus.Full;
+            }
+            else if (module.BatteryPercent > 25)
+            {
+                device.BatteryStatus = DeviceBatteryStatus.Good;
+            }
+            else
+            {
+                device.BatteryStatus = DeviceBatteryStatus.Low;
+            }
+        }
+
+        private void PublishVariables(IDevice device, IStationModule module)
+        {
+            var properties = module.DashboardData.GetType().GetProperties();
 
             foreach (var property in properties)
             {
-                if (dataTypes.Contains(property.Name))
+                if (module.DataType.Contains(property.Name))
                 {
-                    var name = property.Name.ToLowerInvariant();
-                    var value = (double) property.GetValue(dashboardData);
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, $"{module}_{name}", value));
+                    var name = property.Name[0] + property.Name.ToLowerInvariant().Substring(1);
+                    var value = (double) property.GetValue(module.DashboardData);
+                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, name, value));
                 }
             }
         }
@@ -175,7 +182,7 @@ namespace Xpressive.Home.Plugins.Netatmo
             return token;
         }
 
-        public class StationModuleDto
+        public class StationModuleDto : IStationModule
         {
             public string Type { get; set; }
             public StationDashboardData DashboardData { get; set; }
@@ -194,13 +201,22 @@ namespace Xpressive.Home.Plugins.Netatmo
             public List<StationDataDevice> Devices { get; set; }
         }
 
-        public class StationDataDevice
+        public class StationDataDevice : IStationModule
         {
             public string StationName { get; set; }
             public string ModuleName { get; set; }
             public StationDashboardData DashboardData { get; set; }
             public List<StationModuleDto> Modules { get; set; }
             public List<string> DataType { get; set; }
+            public int BatteryPercent { get; set; }
+        }
+
+        public interface IStationModule
+        {
+            string ModuleName { get; set; }
+            StationDashboardData DashboardData { get; set; }
+            List<string> DataType { get; set; }
+            int BatteryPercent { get; set; }
         }
 
         public class StationDashboardData
