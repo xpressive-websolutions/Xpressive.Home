@@ -31,13 +31,13 @@ namespace Xpressive.Home.Plugins.Daylight
 
             while (true)
             {
-                await Task.Delay(TimeSpan.FromMinutes(1));
-
                 foreach (var device in Devices.Cast<DaylightDevice>())
                 {
                     var daylight = IsDaylight(device);
                     _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsDaylight", daylight));
                 }
+
+                await Task.Delay(TimeSpan.FromMinutes(1));
             }
         }
 

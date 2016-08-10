@@ -19,7 +19,7 @@ namespace Xpressive.Home.Plugins.Daylight
 
             if (utc.HasValue)
             {
-                return utc.Value.ToLocalTime().TimeOfDay;
+                return utc.Value.TimeOfDay;
             }
 
             return new TimeSpan(6, 0, 0);
@@ -39,7 +39,7 @@ namespace Xpressive.Home.Plugins.Daylight
 
             if (utc.HasValue)
             {
-                return utc.Value.ToLocalTime().TimeOfDay;
+                return utc.Value.TimeOfDay;
             }
 
             return new TimeSpan(18, 0, 0);
@@ -373,7 +373,7 @@ namespace Xpressive.Home.Plugins.Daylight
                     minute = 0;
                     hour += 1;
                 }
-                return new DateTime(date.Year, date.Month, date.Day, (int)hour, (int)minute, (int)second);
+                return new DateTime(date.Year, date.Month, date.Day, (int)hour, (int)minute, (int)second, DateTimeKind.Utc);
             }
             return null;
         }
