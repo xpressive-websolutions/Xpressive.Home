@@ -48,6 +48,7 @@
       <Link>Properties\AssemblyInfo.shared.cs</Link>
     </Compile>
     <Compile Include="Automation\ICronService.cs" />
+    <Compile Include="Automation\IScheduledScriptRepository.cs" />
     <Compile Include="Automation\IScriptEngine.cs" />
     <Compile Include="Automation\IScriptObjectProvider.cs" />
     <Compile Include="Automation\IScriptRepository.cs" />

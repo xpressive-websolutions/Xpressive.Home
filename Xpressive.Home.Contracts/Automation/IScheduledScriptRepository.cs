@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Xpressive.Home.Contracts.Automation;
 
-namespace Xpressive.Home.Automation
+namespace Xpressive.Home.Contracts.Automation
 {
-    internal interface IScheduledScriptRepository
+    public interface IScheduledScriptRepository
     {
         Task InsertAsync(Guid jobId, Guid scriptId, string cronTab);
 
