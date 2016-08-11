@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
+using Autofac;
 using Quartz;
 using Quartz.Impl;
 using Quartz.Spi;
@@ -8,7 +8,7 @@ using Xpressive.Home.Contracts.Automation;
 
 namespace Xpressive.Home.Automation
 {
-    internal class CronService : ICronService
+    internal class CronService : IStartable, ICronService
     {
         private static readonly object _schedulerLock = new object();
         private static volatile IScheduler _scheduler;
@@ -25,9 +25,9 @@ namespace Xpressive.Home.Automation
         {
             var id = Guid.NewGuid();
 
-            Schedule(id, cronTab);
-
             await _scheduledScriptRepository.InsertAsync(id, scriptId, cronTab);
+
+            Schedule(id, cronTab);
 
             return new ScheduledScript
             {
@@ -43,12 +43,12 @@ namespace Xpressive.Home.Automation
             await _scheduledScriptRepository.DeleteAsync(id);
         }
 
-        public async Task<IEnumerable<ScheduledScript>> GetSchedulesAsync()
+        public void Start()
         {
-            return await _scheduledScriptRepository.GetAsync();
+            Task.Run(InitAsync);
         }
 
-        internal async Task InitAsync()
+        private async Task InitAsync()
         {
             if (_scheduler != null)
             {
