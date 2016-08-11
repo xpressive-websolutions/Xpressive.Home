@@ -50,9 +50,16 @@
                     </button>
                 </div>
                 <div class="box-body">
-
-                    tabelle
-
+                    <table class="table table-striped">
+                        <tbody>
+                            <tr>
+                                <th>Variable names</th>
+                            </tr>
+                            <tr ng-repeat="trigger in triggers">
+                                <td>{{::trigger.variable}}</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -65,9 +72,16 @@
                     </button>
                 </div>
                 <div class="box-body">
-
-                    tabelle
-
+                    <table class="table table-striped">
+                        <tbody>
+                            <tr>
+                                <th>Cron tab</th>
+                            </tr>
+                            <tr ng-repeat="schedule in schedules">
+                                <td>{{::schedule.cronTab}}</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

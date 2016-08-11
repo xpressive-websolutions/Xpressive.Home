@@ -195,12 +195,71 @@
     xha.controller("scriptDetailController", ["$scope", "$log", "$http", "$routeParams", "$uibModal", function($scope, $log, $http, $routeParams, $uibModal) {
         var id = $routeParams.id;
 
+        $scope.triggers = [];
+        $scope.schedules = [];
+
+        var getTriggers = function() {
+            $http.get("/api/v1/trigger/" + id, { cache: false }).then(function (result) {
+                $scope.triggers = result.data;
+            });
+        };
+
+        var getSchedules = function() {
+            $http.get("/api/v1/schedule/" + id, { cache: false }).then(function (result) {
+                $scope.schedules = result.data;
+            });
+        };
+
         $http.get("/api/v1/script/" + id, { cache: false }).then(function(result) {
             $scope.script = result.data;
         });
 
-        $scope.save = function () {
+        getTriggers();
+        getSchedules();
+
+        $scope.save = function() {
             $http.post("/api/v1/script/" + id, $scope.script);
+        };
+
+        $scope.addTrigger = function() {
+            var modal = $uibModal.open({
+                animation: false,
+                templateUrl: "/app/admin/singleInputDialog.html",
+                controller: "singleInputController",
+                resolve: {
+                    caption: function() {
+                        return "Add Trigger";
+                    },
+                    label: function() {
+                        return "Variable name";
+                    }
+                }
+            });
+
+            modal.result.then(function(result) {
+                $http.post("/api/v1/trigger/" + id, "'" + result + "'").then(getTriggers);
+            });
+
+        };
+
+        $scope.addSchedule = function() {
+            var modal = $uibModal.open({
+                animation: false,
+                templateUrl: "/app/admin/singleInputDialog.html",
+                controller: "singleInputController",
+                resolve: {
+                    caption: function() {
+                        return "Add Schedule";
+                    },
+                    label: function() {
+                        return "Cron tab";
+                    }
+                }
+            });
+
+            modal.result.then(function(result) {
+                $http.post("/api/v1/schedule/" + id, "'" + result + "'").then(getSchedules);
+            });
         };
     }]);
 
