@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using NPoco;
 using Xpressive.Home.Contracts.Rooms;
@@ -13,7 +14,8 @@ namespace Xpressive.Home.Services
             using (var database = new Database("ConnectionString"))
             {
                 const string sql = "select * from RoomScript where GroupId = @0";
-                return await database.FetchAsync<RoomScript>(sql, groupId);
+                var scripts = await database.FetchAsync<RoomScript>(sql, groupId);
+                return scripts.OrderBy(s => s.Name, StringComparer.OrdinalIgnoreCase);
             }
         }
 

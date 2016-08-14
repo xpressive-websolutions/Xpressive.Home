@@ -116,6 +116,7 @@
       <Link>Properties\AssemblyInfo.shared.cs</Link>
     </Compile>
     <Compile Include="Controllers\RoomController.cs" />
+    <Compile Include="Controllers\RoomScriptController.cs" />
     <Compile Include="Controllers\RoomScriptGroupController.cs" />
     <Compile Include="Controllers\ScriptController.cs" />
     <Compile Include="Controllers\ScriptSchedulerController.cs" />
@@ -147,7 +148,11 @@
   <ItemGroup>
     <Content Include="admin.html" />
     <Content Include="app\admin.js" />
+    <Content Include="app\admin\room.html" />
+    <Content Include="app\admin\rooms.html" />
+    <Content Include="app\admin\roomScriptDialog.html" />
     <Content Include="app\admin\script.html" />
+    <Content Include="app\admin\scriptGroup.html" />
     <Content Include="app\admin\singleInputDialog.html" />
     <Content Include="app\admin\createDeviceDialog.html" />
     <Content Include="app\admin\devices.html" />

@@ -129,61 +129,6 @@
                             </ul>
                         </div>
 
-                        <!--<div class="btn-group btn-blog">
-                            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-                                <span class="selection"><h1><span class="glyphicon glyphicon-home"></span></h1><span>Wohnzimmer</span></span>
-                            </button>
-                            <ul class="dropdown-menu" role="menu">
-                                <li>
-                                    <a href="#">
-                                        <h1><span class="glyphicon glyphicon-home"></span></h1><span>Wohnzimmer</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="#">
-                                        <h1><span class="glyphicon glyphicon-globe"></span></h1><span>Küche</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="#">
-                                        <h1><span class="glyphicon glyphicon-cutlery"></span></h1><span>Esszimmer</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="#">
-                                        <h1><span class="glyphicon glyphicon-globe"></span></h1><span>WC EG</span>
-                                    </a>
-                                </li>
-                                <li role="separator" class="divider"></li>
-                                <li>
-                                    <a href="#">
-                                        <h1><span class="glyphicon glyphicon-bed"></span></h1><span>Schlafzimmer</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="#">
-                                        <h1><span class="glyphicon glyphicon-globe"></span></h1><span>Kinderzimmer</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="#">
-                                        <h1><span class="glyphicon glyphicon-education"></span></h1><span>Büro</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="#">
-                                        <h1><span class="glyphicon glyphicon-globe"></span></h1><span>WC OG</span>
-                                    </a>
-                                </li>
-                                <li role="separator" class="divider"></li>
-                                <li>
-                                    <a href="#">
-                                        <h1><span class="glyphicon glyphicon-globe"></span></h1><span>Dachgeschoss</span>
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>-->
-
                         <div class="btn-group btn-blog" uib-dropdown ng-repeat="g in rc.groups" on-toggle="rc.toggle('g' + g.id)" id="{{ 'g' + g.id }}">
                             <button type="button" class="btn btn-default" uib-dropdown-toggle>
                                 <span class="selection">
@@ -217,10 +162,10 @@
     <script src="//seiyria.com/bootstrap-slider/js/bootstrap-slider.js"></script>
     <script>
 
-        $.fn.actualHeight = function () {
+        $.fn.actualHeight = function() {
             var height = 0;
 
-            $(this).find("li").each(function (i, s) {
+            $(this).find("li").each(function(i, s) {
                 var clone = $(s).clone();
                 clone.css("visibility", "hidden");
                 $('body').append(clone);

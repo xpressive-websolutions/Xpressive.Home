@@ -22,7 +22,10 @@ namespace Xpressive.Home.Services
         {
             using (var database = new Database("ConnectionString"))
             {
-                return await database.FetchAsync<Room>("select * from Room");
+                var rooms =  await database.FetchAsync<Room>("select * from Room");
+                return rooms
+                    .OrderBy(r => r.SortOrder)
+                    .ThenBy(r => r.Name, StringComparer.OrdinalIgnoreCase);
             }
         }
 

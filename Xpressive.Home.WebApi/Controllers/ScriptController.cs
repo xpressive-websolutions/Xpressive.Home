@@ -60,8 +60,7 @@ namespace Xpressive.Home.WebApi.Controllers
             var scripts = await _roomScriptRepository.GetAsync(groupId);
 
             return scripts
-                .OrderBy(s => s.SortOrder)
-                .ThenBy(s => s.Name)
+                .OrderBy(s => s.Name)
                 .Select(s => new NameIdDto
                 {
                     Id = s.ScriptId.ToString("n"),

@@ -22,7 +22,7 @@
         c.selectRoom = function (room) {
             c.room = room;
 
-            $http.get("/api/v1/roomscriptgroup/" + room.id, { cache: false }).then(function (result) {
+            $http.get("/api/v1/roomscriptgroup?roomId=" + room.id, { cache: false }).then(function (result) {
                 var groups = _.sortBy(result.data, function (g) { return g.sortOrder; });
 
                 _.each(groups, function (g) {

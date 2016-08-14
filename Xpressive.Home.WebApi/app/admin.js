@@ -1,4 +1,4 @@
-﻿(function () {
+﻿(function() {
 
     var xha = angular.module("admin", ["ngRoute", "ui.bootstrap", "ui.codemirror"]);
 
@@ -24,19 +24,23 @@
                 templateUrl: "/app/admin/rooms.html",
                 controller: "roomController"
             })
-            .when("/rooms/groups", {
-                templateUrl: "/app/admin/scriptgroups.html",
+            .when("/rooms/:id", {
+                templateUrl: "/app/admin/room.html",
+                controller: "roomDetailController"
+            })
+            .when("/group/:id", {
+                templateUrl: "/app/admin/scriptgroup.html",
                 controller: "scriptGroupController"
             });
     });
 
-    xha.filter("titlecase", function () {
-        return function (input) {
+    xha.filter("titlecase", function() {
+        return function(input) {
             return input.toUpperCase()[0] + input.substr(1);
         }
     });
 
-    xha.controller("navigationController", ["$rootScope", "$location", function ($rootScope, $location) {
+    xha.controller("navigationController", ["$rootScope", "$location", function($rootScope, $location) {
         var c = this;
 
         $rootScope.$on("$locationChangeSuccess", function() {
@@ -44,22 +48,22 @@
         });
     }]);
 
-    xha.controller("deviceController", ["$scope", "$log", "$http", "$location", "$uibModal", function ($scope, $log, $http, $location, $uibModal) {
+    xha.controller("deviceController", ["$scope", "$log", "$http", "$location", "$uibModal", function($scope, $log, $http, $location, $uibModal) {
         var map = {};
         $scope.gateways = [];
         $scope.gatewaysWithFactory = [];
 
-        var getDevices = function (gateway) {
-            $http.get("/api/v1/gateway/" + gateway.name, { cache: false }).then(function (deviceResult) {
-                var devices = _.sortBy(deviceResult.data, function (d) { return d.name; });
+        var getDevices = function(gateway) {
+            $http.get("/api/v1/gateway/" + gateway.name, { cache: false }).then(function(deviceResult) {
+                var devices = _.sortBy(deviceResult.data, function(d) { return d.name; });
                 gateway.devices = devices;
             });
         };
 
         $http.get("/api/v1/gateway", { cache: false }).then(function(result) {
-            var gateways = _.sortBy(result.data, function (g) { return g.name; });
+            var gateways = _.sortBy(result.data, function(g) { return g.name; });
 
-            _.each(gateways, function (g) {
+            _.each(gateways, function(g) {
                 var gateway = {
                     name: g.name,
                     canCreateDevices: g.canCreateDevices,
@@ -89,7 +93,7 @@
                     templateUrl: "/app/admin/createDeviceDialog.html",
                     controller: "createDeviceController",
                     resolve: {
-                        device: function () {
+                        device: function() {
                             return result.data;
                         },
                         gateway: function() {
@@ -132,8 +136,8 @@
             $scope.variables = result.data;
         });
 
-        $http.get("/api/v1/gateway/" + gateway, { cache: false }).then(function (result) {
-            var device = _.find(result.data, function (d) { return d.id === deviceId; });
+        $http.get("/api/v1/gateway/" + gateway, { cache: false }).then(function(result) {
+            var device = _.find(result.data, function(d) { return d.id === deviceId; });
             
             if (device) {
                 $scope.deviceName = device.name;
@@ -150,7 +154,7 @@
             $scope.scripts = result.data;
         });
 
-        $scope.openScript = function (id) {
+        $scope.openScript = function(id) {
             $location.path("/scripts/" + id);
         }
 
@@ -160,18 +164,18 @@
                 templateUrl: "/app/admin/singleInputDialog.html",
                 controller: "singleInputController",
                 resolve: {
-                    caption: function () {
+                    caption: function() {
                         return "Create Script";
                     },
-                    label: function () {
+                    label: function() {
                         return "Name";
                     }
                 }
             });
 
-            modal.result.then(function (script) {
-                $http.post("/api/v1/script", "'" + script + "'").then(function (result) {
-                    $scope.openScript(result.data.id.replace("-", ""));
+            modal.result.then(function(script) {
+                $http.post("/api/v1/script", "'" + script + "'").then(function(result) {
+                    $scope.openScript(result.data.id.replace(/-/g, ""));
                 });
             });
         };
@@ -183,11 +187,11 @@
 
         $scope.value = "";
 
-        $scope.ok = function () {
+        $scope.ok = function() {
             $uibModalInstance.close($scope.value);
         };
 
-        $scope.cancel = function () {
+        $scope.cancel = function() {
             $uibModalInstance.dismiss("cancel");
         };
     }]);
@@ -199,13 +203,13 @@
         $scope.schedules = [];
 
         var getTriggers = function() {
-            $http.get("/api/v1/trigger/" + id, { cache: false }).then(function (result) {
+            $http.get("/api/v1/trigger/" + id, { cache: false }).then(function(result) {
                 $scope.triggers = result.data;
             });
         };
 
         var getSchedules = function() {
-            $http.get("/api/v1/schedule/" + id, { cache: false }).then(function (result) {
+            $http.get("/api/v1/schedule/" + id, { cache: false }).then(function(result) {
                 $scope.schedules = result.data;
             });
         };
@@ -260,6 +264,192 @@
             modal.result.then(function(result) {
                 $http.post("/api/v1/schedule/" + id, "'" + result + "'").then(getSchedules);
             });
+        };
+    }]);
+
+    xha.controller("roomController", ["$scope", "$http", "$uibModal", "$location", function($scope, $http, $uibModal, $location) {
+        $scope.rooms = [];
+
+        var getRooms = function() {
+            $http.get("/api/v1/room", { cache: false }).then(function(result) {
+                $scope.rooms = result.data;
+
+                _.each($scope.rooms, function(r) {
+                    r.id = r.id.replace(/-/g, "");
+                    if (r.icon === "") {
+                        r.icon = "glyphicon glyphicon-align-justify";
+                    }
+                });
+            });
+        };
+
+        getRooms();
+
+        $scope.showRoom = function(id) {
+            $location.path("/rooms/" + id);
+        };
+
+        $scope.addRoom = function() {
+            var modal = $uibModal.open({
+                animation: false,
+                templateUrl: "/app/admin/singleInputDialog.html",
+                controller: "singleInputController",
+                resolve: {
+                    caption: function() {
+                        return "Add room";
+                    },
+                    label: function() {
+                        return "Name";
+                    }
+                }
+            });
+
+            modal.result.then(function(result) {
+                $http.post("/api/v1/room", "'" + result + "'").then(getRooms);
+            });
+        };
+    }]);
+
+    xha.controller("roomDetailController", ["$scope", "$log", "$http", "$routeParams", "$uibModal", "$location", function($scope, $log, $http, $routeParams, $uibModal, $location) {
+        var id = $routeParams.id;
+        $scope.room = {};
+        $scope.groups = [];
+
+        $http.get("/api/v1/room/" + id, { cache: false }).then(function(result) {
+            $scope.room = result.data;
+        });
+
+        $scope.save = function() {
+            $http.put("/api/v1/room", $scope.room);
+        };
+
+        var getGroups = function() {
+            $http.get("/api/v1/roomscriptgroup?roomId=" + id, { cache: false }).then(function(result) {
+                $scope.groups = result.data;
+            });
+        };
+
+        getGroups();
+
+        $scope.openGroup = function(groupId) {
+            groupId = groupId.replace(/-/g, "");
+            $location.path("/group/" + groupId);
+        };
+
+        $scope.addScriptGroup = function() {
+            var modal = $uibModal.open({
+                animation: false,
+                templateUrl: "/app/admin/singleInputDialog.html",
+                controller: "singleInputController",
+                resolve: {
+                    caption: function() {
+                        return "Add room script group";
+                    },
+                    label: function() {
+                        return "Name";
+                    }
+                }
+            });
+
+            modal.result.then(function(result) {
+                var group = {
+                    name: result
+                };
+                $http.post("/api/v1/roomscriptgroup/" + id, group).then(getGroups);
+            });
+        };
+    }]);
+
+    xha.controller("scriptGroupController", ["$scope", "$http", "$routeParams", "$uibModal", function($scope, $http, $routeParams, $uibModal) {
+        var id = $routeParams.id;
+        var allScripts = [];
+        $scope.group = {};
+        $scope.scripts = [];
+
+        var getScripts = function() {
+            $http.get("/api/v1/roomscript?groupId=" + id, { cache: false }).then(function(result) {
+                $scope.scripts = result.data;
+
+                _.each($scope.scripts, function(s) {
+                    s.id = s.id.replace(/-/g, "");
+                    s.scriptId = s.scriptId.replace(/-/g, "");
+                    s.script = _.find(allScripts, function (a) { return a.id === s.scriptId });
+                });
+            });
+        };
+
+        $http.get("/api/v1/roomscriptgroup/" + id).then(function(result) {
+            $scope.group = result.data;
+        });
+
+        $http.get("/api/v1/script", { cache: false }).then(function(result) {
+            allScripts = result.data;
+            getScripts();
+        });
+
+        getScripts();
+
+        $scope.addScript = function() {
+            var modal = $uibModal.open({
+                animation: false,
+                templateUrl: "/app/admin/roomScriptDialog.html",
+                controller: "roomScriptController",
+                resolve: {
+                    caption: function() {
+                        return "Add room script";
+                    },
+                    script: function() {
+                        return { };
+                    },
+                    scripts: function() {
+                        return allScripts;
+                    }
+                }
+            });
+
+            modal.result.then(function(result) {
+                result.scriptId = result.script.id;
+                result.groupId = id;
+                $http.post("/api/v1/roomscript", result).then(getScripts);
+            });
+        };
+
+        $scope.updateScript = function(script) {
+            var modal = $uibModal.open({
+                animation: false,
+                templateUrl: "/app/admin/roomScriptDialog.html",
+                controller: "roomScriptController",
+                resolve: {
+                    caption: function() {
+                        return "Update room script";
+                    },
+                    script: function() {
+                        return script;
+                    },
+                    scripts: function() {
+                        return allScripts;
+                    }
+                }
+            });
+
+            modal.result.then(function(result) {
+                result.scriptId = result.script.id;
+                $http.post("/api/v1/roomscript/" + result.id, result).then(getScripts);
+            });
+        };
+    }]);
+
+    xha.controller("roomScriptController", ["$scope", "$uibModalInstance", "caption", "script", "scripts", function($scope, $uibModalInstance, caption, script, scripts) {
+        $scope.script = script;
+        $scope.scripts = scripts;
+        $scope.caption = caption;
+
+        $scope.ok = function() {
+            $uibModalInstance.close($scope.script);
+        };
+
+        $scope.cancel = function() {
+            $uibModalInstance.dismiss("cancel");
         };
     }]);
 

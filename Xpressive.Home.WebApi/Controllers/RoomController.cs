@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Web.Http;
 using Xpressive.Home.Contracts.Rooms;
@@ -22,12 +23,30 @@ namespace Xpressive.Home.WebApi.Controllers
             return await _repository.GetAsync();
         }
 
-        [HttpPost, Route("")]
-        public async Task<Room> Create([FromBody] Room room)
+        [HttpGet, Route("{id}")]
+        public async Task<IHttpActionResult> Get(string id)
         {
-            room = new Room
+            Guid guid;
+            if (Guid.TryParse(id, out guid))
             {
-                Name = room.Name,
+                var rooms = await _repository.GetAsync();
+                var room = rooms.SingleOrDefault(r => r.Id.Equals(guid));
+
+                if (room != null)
+                {
+                    return Ok(room);
+                }
+            }
+
+            return NotFound();
+        }
+
+        [HttpPost, Route("")]
+        public async Task<Room> Create([FromBody] string name)
+        {
+            var room = new Room
+            {
+                Name = name,
                 Icon = string.Empty
             };
 

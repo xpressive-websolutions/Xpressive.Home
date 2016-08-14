@@ -19,8 +19,25 @@ namespace Xpressive.Home.WebApi.Controllers
             _roomRepository = roomRepository;
         }
 
-        [HttpGet, Route("{roomId}")]
-        public async Task<IEnumerable<RoomScriptGroup>> Get(string roomId)
+        [HttpGet, Route("{id}")]
+        public async Task<IHttpActionResult> Get(string id)
+        {
+            Guid guid;
+            if (Guid.TryParse(id, out guid))
+            {
+                var group = await _repository.GetAsync(guid);
+
+                if (group != null)
+                {
+                    return Ok(group);
+                }
+            }
+
+            return NotFound();
+        }
+
+        [HttpGet, Route("")]
+        public async Task<IEnumerable<RoomScriptGroup>> GetByRoom([FromUri] string roomId)
         {
             var rooms = await _roomRepository.GetAsync();
             var room = rooms.SingleOrDefault(r => r.Id.Equals(new Guid(roomId)));

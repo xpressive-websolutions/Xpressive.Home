@@ -11,7 +11,5 @@ namespace Xpressive.Home.Contracts.Rooms
         public Guid GroupId { get; set; }
         public Guid ScriptId { get; set; }
         public string Name { get; set; }
-        public int SortOrder { get; set; }
-        public string Icon { get; set; }
     }
 }

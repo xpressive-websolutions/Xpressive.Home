@@ -15,6 +15,14 @@ namespace Xpressive.Home.Services
             _roomScriptRepository = roomScriptRepository;
         }
 
+        public async Task<RoomScriptGroup> GetAsync(Guid id)
+        {
+            using (var database = new Database("ConnectionString"))
+            {
+                return await database.SingleOrDefaultByIdAsync<RoomScriptGroup>(id);
+            }
+        }
+
         public async Task<IEnumerable<RoomScriptGroup>> GetAsync(Room room)
         {
             using (var database = new Database("ConnectionString"))
