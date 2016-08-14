@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using Xpressive.Home.Contracts.Automation;
 using Xpressive.Home.Contracts.Gateway;
 
 namespace Xpressive.Home.Plugins.PhilipsHue
@@ -7,8 +8,11 @@ namespace Xpressive.Home.Plugins.PhilipsHue
     {
         protected override void Load(ContainerBuilder builder)
         {
+            builder.RegisterType<PhilipsHueScriptObjectProvider>().As<IScriptObjectProvider>();
+
             builder.RegisterType<PhilipsHueGateway>()
                 .As<IGateway>()
+                .As<IPhilipsHueGateway>()
                 .SingleInstance()
                 .OnActivated(async h => await h.Instance.ObserveBulbStatusAsync());
 

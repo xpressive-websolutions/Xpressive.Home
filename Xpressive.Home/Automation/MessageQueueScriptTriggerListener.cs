@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Autofac;
 using log4net;
 using Xpressive.Home.Contracts.Automation;
 using Xpressive.Home.Contracts.Messaging;
@@ -10,7 +11,7 @@ using Xpressive.Home.Contracts.Variables;
 
 namespace Xpressive.Home.Automation
 {
-    internal class MessageQueueScriptTriggerListener : IMessageQueueListener<UpdateVariableMessage>
+    internal class MessageQueueScriptTriggerListener : IMessageQueueListener<UpdateVariableMessage>, IStartable
     {
         private static readonly ILog _log = LogManager.GetLogger(typeof(MessageQueueScriptTriggerListener));
         private readonly IVariableRepository _variableRepository;
@@ -37,7 +38,7 @@ namespace Xpressive.Home.Automation
             _taskRunner.StartIfNotAlreadyRunning(HandleVariableUpdatesAsync);
         }
 
-        internal void Init()
+        public void Start()
         {
             _variableValues = _variableRepository
                 .Get()

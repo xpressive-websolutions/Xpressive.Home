@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Autofac;
 using Xpressive.Home.Contracts.Messaging;
 using Xpressive.Home.Contracts.Variables;
 
 namespace Xpressive.Home.Variables
 {
-    internal sealed class VariableRepository : IVariableRepository, IMessageQueueListener<UpdateVariableMessage>
+    internal sealed class VariableRepository : IVariableRepository, IMessageQueueListener<UpdateVariableMessage>, IStartable
     {
         private readonly IVariablePersistingService _variablePersistingService;
         private readonly object _variablesLock = new object();
@@ -64,7 +65,12 @@ namespace Xpressive.Home.Variables
             }
         }
 
-        internal async Task InitAsync()
+        public void Start()
+        {
+            Task.WaitAll(InitAsync());
+        }
+
+        private async Task InitAsync()
         {
             var variables = await _variablePersistingService.LoadAsync();
 

@@ -55,6 +55,7 @@
     <Compile Include="..\Xpressive.Home\Properties\AssemblyInfo.shared.cs">
       <Link>Properties\AssemblyInfo.shared.cs</Link>
     </Compile>
+    <Compile Include="IPhilipsHueGateway.cs" />
     <Compile Include="PhilipsHueModule.cs" />
     <Compile Include="IPhilipsHueBridgeDiscoveringService.cs" />
     <Compile Include="IPhilipsHueDeviceDiscoveringService.cs" />
@@ -63,6 +64,7 @@
     <Compile Include="PhilipsHueDevice.cs" />
     <Compile Include="PhilipsHueDeviceDiscoveringService.cs" />
     <Compile Include="PhilipsHueGateway.cs" />
+    <Compile Include="PhilipsHueScriptObjectProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

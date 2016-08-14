@@ -37,7 +37,7 @@
     xha.filter("titlecase", function() {
         return function(input) {
             return input.toUpperCase()[0] + input.substr(1);
-        }
+        };
     });
 
     xha.controller("navigationController", ["$rootScope", "$location", function($rootScope, $location) {
@@ -156,7 +156,7 @@
 
         $scope.openScript = function(id) {
             $location.path("/scripts/" + id);
-        }
+        };
 
         $scope.createScript = function() {
             var modal = $uibModal.open({
@@ -223,6 +223,10 @@
 
         $scope.save = function() {
             $http.post("/api/v1/script/" + id, $scope.script);
+        };
+
+        $scope.execute = function() {
+            $http.post("/api/v1/script/execute/" + id);
         };
 
         $scope.addTrigger = function() {
@@ -373,7 +377,7 @@
                 _.each($scope.scripts, function(s) {
                     s.id = s.id.replace(/-/g, "");
                     s.scriptId = s.scriptId.replace(/-/g, "");
-                    s.script = _.find(allScripts, function (a) { return a.id === s.scriptId });
+                    s.script = _.find(allScripts, function (a) { return a.id === s.scriptId; });
                 });
             });
         };

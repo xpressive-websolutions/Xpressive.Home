@@ -24,7 +24,7 @@ namespace Xpressive.Home
 
             builder.RegisterType<MessageQueueScriptTriggerListener>()
                 .As<IMessageQueueListener<UpdateVariableMessage>>()
-                .OnActivating(e => e.Instance.Init())
+                .As<IStartable>()
                 .SingleInstance();
 
             builder.RegisterType<MessageQueueLogListener>()
@@ -37,7 +37,7 @@ namespace Xpressive.Home
             builder.RegisterType<VariableRepository>()
                 .As<IVariableRepository>()
                 .As<IMessageQueueListener<UpdateVariableMessage>>()
-                .OnActivating(async e => await e.Instance.InitAsync())
+                .As<IStartable>()
                 .SingleInstance();
 
             builder.RegisterType<CronService>()

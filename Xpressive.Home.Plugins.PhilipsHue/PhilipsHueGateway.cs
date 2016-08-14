@@ -10,7 +10,7 @@ using Action = Xpressive.Home.Contracts.Gateway.Action;
 
 namespace Xpressive.Home.Plugins.PhilipsHue
 {
-    internal class PhilipsHueGateway : GatewayBase
+    internal sealed class PhilipsHueGateway : GatewayBase, IPhilipsHueGateway
     {
         private readonly IVariableRepository _variableRepository;
         private readonly IMessageQueue _messageQueue;
@@ -47,6 +47,53 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             deviceDiscoveringService.BulbFound += OnBulbFound;
         }
 
+        public IEnumerable<PhilipsHueDevice> GetDevices()
+        {
+            return Devices.OfType<PhilipsHueDevice>();
+        }
+
+        public async void SwitchOn(PhilipsHueDevice device, int transitionTimeInSeconds)
+        {
+            var parameters = new Dictionary<string, string>
+            {
+                {"Transition time in seconds", transitionTimeInSeconds.ToString()}
+            };
+
+            await ExecuteInternal(device, new Action("Switch On"), parameters);
+        }
+
+        public async void SwitchOff(PhilipsHueDevice device, int transitionTimeInSeconds)
+        {
+            var parameters = new Dictionary<string, string>
+            {
+                {"Transition time in seconds", transitionTimeInSeconds.ToString()}
+            };
+
+            await ExecuteInternal(device, new Action("Switch Off"), parameters);
+        }
+
+        public async void ChangeColor(PhilipsHueDevice device, string hexColor, int transitionTimeInSeconds)
+        {
+            var parameters = new Dictionary<string, string>
+            {
+                {"Color", hexColor},
+                {"Transition time in seconds", transitionTimeInSeconds.ToString()}
+            };
+
+            await ExecuteInternal(device, new Action("Change Color"), parameters);
+        }
+
+        public async void ChangeBrightness(PhilipsHueDevice device, double brightness, int transitionTimeInSeconds)
+        {
+            var parameters = new Dictionary<string, string>
+            {
+                {"Brightness", brightness.ToString("F2")},
+                {"Transition time in seconds", transitionTimeInSeconds.ToString()}
+            };
+
+            await ExecuteInternal(device, new Action("Change Brightness"), parameters);
+        }
+
         public override IDevice CreateEmptyDevice()
         {
             throw new NotSupportedException();
@@ -71,19 +118,19 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                 {
                     var client = GetClient(bridge);
                     var lights = await client.GetLightsAsync();
-                    var tuples = lights.Select(l => Tuple.Create(bulbs.SingleOrDefault(b => b.Id.Equals(l.Id)), l));
+                    var tuples = lights.Select(l => Tuple.Create(bulbs.SingleOrDefault(b => IsEqual(b, l)), l));
 
                     foreach (var tuple in tuples)
                     {
                         var bulb = tuple.Item1;
                         var light = tuple.Item2;
                         var state = light.State;
-                        var brightness = Math.Round((double) state.Brightness, 0);
+                        var brightness = state.Brightness / 255d;
 
-                        UpdateVariable($"{Name}.{bridge.Id}_{bulb.Id}.Brightness", brightness);
-                        UpdateVariable($"{Name}.{bridge.Id}_{bulb.Id}.IsOn", state.On);
-                        UpdateVariable($"{Name}.{bridge.Id}_{bulb.Id}.IsReachable", state.IsReachable);
-                        UpdateVariable($"{Name}.{bridge.Id}_{bulb.Id}.Name", light.Name);
+                        UpdateVariable($"{Name}.{bulb.Id}.Brightness", brightness);
+                        UpdateVariable($"{Name}.{bulb.Id}.IsOn", state.On);
+                        UpdateVariable($"{Name}.{bulb.Id}.IsReachable", state.IsReachable);
+                        UpdateVariable($"{Name}.{bulb.Id}.Name", light.Name);
                     }
                 }
 
@@ -100,18 +147,20 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             int s;
             if (action.Fields.Contains("Transition time in seconds") &&
                 values.TryGetValue("Transition time in seconds", out seconds) &&
-                int.TryParse(seconds, out s))
+                int.TryParse(seconds, out s) &&
+                s > 0)
             {
                 command.TransitionTime = TimeSpan.FromSeconds(s);
             }
 
             string brightness;
-            byte b;
+            double bd;
             if (action.Fields.Contains("Brightness") &&
                 values.TryGetValue("Brightness", out brightness) &&
-                byte.TryParse(brightness, out b))
+                double.TryParse(brightness, out bd) &&
+                bd >= 0d && bd <= 1d)
             {
-                command.Brightness = b;
+                command.Brightness = Convert.ToByte(bd * 255);
             }
 
             switch (action.Name.ToLowerInvariant())
@@ -138,17 +187,17 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             }
 
             var client = GetClient(bulb.Bridge);
-            await client.SendCommandAsync(command, new[] { bulb.Id });
+            await client.SendCommandAsync(command, new[] { bulb.Index });
 
             if (command.On.HasValue)
             {
-                UpdateVariable($"{Name}.{bulb.Bridge.Id}_{bulb.Id}.IsOn", command.On.Value);
+                UpdateVariable($"{Name}.{bulb.Id}.IsOn", command.On.Value);
             }
 
             if (command.Brightness.HasValue)
             {
-                var db = Math.Round((double)command.Brightness.Value, 0);
-                UpdateVariable($"{Name}.{bulb.Bridge.Id}_{bulb.Id}.Brightness", db);
+                var db = command.Brightness.Value / 255d;
+                UpdateVariable($"{Name}.{bulb.Id}.Brightness", db);
             }
         }
 
@@ -161,7 +210,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                     return;
                 }
 
-                UpdateVariable($"{Name}.{e.Bridge.Id}_{e.Id}.Name", e.Name);
+                UpdateVariable($"{Name}.{e.Id}.Name", e.Name);
 
                 _devices.Add(e);
             }
@@ -170,6 +219,12 @@ namespace Xpressive.Home.Plugins.PhilipsHue
         private void UpdateVariable(string name, object value)
         {
             _messageQueue.Publish(new UpdateVariableMessage(name, value));
+        }
+
+        private bool IsEqual(PhilipsHueDevice device, Light light)
+        {
+            var lightId = light.UniqueId.Replace(":", string.Empty).Replace("-", string.Empty);
+            return device.Id.Equals(lightId, StringComparison.OrdinalIgnoreCase);
         }
 
         private LocalHueClient GetClient(PhilipsHueBridge bridge)
