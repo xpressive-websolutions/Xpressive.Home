@@ -1,5 +1,4 @@
-﻿using System;
-using log4net;
+﻿using log4net;
 using Xpressive.Home.Contracts.Messaging;
 
 namespace Xpressive.Home.Messaging
@@ -14,10 +13,7 @@ namespace Xpressive.Home.Messaging
 
         public void Notify(UpdateVariableMessage message)
         {
-            if (message.Name.StartsWith("zwave", StringComparison.OrdinalIgnoreCase))
-            {
-                _log.Info($"{message.GetType().Name} for variable {message.Name} received.");
-            }
+            _log.Info($"{message.GetType().Name} for variable {message.Name} received.");
         }
 
         public void Notify(CommandMessage message)
