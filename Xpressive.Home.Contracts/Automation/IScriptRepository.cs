@@ -9,6 +9,10 @@ namespace Xpressive.Home.Contracts.Automation
         Task<Script> GetAsync(Guid id);
         Task<IEnumerable<Script>> GetAsync(IEnumerable<Guid> ids);
         Task<IEnumerable<Script>> GetAsync();
+
+        Task EnableAsync(Script script);
+        Task DisableAsync(Script script);
+
         Task SaveAsync(Script script);
         Task DeleteAsync(Script script);
         Task DeleteAsync(Guid id);

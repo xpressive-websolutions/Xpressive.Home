@@ -48,6 +48,42 @@ namespace Xpressive.Home.WebApi.Controllers
             return BadRequest();
         }
 
+        [HttpPost, Route("{id}/enable")]
+        public async Task<IHttpActionResult> Enable(string scriptId)
+        {
+            Guid id;
+            if (Guid.TryParse(scriptId, out id))
+            {
+                var script = await _repository.GetAsync(id);
+
+                if (script != null)
+                {
+                    await _repository.EnableAsync(script);
+                    return Ok();
+                }
+            }
+
+            return NotFound();
+        }
+
+        [HttpPost, Route("{id}/disable")]
+        public async Task<IHttpActionResult> Disable(string scriptId)
+        {
+            Guid id;
+            if (Guid.TryParse(scriptId, out id))
+            {
+                var script = await _repository.GetAsync(id);
+
+                if (script != null)
+                {
+                    await _repository.DisableAsync(script);
+                    return Ok();
+                }
+            }
+
+            return NotFound();
+        }
+
         [HttpGet, Route("group/{scriptGroupId}")]
         public async Task<IEnumerable<NameIdDto>> GetByScriptGroup(string scriptGroupId)
         {

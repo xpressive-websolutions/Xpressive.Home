@@ -25,7 +25,7 @@ namespace Xpressive.Home.Automation
 
         private void Execute(Script script)
         {
-            if (script == null)
+            if (script == null || !script.IsEnabled)
             {
                 return;
             }

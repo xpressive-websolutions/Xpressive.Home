@@ -229,6 +229,18 @@
             $http.post("/api/v1/script/execute/" + id);
         };
 
+        $scope.enable = function() {
+            $http.post("/api/v1/script/" + id + "/enable").then(function() {
+                $scope.script.isEnabled = true;
+            });
+        };
+
+        $scope.disable = function() {
+            $http.post("/api/v1/script/" + id + "/disable").then(function() {
+                $scope.script.isEnabled = false;
+            });
+        };
+
         $scope.addTrigger = function() {
             var modal = $uibModal.open({
                 animation: false,

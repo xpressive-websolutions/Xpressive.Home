@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using NPoco;
+using Should.Core.Assertions;
 using Xpressive.Home.Contracts.Automation;
 
 namespace Xpressive.Home.Automation
@@ -11,6 +12,8 @@ namespace Xpressive.Home.Automation
     {
         public async Task SaveAsync(Script script)
         {
+            Assert.NotNull(script);
+
             if (Guid.Empty.Equals(script.Id))
             {
                 await InsertAsync(script);
@@ -44,6 +47,28 @@ namespace Xpressive.Home.Automation
             }
         }
 
+        public async Task EnableAsync(Script script)
+        {
+            Assert.NotNull(script);
+
+            using (var database = new Database("ConnectionString"))
+            {
+                script.IsEnabled = true;
+                await database.UpdateAsync(script, new[] {"IsEnabled"});
+            }
+        }
+
+        public async Task DisableAsync(Script script)
+        {
+            Assert.NotNull(script);
+
+            using (var database = new Database("ConnectionString"))
+            {
+                script.IsEnabled = false;
+                await database.UpdateAsync(script, new[] { "IsEnabled" });
+            }
+        }
+
         public async Task DeleteAsync(Guid id)
         {
             using (var database = new Database("ConnectionString"))
@@ -59,6 +84,8 @@ namespace Xpressive.Home.Automation
 
         public async Task DeleteAsync(Script script)
         {
+            Assert.NotNull(script);
+
             using (var database = new Database("ConnectionString"))
             {
                 await database.DeleteAsync(script);
@@ -67,6 +94,8 @@ namespace Xpressive.Home.Automation
 
         private async Task InsertAsync(Script script)
         {
+            Assert.NotNull(script);
+
             script.Id = Guid.NewGuid();
 
             using (var database = new Database("ConnectionString"))
@@ -77,9 +106,11 @@ namespace Xpressive.Home.Automation
 
         private async Task UpdateAsync(Script script)
         {
+            Assert.NotNull(script);
+
             using (var database = new Database("ConnectionString"))
             {
-                await database.UpdateAsync(script, new[] {"Name", "JavaScript"});
+                await database.UpdateAsync(script, new[] {"Name", "JavaScript", "IsEnabled"});
             }
         }
     }

@@ -12,6 +12,14 @@
     <button class="btn btn-default" type="button" ng-click="execute()">
         <span class="glyphicon glyphicon-play" aria-hidden="true"></span> Execute
     </button>
+
+    <button class="btn btn-success" type="button" ng-click="enable()" ng-if="!script.isEnabled">
+        <span class="glyphicon glyphicon-ok" aria-hidden="true"></span> Enable
+    </button>
+
+    <button class="btn btn-warning" type="button" ng-click="disable()" ng-if="script.isEnabled">
+        <span class="glyphicon glyphicon-remove" aria-hidden="true"></span> Disable
+    </button>
 </section>
 
 <section class="content" style="min-height: 20px;">
