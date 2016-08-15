@@ -46,6 +46,7 @@
     <Compile Include="..\Xpressive.Home\Properties\AssemblyInfo.shared.cs">
       <Link>Properties\AssemblyInfo.shared.cs</Link>
     </Compile>
+    <Compile Include="ISonosGateway.cs" />
     <Compile Include="SonosModule.cs" />
     <Compile Include="ISonosDeviceDiscoverer.cs" />
     <Compile Include="ISonosSoapClient.cs" />
@@ -53,6 +54,7 @@
     <Compile Include="SonosDevice.cs" />
     <Compile Include="SonosDeviceDiscoverer.cs" />
     <Compile Include="SonosGateway.cs" />
+    <Compile Include="SonosScriptObjectProvider.cs" />
     <Compile Include="SonosSoapClient.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
 using System.Threading.Tasks;
-using log4net;
 using LifxHttp;
+using log4net;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 using Action = Xpressive.Home.Contracts.Gateway.Action;
 
 namespace Xpressive.Home.Plugins.Lifx
 {
-    internal sealed class LifxGateway : GatewayBase
+    internal sealed class LifxGateway : GatewayBase, ILifxGateway
     {
         private static readonly ILog _log = LogManager.GetLogger(typeof (LifxGateway));
         private readonly IMessageQueue _messageQueue;
@@ -45,6 +45,53 @@ namespace Xpressive.Home.Plugins.Lifx
         public override IDevice CreateEmptyDevice()
         {
             throw new NotSupportedException();
+        }
+
+        public IEnumerable<LifxDevice> GetDevices()
+        {
+            return Devices.OfType<LifxDevice>();
+        }
+
+        public async void SwitchOn(LifxDevice device, int transitionTimeInSeconds)
+        {
+            var parameters = new Dictionary<string, string>
+            {
+                { "Transition time in seconds", transitionTimeInSeconds.ToString() }
+            };
+
+            await ExecuteInternal(device, new Action("Switch On"), parameters);
+        }
+
+        public async void SwitchOff(LifxDevice device, int transitionTimeInSeconds)
+        {
+            var parameters = new Dictionary<string, string>
+            {
+                { "Transition time in seconds", transitionTimeInSeconds.ToString() }
+            };
+
+            await ExecuteInternal(device, new Action("Switch Off"), parameters);
+        }
+
+        public async void ChangeColor(LifxDevice device, string hexColor, int transitionTimeInSeconds)
+        {
+            var parameters = new Dictionary<string, string>
+            {
+                { "Color", hexColor },
+                { "Transition time in seconds", transitionTimeInSeconds.ToString() }
+            };
+
+            await ExecuteInternal(device, new Action("Change Color"), parameters);
+        }
+
+        public async void ChangeBrightness(LifxDevice device, double brightness, int transitionTimeInSeconds)
+        {
+            var parameters = new Dictionary<string, string>
+            {
+                { "Brightness", brightness.ToString("F2") },
+                { "Transition time in seconds", transitionTimeInSeconds.ToString() }
+            };
+
+            await ExecuteInternal(device, new Action("Change Brightness"), parameters);
         }
 
         public async Task FindBulbsAsync()
@@ -102,7 +149,7 @@ namespace Xpressive.Home.Plugins.Lifx
             var lights = await client.ListLights();
             var light = lights.SingleOrDefault(l => l.Id.Equals(bulb.Id));
             int seconds;
-            int brightness;
+            float brightness;
 
             if (light == null)
             {
@@ -120,9 +167,9 @@ namespace Xpressive.Home.Plugins.Lifx
             string b;
             if (!action.Fields.Contains("Brightness") ||
                 !values.TryGetValue("Brightness", out b) ||
-                !int.TryParse(b, out brightness))
+                !float.TryParse(b, out brightness))
             {
-                brightness = (int) light.Color.Brightness*100;
+                brightness = light.Color.Brightness;
             }
 
             var color = light.Color;
@@ -144,9 +191,9 @@ namespace Xpressive.Home.Plugins.Lifx
                     _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Color", rgb.ToString()));
                     break;
                 case "change brightness":
-                    color = new LifxColor.HSBK(color.Hue, color.Saturation, brightness / 100f, color.Kelvin);
+                    color = new LifxColor.HSBK(color.Hue, color.Saturation, brightness, color.Kelvin);
                     await client.SetColor(light, color, seconds);
-                    var db = Math.Round((double)brightness, 0);
+                    var db = Math.Round((double)brightness, 2);
                     _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Brightness", db));
                     _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", true));
                     break;
@@ -157,7 +204,7 @@ namespace Xpressive.Home.Plugins.Lifx
 
         private void UpdateDeviceVariables(LifxDevice device, Light light)
         {
-            var brightness = Math.Round(light.Brightness * 100d, 0);
+            var brightness = Math.Round(light.Brightness, 2);
             var groupName = light.GroupName;
             var name = light.Label;
             var isOn = light.PowerState == PowerState.On;

@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using Xpressive.Home.Contracts.Automation;
 using Xpressive.Home.Contracts.Gateway;
 
 namespace Xpressive.Home.Plugins.Denon
@@ -7,7 +8,12 @@ namespace Xpressive.Home.Plugins.Denon
     {
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterType<DenonGateway>().As<IGateway>().SingleInstance();
+            builder.RegisterType<DenonScriptObjectProvider>().As<IScriptObjectProvider>();
+
+            builder.RegisterType<DenonGateway>()
+                .As<IGateway>()
+                .As<IDenonGateway>()
+                .SingleInstance();
 
             base.Load(builder);
         }

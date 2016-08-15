@@ -54,6 +54,8 @@
     <Compile Include="DenonDevice.cs" />
     <Compile Include="DenonDeviceDto.cs" />
     <Compile Include="DenonGateway.cs" />
+    <Compile Include="DenonScriptObjectProvider.cs" />
+    <Compile Include="IDenonGateway.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ValueDto.cs" />
   </ItemGroup>

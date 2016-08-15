@@ -62,9 +62,11 @@
       <Link>Properties\AssemblyInfo.shared.cs</Link>
     </Compile>
     <Compile Include="ColorExtensions.cs" />
+    <Compile Include="ILifxGateway.cs" />
     <Compile Include="LifxDevice.cs" />
     <Compile Include="LifxGateway.cs" />
     <Compile Include="LifxModule.cs" />
+    <Compile Include="LifxScriptObjectProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
