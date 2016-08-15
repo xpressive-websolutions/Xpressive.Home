@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using RestSharp.Extensions.MonoHttp;
 using Xpressive.Home.Contracts.Gateway;
@@ -7,7 +8,7 @@ using Action = Xpressive.Home.Contracts.Gateway.Action;
 
 namespace Xpressive.Home.Plugins.Sonos
 {
-    internal class SonosGateway : GatewayBase
+    internal class SonosGateway : GatewayBase, ISonosGateway
     {
         private readonly ISonosSoapClient _soapClient;
 
@@ -27,6 +28,49 @@ namespace Xpressive.Home.Plugins.Sonos
         public override IDevice CreateEmptyDevice()
         {
             throw new NotSupportedException();
+        }
+
+        public IEnumerable<SonosDevice> GetDevices()
+        {
+            return Devices.OfType<SonosDevice>();
+        }
+
+        public async void Play(SonosDevice device)
+        {
+            await ExecuteInternal(device, new Action("Play"), null);
+        }
+
+        public async void Pause(SonosDevice device)
+        {
+            await ExecuteInternal(device, new Action("Pause"), null);
+        }
+
+        public async void Stop(SonosDevice device)
+        {
+            await ExecuteInternal(device, new Action("Stop"), null);
+        }
+
+        public async void PlayRadio(SonosDevice device, string stream, string title)
+        {
+            var parameters = new Dictionary<string, string>
+            {
+                {"Stream", stream},
+                {"Title", title}
+            };
+
+            await ExecuteInternal(device, new Action("Play Radio"), parameters);
+        }
+
+        public async void PlayFile(SonosDevice device, string file, string title, string album)
+        {
+            var parameters = new Dictionary<string, string>
+            {
+                {"File", file},
+                {"Title", title},
+                {"Album", album}
+            };
+
+            await ExecuteInternal(device, new Action("Play File"), parameters);
         }
 
         protected override async Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values)
