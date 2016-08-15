@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Q42.HueApi;
+using Q42.HueApi.ColorConverters;
+using Q42.HueApi.ColorConverters.HSB;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 using Xpressive.Home.Contracts.Variables;
@@ -127,7 +129,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                         var state = light.State;
                         var brightness = state.Brightness / 255d;
 
-                        UpdateVariable($"{Name}.{bulb.Id}.Brightness", brightness);
+                        UpdateVariable($"{Name}.{bulb.Id}.Brightness", Math.Round(brightness, 2));
                         UpdateVariable($"{Name}.{bulb.Id}.IsOn", state.On);
                         UpdateVariable($"{Name}.{bulb.Id}.IsReachable", state.IsReachable);
                         UpdateVariable($"{Name}.{bulb.Id}.Name", light.Name);
@@ -172,7 +174,8 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                     command.On = false;
                     break;
                 case "change color":
-                    command.SetColor(values["Color"]);
+                    command.On = true;
+                    command.SetColor(new RGBColor(values["Color"]));
                     break;
                 case "change brightness":
                     break;
@@ -197,7 +200,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             if (command.Brightness.HasValue)
             {
                 var db = command.Brightness.Value / 255d;
-                UpdateVariable($"{Name}.{bulb.Id}.Brightness", db);
+                UpdateVariable($"{Name}.{bulb.Id}.Brightness", Math.Round(db, 2));
             }
         }
 
