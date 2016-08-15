@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Globalization;
-using LifxHttp;
 
 namespace Xpressive.Home.Plugins.Lifx
 {
     internal static class ColorExtensions
     {
-        public static LifxColor.RGB ToRgb(this LifxColor.HSBK hsb)
+        public static RgbColor ToRgb(this HsbkColor hsb)
         {
             double r, g, b;
             var h = hsb.Hue / 360d;
@@ -26,24 +25,38 @@ namespace Xpressive.Home.Plugins.Lifx
                 b = HueToRgb(p, q, h - 1d / 3d) * 255d;
             }
 
-            return new LifxColor.RGB((int)r, (int)g, (int)b);
+            return new RgbColor
+            {
+                Red = (int)r,
+                Green = (int)g,
+                Blue = (int)b
+            };
         }
 
-        public static LifxColor.RGB ParseRgb(this string hexColor)
+        public static RgbColor ParseRgb(this string hexColor)
         {
             if (string.IsNullOrEmpty(hexColor))
             {
                 throw new ArgumentNullException(nameof(hexColor));
             }
+
             hexColor = hexColor.Replace("#", string.Empty);
+
             if (hexColor.Length != 6)
             {
                 throw new ArgumentException("Color should contains 6 characters");
             }
+
             var red = int.Parse(hexColor.Substring(0, 2), NumberStyles.AllowHexSpecifier);
             var green = int.Parse(hexColor.Substring(2, 2), NumberStyles.AllowHexSpecifier);
             var blue = int.Parse(hexColor.Substring(4, 2), NumberStyles.AllowHexSpecifier);
-            return new LifxColor.RGB(red, green, blue);
+
+            return new RgbColor
+            {
+                Red = red,
+                Green = green,
+                Blue = blue
+            };
         }
 
         private static double HueToRgb(double p, double q, double t)

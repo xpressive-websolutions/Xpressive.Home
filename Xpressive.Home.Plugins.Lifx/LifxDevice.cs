@@ -1,4 +1,3 @@
-using LifxHttp;
 using Xpressive.Home.Contracts.Gateway;
 
 namespace Xpressive.Home.Plugins.Lifx
