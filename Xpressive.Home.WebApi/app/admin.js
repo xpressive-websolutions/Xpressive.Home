@@ -196,7 +196,7 @@
         };
     }]);
 
-    xha.controller("scriptDetailController", ["$scope", "$log", "$http", "$routeParams", "$uibModal", function($scope, $log, $http, $routeParams, $uibModal) {
+    xha.controller("scriptDetailController", ["$scope", "$log", "$http", "$routeParams", "$uibModal", "$interval", function($scope, $log, $http, $routeParams, $uibModal, $interval) {
         var id = $routeParams.id;
 
         $scope.triggers = [];
@@ -204,7 +204,12 @@
 
         var getTriggers = function() {
             $http.get("/api/v1/trigger/" + id, { cache: false }).then(function(result) {
-                $scope.triggers = result.data;
+                _.each(result.data, function(nt) {
+                    if (!_.find($scope.triggers, function(t) { return t.variable === nt.variable; })) {
+                        nt.value = "";
+                        $scope.triggers.push(nt);
+                    }
+                });
             });
         };
 
@@ -281,6 +286,14 @@
                 $http.post("/api/v1/schedule/" + id, "'" + result + "'").then(getSchedules);
             });
         };
+
+        $interval(function() {
+            _.each($scope.triggers, function(t) {
+                $http.get("/api/v1/variable/" + t.variable, { cache: false }).then(function(result) {
+                    t.value = result.data.value;
+                });
+            });
+        }, 5000);
     }]);
 
     xha.controller("roomController", ["$scope", "$http", "$uibModal", "$location", function($scope, $http, $uibModal, $location) {

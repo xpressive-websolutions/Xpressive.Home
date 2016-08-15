@@ -23,15 +23,29 @@ namespace Xpressive.Home.Automation
             Execute(script);
         }
 
-        private void Execute(Script script)
+        public async Task ExecuteEvenIfDisabledAsync(Guid scriptId)
         {
-            if (script == null || !script.IsEnabled)
+            var script = await _scriptRepository.GetAsync(scriptId);
+            Execute(script, true);
+        }
+
+        private void Execute(Script script, bool evenIfDisabled = false)
+        {
+            if (script == null)
             {
                 return;
             }
 
             var context = new ScriptExecutionContext(script, _scriptObjectProviders);
-            context.Execute();
+
+            if (evenIfDisabled)
+            {
+                context.ExecuteEvenIfDisabled();
+            }
+            else
+            {
+                context.Execute();
+            }
         }
     }
 }

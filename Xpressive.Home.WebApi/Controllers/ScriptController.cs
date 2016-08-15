@@ -48,7 +48,7 @@ namespace Xpressive.Home.WebApi.Controllers
             return BadRequest();
         }
 
-        [HttpPost, Route("{id}/enable")]
+        [HttpPost, Route("{scriptId}/enable")]
         public async Task<IHttpActionResult> Enable(string scriptId)
         {
             Guid id;
@@ -66,7 +66,7 @@ namespace Xpressive.Home.WebApi.Controllers
             return NotFound();
         }
 
-        [HttpPost, Route("{id}/disable")]
+        [HttpPost, Route("{scriptId}/disable")]
         public async Task<IHttpActionResult> Disable(string scriptId)
         {
             Guid id;
@@ -150,7 +150,7 @@ namespace Xpressive.Home.WebApi.Controllers
             Guid id;
             if (Guid.TryParse(scriptId, out id))
             {
-                await _scriptEngine.ExecuteAsync(id);
+                await _scriptEngine.ExecuteEvenIfDisabledAsync(id);
             }
         }
 

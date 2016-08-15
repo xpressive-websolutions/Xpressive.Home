@@ -22,6 +22,16 @@ namespace Xpressive.Home.Automation
 
         public void Execute()
         {
+            if (!_script.IsEnabled)
+            {
+                return;
+            }
+
+            ExecuteEvenIfDisabled();
+        }
+
+        public void ExecuteEvenIfDisabled()
+        {
             Task.Run(() => ExecuteAsTask());
         }
 

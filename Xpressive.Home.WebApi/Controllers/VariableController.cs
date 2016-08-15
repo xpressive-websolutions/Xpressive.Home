@@ -39,6 +39,22 @@ namespace Xpressive.Home.WebApi.Controllers
             });
         }
 
+        [HttpGet, Route("{variable}")]
+        public IHttpActionResult Get(string variable)
+        {
+            var result = _variableRepository.Get().SingleOrDefault(v => v.Name.Equals(variable, StringComparison.OrdinalIgnoreCase));
+            if (result != null)
+            {
+                return Ok(new VariableDto
+                {
+                    Name = result.Name,
+                    Value = result.Value
+                });
+            }
+
+            return NotFound();
+        }
+
         public class VariableDto
         {
             public string Name { get; set; }
