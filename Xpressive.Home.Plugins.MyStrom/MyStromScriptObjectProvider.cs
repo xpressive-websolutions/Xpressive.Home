@@ -27,7 +27,7 @@ namespace Xpressive.Home.Plugins.MyStrom
             var deviceResolver = new Func<string, MyStromScriptObject>(id =>
             {
                 var device = _gateway.GetDevices().SingleOrDefault(d => d.Id.Equals(id));
-                return new MyStromScriptObject(device, _gateway);
+                return device != null ? new MyStromScriptObject(device, _gateway) : null;
             });
 
             yield return new Tuple<string, Delegate>("mystrom", deviceResolver);

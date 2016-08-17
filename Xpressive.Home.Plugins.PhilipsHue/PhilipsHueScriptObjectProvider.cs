@@ -27,7 +27,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             var deviceResolver = new Func<string, PhilipsHueScriptObject>(id =>
             {
                 var device = _gateway.GetDevices().SingleOrDefault(d => d.Id.Equals(id));
-                return new PhilipsHueScriptObject(_gateway, device);
+                return device != null ? new PhilipsHueScriptObject(_gateway, device) : null;
             });
 
             yield return new Tuple<string, Delegate>("philipshue", deviceResolver);

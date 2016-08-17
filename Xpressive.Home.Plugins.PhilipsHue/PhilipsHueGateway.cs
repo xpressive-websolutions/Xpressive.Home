@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using log4net;
 using Q42.HueApi;
 using Q42.HueApi.ColorConverters;
 using Q42.HueApi.ColorConverters.HSB;
@@ -14,6 +15,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 {
     internal sealed class PhilipsHueGateway : GatewayBase, IPhilipsHueGateway
     {
+        private static readonly ILog _log = LogManager.GetLogger(typeof(PhilipsHueGateway));
         private readonly IVariableRepository _variableRepository;
         private readonly IMessageQueue _messageQueue;
         private readonly object _devicesLock = new object();
@@ -118,21 +120,28 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 
                 foreach (var bridge in bridges)
                 {
-                    var client = GetClient(bridge);
-                    var lights = await client.GetLightsAsync();
-                    var tuples = lights.Select(l => Tuple.Create(bulbs.SingleOrDefault(b => IsEqual(b, l)), l));
-
-                    foreach (var tuple in tuples)
+                    try
                     {
-                        var bulb = tuple.Item1;
-                        var light = tuple.Item2;
-                        var state = light.State;
-                        var brightness = state.Brightness / 255d;
+                        var client = GetClient(bridge);
+                        var lights = await client.GetLightsAsync();
+                        var tuples = lights.Select(l => Tuple.Create(bulbs.SingleOrDefault(b => IsEqual(b, l)), l));
 
-                        UpdateVariable($"{Name}.{bulb.Id}.Brightness", Math.Round(brightness, 2));
-                        UpdateVariable($"{Name}.{bulb.Id}.IsOn", state.On);
-                        UpdateVariable($"{Name}.{bulb.Id}.IsReachable", state.IsReachable);
-                        UpdateVariable($"{Name}.{bulb.Id}.Name", light.Name);
+                        foreach (var tuple in tuples)
+                        {
+                            var bulb = tuple.Item1;
+                            var light = tuple.Item2;
+                            var state = light.State;
+                            var brightness = state.Brightness / 255d;
+
+                            UpdateVariable($"{Name}.{bulb.Id}.Brightness", Math.Round(brightness, 2));
+                            UpdateVariable($"{Name}.{bulb.Id}.IsOn", state.On);
+                            UpdateVariable($"{Name}.{bulb.Id}.IsReachable", state.IsReachable);
+                            UpdateVariable($"{Name}.{bulb.Id}.Name", light.Name);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        _log.Error(e.Message, e);
                     }
                 }
 
