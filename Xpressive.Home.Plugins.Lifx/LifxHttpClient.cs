@@ -14,37 +14,37 @@ namespace Xpressive.Home.Plugins.Lifx
             _token = token;
         }
 
-        public async Task<IEnumerable<Light>> GetLights()
+        public async Task<IEnumerable<LifxHttpLight>> GetLights()
         {
             var client = new RestClient(BaseUrl);
             var request = new RestRequest("v1/lights/all");
             request.AddHeader("Authorization", $"Bearer {_token}");
 
-            var result = await client.GetTaskAsync<List<Light>>(request);
+            var result = await client.GetTaskAsync<List<LifxHttpLight>>(request);
             return result;
         }
 
-        public async Task SwitchOn(Light light, int durationInSeconds = 0)
+        public async Task SwitchOn(LifxHttpLight light, int durationInSeconds = 0)
         {
             await ChangeState(light, new {power = "on", duration = durationInSeconds});
         }
 
-        public async Task SwitchOff(Light light, int durationInSeconds = 0)
+        public async Task SwitchOff(LifxHttpLight light, int durationInSeconds = 0)
         {
             await ChangeState(light, new {power = "off", duration = durationInSeconds});
         }
 
-        public async Task ChangeBrightness(Light light, double brightness, int durationInSeconds)
+        public async Task ChangeBrightness(LifxHttpLight light, double brightness, int durationInSeconds)
         {
             await ChangeState(light, new {power = "on", brightness = brightness, duration = durationInSeconds});
         }
 
-        public async Task ChangeColor(Light light, string hexColor, int durationInSeconds)
+        public async Task ChangeColor(LifxHttpLight light, string hexColor, int durationInSeconds)
         {
             await ChangeState(light, new {power = "on", color = hexColor, duration = durationInSeconds});
         }
 
-        private async Task ChangeState(Light light, object payload)
+        private async Task ChangeState(LifxHttpLight light, object payload)
         {
             var client = new RestClient(BaseUrl);
             var request = new RestRequest($"v1/lights/{light.Id}/state");

@@ -59,6 +59,50 @@ namespace Xpressive.Home.Plugins.Lifx
             };
         }
 
+        public static HsbkColor ToHsbk(this RgbColor rgb)
+        {
+            var r = rgb.Red / 255d;
+            var g = rgb.Green / 255d;
+            var b = rgb.Blue / 255d;
+            var mx = Math.Max(r, Math.Max(g, b));
+            var mn = Math.Min(r, Math.Min(g, b));
+            var c = mx - mn;
+            var hs = 0d;
+
+            if (Math.Abs(c) < 0.001)
+            {
+                hs = 0;
+            }
+            else if (Math.Abs(mx - r) < 0.001)
+            {
+                hs = (g - b) / c;
+                if (hs < 0)
+                {
+                    hs += 6;
+                }
+            }
+            else if (Math.Abs(mx - g) < 0.001)
+            {
+                hs = 2 + (b - r) / c;
+            }
+            else
+            {
+                hs = 4 + (r - g) / c;
+            }
+
+            var h = 60 * hs;
+            var v = mx;
+            var s = Math.Abs(c) < 0.001 ? 0 : c / v;
+
+            return new HsbkColor
+            {
+                Hue = h,
+                Saturation = s,
+                Brightness = v,
+                Kelvin = 4500
+            };
+        }
+
         private static double HueToRgb(double p, double q, double t)
         {
             if (t < 0d) { t += 1d; }

@@ -16,6 +16,7 @@ namespace Xpressive.Home.Plugins.Lifx
         private readonly IMessageQueue _messageQueue;
         private readonly string _token;
         private readonly object _deviceLock = new object();
+        private readonly LifxLocalClient _localClient = new LifxLocalClient();
 
         public LifxGateway(IMessageQueue messageQueue) : base("Lifx")
         {
@@ -39,6 +40,35 @@ namespace Xpressive.Home.Plugins.Lifx
             {
                 Fields = {"Brightness", "Transition time in seconds"}
             });
+
+            _localClient.DeviceDiscovered += async (s, e) =>
+            {
+                lock (_deviceLock)
+                {
+                    var device = _devices.Cast<LifxDevice>().SingleOrDefault(d => d.Id.Equals(e.Id));
+
+                    if (device == null)
+                    {
+                        device = new LifxDevice(e);
+                        _devices.Add(device);
+                    }
+                }
+
+                await _localClient.GetLightStateAsync(e);
+            };
+
+            _localClient.VariableChanged += (s, e) =>
+            {
+                var device = _devices.Cast<LifxDevice>().SingleOrDefault(d => d.Id.Equals(e.Item1.Id));
+
+                if (device != null)
+                {
+                    device.Name = e.Item1.Name;
+                }
+
+                var variable = $"{Name}.{e.Item1.Id}.{e.Item2}";
+                _messageQueue.Publish(new UpdateVariableMessage(variable, e.Item3));
+            };
         }
 
         public override IDevice CreateEmptyDevice()
@@ -95,37 +125,31 @@ namespace Xpressive.Home.Plugins.Lifx
 
         public async Task FindBulbsAsync()
         {
+            FindLocalBulbs();
+
             await Task.Delay(TimeSpan.FromSeconds(5));
 
-            if (string.IsNullOrEmpty(_token))
-            {
-                return;
-            }
+            await FindCloudBulbs();
+        }
 
+        private async Task FindCloudBulbs()
+        {
             while (true)
             {
+                if (!string.IsNullOrEmpty(_token))
+                {
+                    try
+                    {
+                        await GetHttpLights();
+                    }
+                    catch (Exception e)
+                    {
+                        _log.Error(e.Message, e);
+                    }
+                }
+
                 try
                 {
-                    var client = new LifxHttpClient(_token);
-                    var lights = await client.GetLights();
-
-                    foreach (var light in lights)
-                    {
-                        LifxDevice device;
-
-                        lock (_deviceLock)
-                        {
-                            device = _devices.Cast<LifxDevice>().SingleOrDefault(d => d.Id.Equals(light.Id));
-
-                            if (device == null)
-                            {
-                                device = new LifxDevice(light);
-                                _devices.Add(device);
-                            }
-                        }
-
-                        UpdateDeviceVariables(device, light);
-                    }
                 }
                 catch (Exception e)
                 {
@@ -136,6 +160,18 @@ namespace Xpressive.Home.Plugins.Lifx
             }
         }
 
+        private void FindLocalBulbs()
+        {
+            try
+            {
+                _localClient.StartDeviceDiscovery();
+            }
+            catch (Exception e)
+            {
+                _log.Error(e.Message, e);
+            }
+        }
+
         protected override async Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values)
         {
             if (string.IsNullOrEmpty(_token))
@@ -143,17 +179,9 @@ namespace Xpressive.Home.Plugins.Lifx
                 return;
             }
 
-            var client = new LifxHttpClient(_token);
             var bulb = (LifxDevice) device;
-            var lights = await client.GetLights();
-            var light = lights.SingleOrDefault(l => l.Id.Equals(bulb.Id));
             int seconds;
             double brightness;
-
-            if (light == null)
-            {
-                return;
-            }
 
             string s;
             if (!action.Fields.Contains("Transition time in seconds") ||
@@ -168,10 +196,93 @@ namespace Xpressive.Home.Plugins.Lifx
                 !values.TryGetValue("Brightness", out b) ||
                 !double.TryParse(b, out brightness))
             {
-                brightness = light.Brightness;
+                brightness = 0;
             }
 
-            switch (action.Name.ToLowerInvariant())
+            string color;
+            if (!values.TryGetValue("Color", out color))
+            {
+                color = string.Empty;
+            }
+
+            if (bulb.Source == LifxSource.Cloud)
+            {
+                await ExecuteCloudAction(bulb, action.Name, seconds, brightness, color);
+            }
+            else
+            {
+                await ExecuteLocalAction(bulb, action.Name, seconds, brightness, color);
+            }
+        }
+
+        private async Task ExecuteLocalAction(LifxDevice device, string action, int seconds, double brightness, string color)
+        {
+            var light = _localClient.Lights.SingleOrDefault(l => l.Id.Equals(device.Id));
+            var b = (ushort)(brightness * 65535);
+
+            if (light == null)
+            {
+                return;
+            }
+
+            switch (action.ToLowerInvariant())
+            {
+                case "switch on":
+                    if (seconds == 0)
+                    {
+                        await _localClient.SetDevicePowerStateAsync(light, true);
+                    }
+                    else if (seconds > 0)
+                    {
+                        await _localClient.SetLightPowerAsync(light, TimeSpan.FromSeconds(seconds), true);
+                    }
+                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", true));
+                    break;
+                case "switch off":
+                    if (seconds == 0)
+                    {
+                        await _localClient.SetDevicePowerStateAsync(light, false);
+                    }
+                    else if (seconds > 0)
+                    {
+                        await _localClient.SetLightPowerAsync(light, TimeSpan.FromSeconds(seconds), false);
+                    }
+                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", false));
+                    break;
+                case "change color":
+                    var rgb = color.ParseRgb();
+                    var hsb = rgb.ToHsbk();
+                    var hue = (ushort)hsb.Hue;
+                    var saturation = (ushort) (hsb.Saturation*65535);
+                    b = (ushort) (hsb.Brightness*65535);
+                    ushort kelvin = 4500;
+                    await _localClient.SetColorAsync(light, hue, saturation, b, kelvin, TimeSpan.FromSeconds(seconds));
+                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", true));
+                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Color", rgb.ToString()));
+                    break;
+                case "change brightness":
+                    await _localClient.SetBrightnessAsync(light, b, TimeSpan.FromSeconds(seconds));
+                    var db = Math.Round(brightness, 2);
+                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Brightness", db));
+                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", true));
+                    break;
+                default:
+                    return;
+            }
+        }
+
+        private async Task ExecuteCloudAction(LifxDevice device, string action, int seconds, double brightness, string color)
+        {
+            var client = new LifxHttpClient(_token);
+            var lights = await client.GetLights();
+            var light = lights.SingleOrDefault(l => l.Id.Equals(device.Id));
+
+            if (light == null)
+            {
+                return;
+            }
+
+            switch (action.ToLowerInvariant())
             {
                 case "switch on":
                     await client.SwitchOn(light, seconds);
@@ -182,7 +293,7 @@ namespace Xpressive.Home.Plugins.Lifx
                     _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", false));
                     break;
                 case "change color":
-                    var rgb = values["Color"].ParseRgb();
+                    var rgb = color.ParseRgb();
                     await client.ChangeColor(light, rgb.ToString(), seconds);
                     _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", true));
                     _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Color", rgb.ToString()));
@@ -198,12 +309,36 @@ namespace Xpressive.Home.Plugins.Lifx
             }
         }
 
-        private void UpdateDeviceVariables(LifxDevice device, Light light)
+        private async Task GetHttpLights()
+        {
+            var client = new LifxHttpClient(_token);
+            var lights = await client.GetLights();
+
+            foreach (var light in lights)
+            {
+                LifxDevice device;
+
+                lock (_deviceLock)
+                {
+                    device = _devices.Cast<LifxDevice>().SingleOrDefault(d => d.Id.Equals(light.Id));
+
+                    if (device == null)
+                    {
+                        device = new LifxDevice(light);
+                        _devices.Add(device);
+                    }
+                }
+
+                UpdateDeviceVariables(device, light);
+            }
+        }
+
+        private void UpdateDeviceVariables(LifxDevice device, LifxHttpLight light)
         {
             var brightness = Math.Round(light.Brightness, 2);
             var groupName = light.Group.Name;
             var name = light.Label;
-            var isOn = light.Power == PowerState.On;
+            var isOn = light.Power == LifxHttpLight.PowerState.On;
             var isConnected = light.IsConnected;
             var color = light.GetHexColor();
 
@@ -213,6 +348,14 @@ namespace Xpressive.Home.Plugins.Lifx
             _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Name", name));
             _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "GroupName", groupName));
             _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Color", color));
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _localClient.Dispose();
+            }
         }
     }
 }

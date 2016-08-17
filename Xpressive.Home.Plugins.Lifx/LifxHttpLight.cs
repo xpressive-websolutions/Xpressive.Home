@@ -3,7 +3,7 @@ using RestSharp.Deserializers;
 
 namespace Xpressive.Home.Plugins.Lifx
 {
-    internal sealed class Light
+    internal sealed class LifxHttpLight
     {
         public string Id { get; set; }
         public string Uuid { get; set; }
@@ -32,6 +32,24 @@ namespace Xpressive.Home.Plugins.Lifx
                 Brightness = Brightness,
                 Kelvin = Color.Kelvin
             };
+        }
+
+        public sealed class LightGroup
+        {
+            public string Name { get; set; }
+        }
+
+        public sealed class LighColor
+        {
+            public double Hue { get; set; }
+            public double Saturation { get; set; }
+            public int Kelvin { get; set; }
+        }
+
+        public enum PowerState
+        {
+            Off = 0,
+            On = 1
         }
     }
 }
