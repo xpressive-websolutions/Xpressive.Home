@@ -53,7 +53,7 @@
     </Compile>
     <Compile Include="ForecastGateway.cs" />
     <Compile Include="ForecastDevice.cs" />
-    <Compile Include="ForegastModule.cs" />
+    <Compile Include="ForecastModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
