@@ -88,7 +88,8 @@ namespace Xpressive.Home.Plugins.Lifx
                 {"Transition time in seconds", transitionTimeInSeconds.ToString()}
             };
 
-            await ExecuteInternal(device, new Action("Switch On"), parameters);
+            var action = _actions.Single(a => a.Name.Equals("Switch On", StringComparison.Ordinal));
+            await ExecuteInternal(device, action, parameters);
         }
 
         public async void SwitchOff(LifxDevice device, int transitionTimeInSeconds)
@@ -98,7 +99,8 @@ namespace Xpressive.Home.Plugins.Lifx
                 {"Transition time in seconds", transitionTimeInSeconds.ToString()}
             };
 
-            await ExecuteInternal(device, new Action("Switch Off"), parameters);
+            var action = _actions.Single(a => a.Name.Equals("Switch Off", StringComparison.Ordinal));
+            await ExecuteInternal(device, action, parameters);
         }
 
         public async void ChangeColor(LifxDevice device, string hexColor, int transitionTimeInSeconds)
@@ -109,7 +111,8 @@ namespace Xpressive.Home.Plugins.Lifx
                 {"Transition time in seconds", transitionTimeInSeconds.ToString()}
             };
 
-            await ExecuteInternal(device, new Action("Change Color"), parameters);
+            var action = _actions.Single(a => a.Name.Equals("Change Color", StringComparison.Ordinal));
+            await ExecuteInternal(device, action, parameters);
         }
 
         public async void ChangeBrightness(LifxDevice device, double brightness, int transitionTimeInSeconds)
@@ -120,7 +123,8 @@ namespace Xpressive.Home.Plugins.Lifx
                 {"Transition time in seconds", transitionTimeInSeconds.ToString()}
             };
 
-            await ExecuteInternal(device, new Action("Change Brightness"), parameters);
+            var action = _actions.Single(a => a.Name.Equals("Change Brightness", StringComparison.Ordinal));
+            await ExecuteInternal(device, action, parameters);
         }
 
         public async Task FindBulbsAsync()
