@@ -15,15 +15,6 @@ namespace Xpressive.Home.Contracts.Gateway
         }
 
         public string Name => _name;
-
-        public IList<string> Fields
-        {
-            get { return _fields.ToList(); }
-            set
-            {
-                _fields.Clear();
-                _fields.AddRange(value);
-            }
-        }
+        public IList<string> Fields => _fields;
     }
 }

@@ -63,7 +63,8 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                 {"Transition time in seconds", transitionTimeInSeconds.ToString()}
             };
 
-            await ExecuteInternal(device, new Action("Switch On"), parameters);
+            var action = _actions.Single(a => a.Name.Equals("Switch On", StringComparison.Ordinal));
+            await ExecuteInternal(device, action, parameters);
         }
 
         public async void SwitchOff(PhilipsHueDevice device, int transitionTimeInSeconds)
@@ -73,7 +74,8 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                 {"Transition time in seconds", transitionTimeInSeconds.ToString()}
             };
 
-            await ExecuteInternal(device, new Action("Switch Off"), parameters);
+            var action = _actions.Single(a => a.Name.Equals("Switch Off", StringComparison.Ordinal));
+            await ExecuteInternal(device, action, parameters);
         }
 
         public async void ChangeColor(PhilipsHueDevice device, string hexColor, int transitionTimeInSeconds)
@@ -84,7 +86,8 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                 {"Transition time in seconds", transitionTimeInSeconds.ToString()}
             };
 
-            await ExecuteInternal(device, new Action("Change Color"), parameters);
+            var action = _actions.Single(a => a.Name.Equals("Change Color", StringComparison.Ordinal));
+            await ExecuteInternal(device, action, parameters);
         }
 
         public async void ChangeBrightness(PhilipsHueDevice device, double brightness, int transitionTimeInSeconds)
@@ -95,7 +98,8 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                 {"Transition time in seconds", transitionTimeInSeconds.ToString()}
             };
 
-            await ExecuteInternal(device, new Action("Change Brightness"), parameters);
+            var action = _actions.Single(a => a.Name.Equals("Change Brightness", StringComparison.Ordinal));
+            await ExecuteInternal(device, action, parameters);
         }
 
         public override IDevice CreateEmptyDevice()
