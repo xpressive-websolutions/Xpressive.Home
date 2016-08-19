@@ -67,10 +67,16 @@
                     <table class="table table-striped">
                         <tbody>
                             <tr>
+                                <th style="width: 35px"></th>
                                 <th>Variable name</th>
                                 <th>Current value</th>
                             </tr>
                             <tr ng-repeat="trigger in triggers">
+                                <td>
+                                    <button type="button" class="btn btn-default btn-xs btn-row-action" title="Delete" ng-click="removeTrigger(trigger)">
+                                        <span class="glyphicon glyphicon-remove"></span>
+                                    </button>
+                                </td>
                                 <td>{{::trigger.variable }}</td>
                                 <td>{{ trigger.value }}</td>
                             </tr>
@@ -91,9 +97,15 @@
                     <table class="table table-striped">
                         <tbody>
                             <tr>
+                                <th style="width: 35px"></th>
                                 <th>Cron tab</th>
                             </tr>
                             <tr ng-repeat="schedule in schedules">
+                                <td>
+                                    <button type="button" class="btn btn-default btn-xs btn-row-action" title="Delete" ng-click="removeSchedule(schedule)">
+                                        <span class="glyphicon glyphicon-remove"></span>
+                                    </button>
+                                </td>
                                 <td>{{::schedule.cronTab}}</td>
                             </tr>
                         </tbody>

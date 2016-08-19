@@ -18,7 +18,7 @@ namespace Xpressive.Home.WebApi.Controllers
         }
 
         [HttpGet, Route("{scriptId}")]
-        public async Task<IEnumerable<TriggeredScript>> Get(string scriptId)
+        public async Task<IEnumerable<TriggeredScript>> GetAsync(string scriptId)
         {
             Guid id;
             if (Guid.TryParse(scriptId, out id))
@@ -29,7 +29,7 @@ namespace Xpressive.Home.WebApi.Controllers
         }
 
         [HttpPost, Route("{scriptId}")]
-        public async Task<TriggeredScript> Create(string scriptId, [FromBody] string variable)
+        public async Task<TriggeredScript> CreateAsync(string scriptId, [FromBody] string variable)
         {
             Guid id;
             if (!Guid.TryParse(scriptId, out id) || string.IsNullOrEmpty(variable))
@@ -41,7 +41,7 @@ namespace Xpressive.Home.WebApi.Controllers
         }
 
         [HttpDelete, Route("{triggerId}")]
-        public async Task DeleteSchedule(string triggerId)
+        public async Task DeleteAsync(string triggerId)
         {
             Guid id;
             if (Guid.TryParse(triggerId, out id))

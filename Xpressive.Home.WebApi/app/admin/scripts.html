@@ -18,9 +18,21 @@
                 <table class="table table-striped">
                     <tbody>
                         <tr>
+                            <th style="width: 65px"></th>
                             <th>Name</th>
                         </tr>
                         <tr ng-repeat="script in scripts">
+                            <td>
+                                <button type="button" class="btn btn-default btn-xs btn-row-action" title="Enable" ng-click="enable(script)" ng-if="script.isEnabled === false">
+                                    <span class="glyphicon glyphicon-ok"></span>
+                                </button>
+                                <button type="button" class="btn btn-default btn-xs btn-row-action" title="Disable" ng-click="disable(script)" ng-if="script.isEnabled === true">
+                                    <span class="glyphicon glyphicon-remove"></span>
+                                </button>
+                                <button type="button" class="btn btn-default btn-xs btn-row-action" title="Execute" ng-click="execute(script)">
+                                    <span class="glyphicon glyphicon-play"></span>
+                                </button>
+                            </td>
                             <td ng-click="openScript(script.id)">{{::script.name }}</td>
                         </tr>
                     </tbody>

@@ -20,7 +20,7 @@ namespace Xpressive.Home.WebApi.Controllers
         }
 
         [HttpGet, Route("{scriptId}")]
-        public async Task<IEnumerable<ScheduledScript>> Get(string scriptId)
+        public async Task<IEnumerable<ScheduledScript>> GetAsync(string scriptId)
         {
             Guid id;
             if (Guid.TryParse(scriptId, out id))
@@ -32,7 +32,7 @@ namespace Xpressive.Home.WebApi.Controllers
         }
 
         [HttpPost, Route("{scriptId}")]
-        public async Task Schedule(string scriptId, [FromBody]string cronTab)
+        public async Task ScheduleAsync(string scriptId, [FromBody]string cronTab)
         {
             Guid id;
             if (Guid.TryParse(scriptId, out id))
@@ -42,7 +42,7 @@ namespace Xpressive.Home.WebApi.Controllers
         }
 
         [HttpDelete, Route("{scheduleId}")]
-        public async Task DeleteSchedule(string scheduleId)
+        public async Task DeleteAsync(string scheduleId)
         {
             Guid id;
             if (Guid.TryParse(scheduleId, out id))

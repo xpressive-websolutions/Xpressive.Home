@@ -154,6 +154,22 @@
             $scope.scripts = result.data;
         });
 
+        $scope.enable = function(script) {
+            $http.post("/api/v1/script/" + script.id + "/enable").then(function () {
+                script.isEnabled = true;
+            });
+        };
+
+        $scope.disable = function(script) {
+            $http.post("/api/v1/script/" + script.id + "/disable").then(function () {
+                script.isEnabled = false;
+            });
+        };
+
+        $scope.execute = function(script) {
+            $http.post("/api/v1/script/execute/" + script.id);
+        };
+
         $scope.openScript = function(id) {
             $location.path("/scripts/" + id);
         };
@@ -169,6 +185,9 @@
                     },
                     label: function() {
                         return "Name";
+                    },
+                    value: function() {
+                        return "";
                     }
                 }
             });
@@ -181,11 +200,10 @@
         };
     }]);
 
-    xha.controller("singleInputController", ["$scope", "$log", "$uibModalInstance", "caption", "label", function($scope, $log, $uibModalInstance, caption, label) {
+    xha.controller("singleInputController", ["$scope", "$log", "$uibModalInstance", "caption", "label", "value", function($scope, $log, $uibModalInstance, caption, label, value) {
         $scope.caption = caption;
         $scope.label = label;
-
-        $scope.value = "";
+        $scope.value = value;
 
         $scope.ok = function() {
             $uibModalInstance.close($scope.value);
@@ -208,6 +226,12 @@
                     if (!_.find($scope.triggers, function(t) { return t.variable === nt.variable; })) {
                         nt.value = "";
                         $scope.triggers.push(nt);
+                    }
+                });
+                _.each($scope.triggers, function(t) {
+                    if (!_.find(result.data, function(nt) { return t.variable === nt.variable; })) {
+                        var i = $scope.triggers.indexOf(t);
+                        $scope.triggers.splice(i, 1);
                     }
                 });
             });
@@ -257,6 +281,9 @@
                     },
                     label: function() {
                         return "Variable name";
+                    },
+                    value: function () {
+                        return "";
                     }
                 }
             });
@@ -264,7 +291,10 @@
             modal.result.then(function(result) {
                 $http.post("/api/v1/trigger/" + id, "'" + result + "'").then(getTriggers);
             });
+        };
 
+        $scope.removeTrigger = function (trigger) {
+            $http.delete("/api/v1/trigger/" + trigger.id).then(getTriggers);
         };
 
         $scope.addSchedule = function() {
@@ -278,6 +308,9 @@
                     },
                     label: function() {
                         return "Cron tab";
+                    },
+                    value: function () {
+                        return "";
                     }
                 }
             });
@@ -285,6 +318,10 @@
             modal.result.then(function(result) {
                 $http.post("/api/v1/schedule/" + id, "'" + result + "'").then(getSchedules);
             });
+        };
+
+        $scope.removeSchedule = function (schedule) {
+            $http.delete("/api/v1/schedule/" + schedule.id).then(getSchedules);
         };
 
         $interval(function() {
@@ -329,6 +366,9 @@
                     },
                     label: function() {
                         return "Name";
+                    },
+                    value: function () {
+                        return "";
                     }
                 }
             });
@@ -376,6 +416,9 @@
                     },
                     label: function() {
                         return "Name";
+                    },
+                    value: function () {
+                        return "";
                     }
                 }
             });

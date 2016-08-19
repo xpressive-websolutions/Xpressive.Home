@@ -23,10 +23,10 @@ namespace Xpressive.Home.WebApi.Controllers
         }
 
         [HttpGet, Route("")]
-        public async Task<IEnumerable<NameIdDto>> GetScripts()
+        public async Task<IEnumerable<ScriptDto>> GetScripts()
         {
             var scripts = await _repository.GetAsync();
-            return scripts.Select(s => new NameIdDto { Id = s.Id.ToString("n"), Name = s.Name });
+            return scripts.Select(s => new ScriptDto { Id = s.Id.ToString("n"), Name = s.Name, IsEnabled = s.IsEnabled });
         }
 
         [HttpGet, Route("{id}")]
@@ -85,19 +85,19 @@ namespace Xpressive.Home.WebApi.Controllers
         }
 
         [HttpGet, Route("group/{scriptGroupId}")]
-        public async Task<IEnumerable<NameIdDto>> GetByScriptGroup(string scriptGroupId)
+        public async Task<IEnumerable<ScriptDto>> GetByScriptGroup(string scriptGroupId)
         {
             Guid groupId;
             if (!Guid.TryParse(scriptGroupId, out groupId))
             {
-                return Enumerable.Empty<NameIdDto>();
+                return Enumerable.Empty<ScriptDto>();
             }
 
             var scripts = await _roomScriptRepository.GetAsync(groupId);
 
             return scripts
                 .OrderBy(s => s.Name)
-                .Select(s => new NameIdDto
+                .Select(s => new ScriptDto
                 {
                     Id = s.ScriptId.ToString("n"),
                     Name = s.Name
@@ -164,10 +164,11 @@ namespace Xpressive.Home.WebApi.Controllers
             }
         }
 
-        public class NameIdDto
+        public class ScriptDto
         {
             public string Id { get; set; }
             public string Name { get; set; }
+            public bool IsEnabled { get; set; }
         }
     }
 }
