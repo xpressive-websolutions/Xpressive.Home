@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
+using Xpressive.Home.DatabaseMigrator;
 
 namespace Xpressive.Home
 {
@@ -10,6 +11,7 @@ namespace Xpressive.Home
     {
         public static IDisposable Run()
         {
+            DbMigrator.Run();
             IocContainer.Build();
             RegisterMessageQueueListeners();
 

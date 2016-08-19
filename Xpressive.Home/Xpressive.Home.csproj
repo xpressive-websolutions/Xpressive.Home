@@ -102,6 +102,10 @@
       <Project>{d19262be-03d6-415f-b442-eddf9da2d435}</Project>
       <Name>Xpressive.Home.Contracts</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Xpressive.Home.DatabaseMigrator\Xpressive.Home.DatabaseMigrator.csproj">
+      <Project>{bd690159-08fc-4f77-8fe5-3a580e6e9faf}</Project>
+      <Name>Xpressive.Home.DatabaseMigrator</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
