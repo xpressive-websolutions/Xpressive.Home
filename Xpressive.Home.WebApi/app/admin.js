@@ -155,13 +155,13 @@
         });
 
         $scope.enable = function(script) {
-            $http.post("/api/v1/script/" + script.id + "/enable").then(function () {
+            $http.post("/api/v1/script/" + script.id + "/enable").then(function() {
                 script.isEnabled = true;
             });
         };
 
         $scope.disable = function(script) {
-            $http.post("/api/v1/script/" + script.id + "/disable").then(function () {
+            $http.post("/api/v1/script/" + script.id + "/disable").then(function() {
                 script.isEnabled = false;
             });
         };
@@ -282,7 +282,7 @@
                     label: function() {
                         return "Variable name";
                     },
-                    value: function () {
+                    value: function() {
                         return "";
                     }
                 }
@@ -293,7 +293,7 @@
             });
         };
 
-        $scope.removeTrigger = function (trigger) {
+        $scope.removeTrigger = function(trigger) {
             $http.delete("/api/v1/trigger/" + trigger.id).then(getTriggers);
         };
 
@@ -309,7 +309,7 @@
                     label: function() {
                         return "Cron tab";
                     },
-                    value: function () {
+                    value: function() {
                         return "";
                     }
                 }
@@ -320,17 +320,21 @@
             });
         };
 
-        $scope.removeSchedule = function (schedule) {
+        $scope.removeSchedule = function(schedule) {
             $http.delete("/api/v1/schedule/" + schedule.id).then(getSchedules);
         };
 
-        $interval(function() {
+        var interval = $interval(function() {
             _.each($scope.triggers, function(t) {
                 $http.get("/api/v1/variable/" + t.variable, { cache: false }).then(function(result) {
                     t.value = result.data.value;
                 });
             });
         }, 5000);
+
+        $scope.$on("$destroy", function() {
+            $interval.cancel(interval);
+        });
     }]);
 
     xha.controller("roomController", ["$scope", "$http", "$uibModal", "$location", function($scope, $http, $uibModal, $location) {
@@ -367,7 +371,7 @@
                     label: function() {
                         return "Name";
                     },
-                    value: function () {
+                    value: function() {
                         return "";
                     }
                 }
@@ -417,7 +421,7 @@
                     label: function() {
                         return "Name";
                     },
-                    value: function () {
+                    value: function() {
                         return "";
                     }
                 }
@@ -445,7 +449,7 @@
                 _.each($scope.scripts, function(s) {
                     s.id = s.id.replace(/-/g, "");
                     s.scriptId = s.scriptId.replace(/-/g, "");
-                    s.script = _.find(allScripts, function (a) { return a.id === s.scriptId; });
+                    s.script = _.find(allScripts, function(a) { return a.id === s.scriptId; });
                 });
             });
         };

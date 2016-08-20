@@ -12,7 +12,7 @@
         }, 1000);
     }]);
 
-    xh.controller("backgroundController", ["$interval", function($interval) {
+    xh.controller("backgroundController", ["$interval", "$scope", function($interval, $scope) {
         var c = this;
         var seasons = ["spring", "summer", "autumn", "winter"];
         var times = ["night", "morning", "afternoon", "evening"];
@@ -39,7 +39,11 @@
         };
 
         calculateClass();
-        $interval(calculateClass, 10000);
+        var interval = $interval(calculateClass, 10000);
+
+        $scope.$on("$destroy", function() {
+            $interval.cancel(interval);
+        });
     }]);
 
     xh.controller("roomController", ["$log", "$http", function($log, $http) {
@@ -105,7 +109,7 @@
         });
     }]);
 
-    xh.controller("weatherController", ["$log", "$http", "$interval", function($log, $http, $interval) {
+    xh.controller("weatherController", ["$log", "$http", "$interval", "$scope", function($log, $http, $interval, $scope) {
         var c = this;
         var icons = [
             "clear-day",
@@ -208,6 +212,8 @@
             });
         };
 
+        var interval = null;
+
         $http.get("/api/v1/gateway", { cache: false }).then(function(gateways) {
             if (!_.find(gateways.data, function(g) { return g.name === "Weather"; })) {
                 return;
@@ -215,7 +221,13 @@
 
             updateWeather();
 
-            $interval(updateWeather, 10 * 60 * 1000); // every 10minutes
+            interval = $interval(updateWeather, 10 * 60 * 1000); // every 10minutes
+        });
+
+        $scope.$on("$destroy", function() {
+            if (interval) {
+                $interval.cancel(interval);
+            }
         });
     }]);
 
