@@ -141,6 +141,54 @@ body .masthead-nav > .active > a:focus {
   color: #fff;
   border-bottom-color: #fff;
 }
+body.spring-morning {
+  background: linear-gradient(rgba(25, 25, 25, 0.5), rgba(25, 25, 25, 0.5)), url("/styles/spring_morning.jpg") no-repeat center center fixed;
+}
+body.spring-afternoon {
+  background: linear-gradient(rgba(25, 25, 25, 0.5), rgba(25, 25, 25, 0.5)), url("/styles/spring_afternoon.jpg") no-repeat center center fixed;
+}
+body.spring-evening {
+  background: linear-gradient(rgba(25, 25, 25, 0.5), rgba(25, 25, 25, 0.5)), url("/styles/spring_evening.jpg") no-repeat center center fixed;
+}
+body.spring-night {
+  background: linear-gradient(rgba(25, 25, 25, 0.5), rgba(25, 25, 25, 0.5)), url("/styles/spring_night.jpg") no-repeat center center fixed;
+}
+body.summer-morning {
+  background: linear-gradient(rgba(25, 25, 25, 0.5), rgba(25, 25, 25, 0.5)), url("/styles/summer_morning.jpg") no-repeat center center fixed;
+}
+body.summer-afternoon {
+  background: linear-gradient(rgba(25, 25, 25, 0.5), rgba(25, 25, 25, 0.5)), url("/styles/summer_afternoon.jpg") no-repeat center center fixed;
+}
+body.summer-evening {
+  background: linear-gradient(rgba(25, 25, 25, 0.5), rgba(25, 25, 25, 0.5)), url("/styles/summer_evening.jpg") no-repeat center center fixed;
+}
+body.summer-night {
+  background: linear-gradient(rgba(25, 25, 25, 0.5), rgba(25, 25, 25, 0.5)), url("/styles/summer_night.jpg") no-repeat center center fixed;
+}
+body.autumn-morning {
+  background: linear-gradient(rgba(25, 25, 25, 0.5), rgba(25, 25, 25, 0.5)), url("/styles/autumn_morning.jpg") no-repeat center center fixed;
+}
+body.autumn-afternoon {
+  background: linear-gradient(rgba(25, 25, 25, 0.5), rgba(25, 25, 25, 0.5)), url("/styles/autumn_afternoon.jpg") no-repeat center center fixed;
+}
+body.autumn-evening {
+  background: linear-gradient(rgba(25, 25, 25, 0.5), rgba(25, 25, 25, 0.5)), url("/styles/autumn_evening.jpg") no-repeat center center fixed;
+}
+body.autumn-night {
+  background: linear-gradient(rgba(25, 25, 25, 0.5), rgba(25, 25, 25, 0.5)), url("/styles/autumn_night.jpg") no-repeat center center fixed;
+}
+body.winter-morning {
+  background: linear-gradient(rgba(25, 25, 25, 0.5), rgba(25, 25, 25, 0.5)), url("/styles/winter_morning.jpg") no-repeat center center fixed;
+}
+body.winter-afternoon {
+  background: linear-gradient(rgba(25, 25, 25, 0.5), rgba(25, 25, 25, 0.5)), url("/styles/winter_afternoon.jpg") no-repeat center center fixed;
+}
+body.winter-evening {
+  background: linear-gradient(rgba(25, 25, 25, 0.5), rgba(25, 25, 25, 0.5)), url("/styles/winter_evening.jpg") no-repeat center center fixed;
+}
+body.winter-night {
+  background: linear-gradient(rgba(25, 25, 25, 0.5), rgba(25, 25, 25, 0.5)), url("/styles/winter_night.jpg") no-repeat center center fixed;
+}
 @media (min-width: 768px) {
   body .masthead-brand {
     float: left;
