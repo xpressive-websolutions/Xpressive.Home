@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using log4net;
+using Polly;
 using Q42.HueApi;
 using Q42.HueApi.ColorConverters;
 using Q42.HueApi.ColorConverters.HSB;
@@ -202,8 +203,28 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                     return;
             }
 
-            var client = GetClient(bulb.Bridge);
-            await client.SendCommandAsync(command, new[] { bulb.Index });
+            var policy = Policy
+                .Handle<Exception>()
+                .WaitAndRetryAsync(new []
+                {
+                    TimeSpan.FromSeconds(1),
+                    TimeSpan.FromSeconds(2),
+                    TimeSpan.FromSeconds(5)
+                });
+
+            try
+            {
+                await policy.ExecuteAsync(async () =>
+                {
+                    var client = GetClient(bulb.Bridge);
+                    await client.SendCommandAsync(command, new[] { bulb.Index });
+                });
+            }
+            catch (Exception e)
+            {
+                _log.Error(e.Message, e);
+            }
+
 
             if (command.On.HasValue)
             {

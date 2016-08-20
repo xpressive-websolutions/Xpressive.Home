@@ -4,6 +4,7 @@ using System.Configuration;
 using System.Linq;
 using System.Threading.Tasks;
 using log4net;
+using Polly;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 using Action = Xpressive.Home.Contracts.Gateway.Action;
@@ -144,7 +145,16 @@ namespace Xpressive.Home.Plugins.Lifx
                 {
                     try
                     {
-                        await GetHttpLights();
+                        var policy = Policy
+                            .Handle<Exception>()
+                            .WaitAndRetryAsync(new[]
+                            {
+                                TimeSpan.FromSeconds(1),
+                                TimeSpan.FromSeconds(2),
+                                TimeSpan.FromSeconds(5)
+                            });
+
+                        await policy.ExecuteAsync(async () => await GetHttpLights());
                     }
                     catch (Exception e)
                     {
