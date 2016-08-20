@@ -25,7 +25,7 @@ namespace Xpressive.Home.WebApi
 
         public void Start()
         {
-            _webApp = WebApp.Start("http://localhost:8080", app =>
+            _webApp = WebApp.Start("http://+:8080", app =>
             {
                 var config = new HttpConfiguration();
                 config.MapHttpAttributeRoutes();
