@@ -72,6 +72,12 @@ namespace Xpressive.Home.Plugins.Lifx
             }
 
             var msg = ParseMessage(data);
+
+            if (msg.Header.TargetMacAddress.All(b => b == 0))
+            {
+                return;
+            }
+
             var device = ProcessDeviceDiscoveryMessage(remoteEndPoint, msg);
             ProcessVariables(msg, device);
         }
@@ -100,10 +106,13 @@ namespace Xpressive.Home.Plugins.Lifx
                     Saturation = saturation,
                     Brightness = brightness,
                     Kelvin = kelvin
-                }.ToRgb().ToString();
+                };
+                
+                var hexColor = color.ToRgb().ToString();
 
                 light.Name = lightStateResponse.Label;
-                VariableChanged?.Invoke(light, Tuple.Create(light, "Color", (object)color));
+                light.Color = color;
+                VariableChanged?.Invoke(light, Tuple.Create(light, "Color", (object)hexColor));
                 VariableChanged?.Invoke(light, Tuple.Create(light, "Brightness", (object)Math.Round(brightness, 2)));
                 VariableChanged?.Invoke(light, Tuple.Create(light, "Name", (object)lightStateResponse.Label));
                 VariableChanged?.Invoke(light, Tuple.Create(light, "IsOn", (object)lightStateResponse.IsOn));
@@ -355,22 +364,6 @@ namespace Xpressive.Home.Plugins.Lifx
             );
         }
 
-        public async Task SetBrightnessAsync(LifxLocalLight bulb, ushort brightness, TimeSpan transitionDuration)
-        {
-            if (transitionDuration.TotalMilliseconds > UInt32.MaxValue ||
-                transitionDuration.Ticks < 0)
-                throw new ArgumentOutOfRangeException("transitionDuration");
-            FrameHeader header = new FrameHeader()
-            {
-                Identifier = (uint)_randomizer.Next(),
-                AcknowledgeRequired = true
-            };
-            var duration = (uint)transitionDuration.TotalMilliseconds;
-            await BroadcastMessageAsync(bulb.HostName, header,
-                MessageType.SetLightBrightness, brightness, duration
-            );
-        }
-
         /// <summary>
         /// Gets the current state of the bulb
         /// </summary>
@@ -580,7 +573,6 @@ namespace Xpressive.Home.Plugins.Lifx
         //Unofficial
         LightGetTemperature = 0x6E,
         //LightStateTemperature = 0x6f,
-        SetLightBrightness = 0x68
     }
 
     /// <summary>
@@ -594,5 +586,6 @@ namespace Xpressive.Home.Plugins.Lifx
         public DateTime LastSeen { get; set; }
         public string Id { get; set; }
         public string Name { get; set; }
+        public HsbkColor Color { get; set; }
     }
 }

@@ -256,7 +256,7 @@ namespace Xpressive.Home.Plugins.Lifx
                 case "change color":
                     var rgb = color.ParseRgb();
                     var hsb = rgb.ToHsbk();
-                    var hue = (ushort)hsb.Hue;
+                    var hue = (ushort)(hsb.Hue * 65535 / 360);
                     var saturation = (ushort) (hsb.Saturation*65535);
                     b = (ushort) (hsb.Brightness*65535);
                     ushort kelvin = 4500;
@@ -265,7 +265,17 @@ namespace Xpressive.Home.Plugins.Lifx
                     _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Color", rgb.ToString()));
                     break;
                 case "change brightness":
-                    await _localClient.SetBrightnessAsync(light, b, TimeSpan.FromSeconds(seconds));
+                    var hsbk = light.Color;
+                    if (hsbk == null)
+                    {
+                        hsbk = new HsbkColor();
+                        hsbk.Hue = 0;
+                        hsbk.Saturation = 0;
+                        hsbk.Kelvin = 4500;
+                    }
+                    hue = (ushort) (hsbk.Hue*65535/360);
+                    saturation = (ushort) (hsbk.Saturation*65535);
+                    await _localClient.SetColorAsync(light, hue, saturation, b, (ushort)hsbk.Kelvin, TimeSpan.FromSeconds(seconds));
                     var db = Math.Round(brightness, 2);
                     _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Brightness", db));
                     _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", true));
