@@ -114,11 +114,11 @@
     xh.controller("weatherController", ["$log", "$http", "$interval", "$scope", function($log, $http, $interval, $scope) {
         var c = this;
         var icons = [
-            "clear-day",
             "clear-night",
+            "partly-cloudy-night",
+            "clear-day",
             "wind",
             "partly-cloudy-day",
-            "partly-cloudy-night",
             "fog",
             "cloudy",
             "rain",
@@ -267,14 +267,24 @@
                 c.stationId = selectedItem.id;
                 c.station = selectedItem.name;
                 c.imageUrl = selectedItem.imageUrl;
+                c.playing = "";
             });
         };
 
         $interval(function() {
             if (c.stationId) {
                 $http.get("/api/v1/radio/playing?stationId=" + c.stationId, { cache: false }).then(function(result) {
-                    c.imageUrl = result.data.playingImageUrl;
-                    c.playing = result.data.playing;
+                    if (result.data) {
+                        c.imageUrl = result.data.playingImageUrl;
+                        c.playing = result.data.playing;
+                    } else {
+                        c.imageUrl = null;
+                        c.playing = "";
+                    }
+                },
+                function() {
+                    c.imageUrl = null;
+                    c.playing = "";
                 });
             }
         }, 10000);

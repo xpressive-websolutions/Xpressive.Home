@@ -109,12 +109,17 @@ namespace Xpressive.Home.Services
                 var url = $"http://opml.radiotime.com/Search.ashx?query={encoded}&call";
                 var opml = await GetDocumentAsync(url);
 
-                if (opml.Header.Status != 200 || opml.Body.Outlines == null || opml.Body.Outlines.Count == 0)
+                if (opml.Header.Status != 200)
                 {
                     return null;
                 }
 
-                var outline = opml.Body.Outlines[0];
+                var outline = opml.Body.Outlines?.FirstOrDefault(o => stationId.Equals(o.GuideId));
+
+                if (outline == null)
+                {
+                    return null;
+                }
 
                 return new TuneInRadioStationDetail
                 {
