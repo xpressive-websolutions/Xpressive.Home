@@ -11,12 +11,13 @@ namespace Xpressive.Home.Services
         protected override void Load(ContainerBuilder builder)
         {
             builder.RegisterType<IpAddressService>().As<IIpAddressService>();
-            builder.RegisterType<RadioStationService>().As<IRadioStationService>();
+            builder.RegisterType<TuneInRadioStationService>().As<ITuneInRadioStationService>();
             builder.RegisterType<LowBatteryDeviceObserver>().As<IStartable>().SingleInstance();
             builder.RegisterType<DevicePersistingService>().As<IDevicePersistingService>();
             builder.RegisterType<RoomRepository>().As<IRoomRepository>();
             builder.RegisterType<RoomScriptGroupRepository>().As<IRoomScriptGroupRepository>();
             builder.RegisterType<RoomScriptRepository>().As<IRoomScriptRepository>();
+            builder.RegisterType<FavoriteRadioStationService>().As<IFavoriteRadioStationService>();
 
             builder.RegisterType<UpnpDeviceDiscoveringService>()
                 .As<IUpnpDeviceDiscoveringService>()

@@ -81,12 +81,12 @@
     <Compile Include="Rooms\Room.cs" />
     <Compile Include="Rooms\RoomScript.cs" />
     <Compile Include="Rooms\RoomScriptGroup.cs" />
+    <Compile Include="Services\FavoriteRadioStation.cs" />
+    <Compile Include="Services\IFavoriteRadioStationService.cs" />
     <Compile Include="Services\IIpAddressService.cs" />
-    <Compile Include="Services\IRadioStationService.cs" />
+    <Compile Include="Services\ITuneInRadioStationService.cs" />
     <Compile Include="Services\IUpnpDeviceDiscoveringService.cs" />
     <Compile Include="Services\IUpnpDeviceResponse.cs" />
-    <Compile Include="Services\RadioStation.cs" />
-    <Compile Include="Services\RadioStationCountry.cs" />
     <Compile Include="Variables\BooleanVariable.cs" />
     <Compile Include="Variables\DoubleVariable.cs" />
     <Compile Include="Variables\IVariableRepository.cs" />

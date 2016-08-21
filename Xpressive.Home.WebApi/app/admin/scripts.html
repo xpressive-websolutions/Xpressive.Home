@@ -23,17 +23,20 @@
                         </tr>
                         <tr ng-repeat="script in scripts">
                             <td>
-                                <button type="button" class="btn btn-default btn-xs btn-row-action" title="Enable" ng-click="enable(script)" ng-if="script.isEnabled === false">
+                                <button type="button" class="btn btn-default btn-xs btn-row-action" title="Enable" ng-click="enable(script)" ng-if="!script.isEnabled">
                                     <span class="glyphicon glyphicon-ok"></span>
                                 </button>
-                                <button type="button" class="btn btn-default btn-xs btn-row-action" title="Disable" ng-click="disable(script)" ng-if="script.isEnabled === true">
+                                <button type="button" class="btn btn-default btn-xs btn-row-action" title="Disable" ng-click="disable(script)" ng-if="script.isEnabled">
                                     <span class="glyphicon glyphicon-remove"></span>
                                 </button>
                                 <button type="button" class="btn btn-default btn-xs btn-row-action" title="Execute" ng-click="execute(script)">
                                     <span class="glyphicon glyphicon-play"></span>
                                 </button>
                             </td>
-                            <td ng-click="openScript(script.id)">{{::script.name }}</td>
+                            <td ng-click="openScript(script.id)">
+                                {{::script.name }}
+                                <span class="label label-warning" ng-if="!script.isEnabled">disabled</span>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
