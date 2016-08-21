@@ -51,6 +51,19 @@
         div.btn-blog ul.dropdown-menu li {
             text-align: center;
         }
+
+        div.modal-content {
+            background-color: #ffffff;
+            background-color: rgba(255, 255, 255, .4);
+        }
+
+        div.modal-footer {
+            border-top: 1px solid #bbb;
+        }
+
+        div.modal-header {
+            border-bottom: 1px solid #bbb;
+        }
     </style>
 
 </head>
@@ -99,20 +112,31 @@
                             </div>
                         </div>
 
-                        <div class="row" ng-controller="musicController as mc">
-                            <div class="col-md-4 col-xs-4 col-sm-4 center-block text-center">
-                                Show current song with cover and artist
+                        <div class="row" ng-controller="musicController as mc" style="height: 55px; text-align: left;" ng-click="mc.selectStation()">
+                            <div class="col-md-4 col-xs-4 col-sm-4">
+                                <div style="float: left;" ng-show="!mc.imageUrl">
+                                    <button class="btn btn-default btn-lg" style="height: 55px; width: 55px;">
+                                        <span class="glyphicon glyphicon-list"></span>
+                                    </button>
+                                </div>
+                                <div style="float: left;" ng-show="mc.imageUrl">
+                                    <img class="img-rounded" style="height: 55px; width: 55px;" ng-src="{{ mc.imageUrl }}"/>
+                                </div>
+                                <div style="height: 55px; padding-left: 65px; margin-top: 8px;">
+                                    <div>{{ mc.station }}</div>
+                                    <div>{{ mc.playing }}</div>
+                                </div>
                             </div>
                             <div class="col-md-4 col-xs-4 col-sm-4 center-block text-center">
                                 <div class="btn-group">
                                     <button type="button" class="btn btn-default" style="border-radius: 50%; height: 40px; width: 40px; margin-top: 6px;">
-                                        <span class="glyphicon glyphicon-backward"></span>
+                                        <span class="glyphicon glyphicon-backward" style="margin-right: 2px;"></span>
                                     </button>
                                     <button type="button" class="btn btn-default btn-lg" style="border-radius: 50%; height: 55px; width: 55px; margin-left: 10px; margin-right: 10px;">
                                         <span class="glyphicon glyphicon-play"></span>
                                     </button>
                                     <button type="button" class="btn btn-default" style="border-radius: 50%; height: 40px; width: 40px; margin-top: 6px;">
-                                        <span class="glyphicon glyphicon-forward"></span>
+                                        <span class="glyphicon glyphicon-forward" style="margin-left: 4px;"></span>
                                     </button>
                                 </div>
                             </div>

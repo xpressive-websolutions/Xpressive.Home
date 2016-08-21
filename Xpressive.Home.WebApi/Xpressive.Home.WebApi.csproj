@@ -160,6 +160,7 @@
     <Content Include="app\admin\scripts.html" />
     <Content Include="app\admin\variables.html" />
     <Content Include="app\dashboard.js" />
+    <Content Include="app\musicSelectionController.html" />
     <Content Include="index.html" />
     <Content Include="Scripts\adminlte.js" />
     <Content Include="Styles\AdminLTE.min.css" />

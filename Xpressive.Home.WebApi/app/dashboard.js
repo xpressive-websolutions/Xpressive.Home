@@ -1,10 +1,10 @@
 ﻿(function(jq) {
 
-    var xh = angular.module("xpressivehome", ['ngRoute', 'ui.bootstrap']);
+    var xh = angular.module("xpressivehome", ["ngRoute", "ui.bootstrap"]);
 
     // TODO: sidebar mit "pinned" scripts z.B. für alarm scharf stellen, also raumübergreiffend
 
-    xh.controller("dateTimeController", ['$log', '$interval', function($log, $interval) {
+    xh.controller("dateTimeController", ["$log", "$interval", function($log, $interval) {
         var c = this;
 
         $interval(function() {
@@ -46,7 +46,7 @@
         });
     }]);
 
-    xh.controller("roomController", ["$log", "$http", function($log, $http) {
+    xh.controller("roomController", ["$rootScope", "$log", "$http", function($rootScope, $log, $http) {
         var c = this;
 
         c.rooms = [];
@@ -55,6 +55,8 @@
 
         c.selectRoom = function(room) {
             c.room = room;
+
+            $rootScope.$broadcast("selectedRoomChanged", room);
 
             $http.get("/api/v1/roomscriptgroup?roomId=" + room.id, { cache: false }).then(function(result) {
                 var groups = _.sortBy(result.data, function(g) { return g.sortOrder; });
@@ -78,8 +80,8 @@
         };
 
         c.toggle = function(caller) {
-            var offsets = jq('#' + caller)[0].getBoundingClientRect();
-            var dd = jq('#' + caller).find(".dropdown-menu")[0];
+            var offsets = jq("#" + caller)[0].getBoundingClientRect();
+            var dd = jq("#" + caller).find(".dropdown-menu")[0];
             var maxHeight = jq(window).height();
             var height = jq(dd).actualHeight() * 1.3 + 12;
             var hp = "90%";
@@ -231,7 +233,7 @@
         });
     }]);
 
-    xh.controller("musicController", ["$log", "$http", function($log, $http) {
+    xh.controller("musicController", ["$rootScope", "$log", "$http", "$uibModal", "$interval", function($rootScope, $log, $http, $uibModal, $interval) {
         var c = this;
 
         c.isEnabled = false;
@@ -244,10 +246,111 @@
             c.isEnabled = true;
             $log.debug("Music is enabled");
 
+            // TODO: only enable music if devices belongs to the selected room
+
             $http.get("/api/v1/gateway/Sonos", { cache: false }).then(function(devices) {
                 $log.debug(angular.toJson(devices.data));
             });
         });
+
+        $rootScope.$on("selectedRoomChanged", function(event, data) {
+            $log.debug("selected room: " + angular.toJson(data));
+        });
+
+        c.selectStation = function() {
+            var modalInstance = $uibModal.open({
+                templateUrl: "/app/musicSelectionController.html",
+                controller: "musicSelectionController"
+            });
+
+            modalInstance.result.then(function(selectedItem) {
+                c.stationId = selectedItem.id;
+                c.station = selectedItem.name;
+                c.imageUrl = selectedItem.imageUrl;
+            });
+        };
+
+        $interval(function() {
+            if (c.stationId) {
+                $http.get("/api/v1/radio/playing?stationId=" + c.stationId, { cache: false }).then(function(result) {
+                    c.imageUrl = result.data.playingImageUrl;
+                    c.playing = result.data.playing;
+                });
+            }
+        }, 10000);
+    }]);
+
+    xh.controller("musicSelectionController", ["$scope", "$http", "$uibModalInstance", function($scope, $http, $uibModalInstance) {
+        $scope.stations = {};
+        $scope.favorites = [];
+        $scope.categories = [];
+        $scope.query = "";
+        $scope.selected = {};
+        $scope.isOkEnabled = false;
+
+        $http.get("/api/v1/radio/starred", { cache: false }).then(function(result) {
+            $scope.favorites = result.data;
+        });
+
+        $http.get("/api/v1/radio/category").then(function(result) {
+            $scope.categories = result.data;
+        });
+
+        $scope.search = function() {
+            $scope.favorites = [];
+            if ($scope.query) {
+                $http.get("/api/v1/radio/search?query=" + encodeURIComponent($scope.query)).then(function(result) {
+                    $scope.stations = result.data;
+                });
+            }
+        };
+
+        $scope.star = function(station) {
+            $http.put("/api/v1/radio/star", station);
+        };
+
+        $scope.unstar = function(station) {
+            $http.put("/api/v1/radio/unstar", station).then(function() {
+                $scope.favorites.splice($scope.favorites.indexOf(station), 1);
+            });
+        };
+
+        $scope.selectCategory = function(category) {
+            $scope.favorites = [];
+            $http.get("/api/v1/radio/category?parentId=" + category.id).then(function(result) {
+                $scope.categories = result.data;
+            });
+            $http.get("/api/v1/radio/station?categoryId=" + category.id).then(function(result) {
+                $scope.stations = result.data;
+            });
+        };
+
+        $scope.selectStation = function(station) {
+            $scope.selected = station;
+            $scope.isOkEnabled = true;
+        }
+
+        $scope.selectMoreStations = function() {
+            if (!$scope.stations.showMore) {
+                return;
+            }
+            var showMore = $scope.stations.showMore;
+            $scope.stations.showMore = null;
+            $http.get("/api/v1/radio/station?categoryId=" + showMore).then(function(result) {
+                _.each(result.data.stations, function(s) {
+                    $scope.stations.stations.push(s);
+                });
+                $scope.stations.showMore = result.data.showMore;
+            });
+        };
+
+        $scope.ok = function() {
+            $uibModalInstance.close($scope.selected);
+        };
+
+        $scope.cancel = function() {
+            $uibModalInstance.dismiss("cancel");
+        };
     }]);
 
 })($);

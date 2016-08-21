@@ -42,10 +42,13 @@ namespace Xpressive.Home.Services
 
         public async Task<TuneInRadioStations> GetStationsAsync(string categoryId)
         {
+            if (string.IsNullOrEmpty(categoryId))
+            {
+                return new TuneInRadioStations();
+            }
+
             Uri url;
-            if (string.IsNullOrEmpty(categoryId) ||
-                !_categories.TryGetValue(categoryId, out url) ||
-                !_showMoreStations.TryGetValue(categoryId, out url))
+            if (!_categories.TryGetValue(categoryId, out url) && !_showMoreStations.TryGetValue(categoryId, out url))
             {
                 return new TuneInRadioStations();
             }
@@ -55,7 +58,7 @@ namespace Xpressive.Home.Services
 
         public async Task<TuneInRadioStations> SearchStationsAsync(string query)
         {
-            var url = "http://opml.radiotime.com/Search.ashx?query=" + WebUtility.UrlDecode(query);
+            var url = $"http://opml.radiotime.com/Search.ashx?query={WebUtility.UrlDecode(query)}&types=station&name";
             return await GetStationsInternalAsync(url);
         }
 
@@ -102,10 +105,11 @@ namespace Xpressive.Home.Services
                 }
 
                 var callSign = document.SelectSingleNode("/opml/body/outline/station/call_sign")?.InnerText;
-                var url = $"http://opml.radiotime.com/Search.ashx?query={WebUtility.UrlEncode(callSign)}&call";
+                var encoded = WebUtility.UrlEncode(callSign).Replace("+", "%20");
+                var url = $"http://opml.radiotime.com/Search.ashx?query={encoded}&call";
                 var opml = await GetDocumentAsync(url);
 
-                if (opml.Header.Status != 200 || opml.Body.Outlines == null || opml.Body.Outlines.Count != 1)
+                if (opml.Header.Status != 200 || opml.Body.Outlines == null || opml.Body.Outlines.Count == 0)
                 {
                     return null;
                 }
@@ -197,7 +201,7 @@ namespace Xpressive.Home.Services
                     _showMoreStations.TryAdd(hash, new Uri(outline.Url));
                 }
 
-                if ("audio".Equals(outline.Type) && outline.Formats.Contains("mp3"))
+                if ("audio".Equals(outline.Type) && outline.Formats != null && outline.Formats.Contains("mp3"))
                 {
                     result.Stations.Add(new TuneInRadioStation
                     {

@@ -55,6 +55,12 @@ namespace Xpressive.Home.WebApi.Controllers
             };
         }
 
+        [HttpGet, Route("playing")]
+        public async Task<object> GetPlaying([FromUri] string stationId)
+        {
+            return await _radioStationService.GetStationDetailAsync(stationId);
+        }
+
         [HttpGet, Route("starred")]
         public async Task<IEnumerable<FavoriteRadioStation>> GetFavorites()
         {
