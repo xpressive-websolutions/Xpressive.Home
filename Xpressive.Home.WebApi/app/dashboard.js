@@ -286,12 +286,19 @@
                 controller: "musicSelectionController"
             });
 
-            modalInstance.result.then(function(selectedItem) {
-                c.stationId = selectedItem.id;
-                c.station = selectedItem.name;
-                c.imageUrl = selectedItem.imageUrl;
-                c.playing = "";
-            });
+            modalInstance.result.then(
+                function(selectedItem) {
+                    c.stationId = selectedItem.id;
+                    c.station = selectedItem.name;
+                    c.imageUrl = selectedItem.imageUrl;
+                    c.playing = "";
+                },
+                function() {
+                    c.stationId = null;
+                    c.station = null;
+                    c.imageUrl = null;
+                    c.playing = "";
+                });
         };
 
         $interval(function() {
