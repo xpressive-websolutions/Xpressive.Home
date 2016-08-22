@@ -56,6 +56,8 @@
     <Compile Include="SonosGateway.cs" />
     <Compile Include="SonosScriptObjectProvider.cs" />
     <Compile Include="SonosSoapClient.cs" />
+    <Compile Include="UpnpAction.cs" />
+    <Compile Include="UpnpService.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Xpressive.Home.Contracts\Xpressive.Home.Contracts.csproj">

@@ -1,4 +1,5 @@
-﻿using Xpressive.Home.Contracts.Gateway;
+﻿using System.Collections.Generic;
+using Xpressive.Home.Contracts.Gateway;
 
 namespace Xpressive.Home.Plugins.Sonos
 {
@@ -11,11 +12,13 @@ namespace Xpressive.Home.Plugins.Sonos
             _ipAddress = ipAddress;
             Id = id;
             Name = name;
+            Services = new List<UpnpService>();
         }
 
         public string IpAddress => _ipAddress;
         public string Type { get; set; }
         public string Zone { get; set; }
         public bool IsMaster { get; set; }
+        public List<UpnpService> Services { get; }
     }
 }
