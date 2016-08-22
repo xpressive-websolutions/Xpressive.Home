@@ -54,10 +54,10 @@ create table RoomScriptGroup (
 
 create table RoomScript (
     Id uniqueidentifier not null primary key,
-    RoomId uniqueidentifier not null,
+    GroupId uniqueidentifier not null,
     ScriptId uniqueidentifier not null,
     Name nvarchar(64) not null,
 
-    constraint FK_RoomScript_Room foreign key (RoomId) references Room (Id),
+    constraint FK_RoomScript_RoomScriptGroup foreign key (GroupId) references RoomScriptGroup (Id),
     constraint FK_RoomScript_Script foreign key (ScriptId) references Script (Id)
 )
