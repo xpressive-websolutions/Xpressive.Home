@@ -1,6 +1,7 @@
 ﻿using Autofac;
 using Xpressive.Home.Contracts.Automation;
 using Xpressive.Home.Contracts.Gateway;
+using Xpressive.Home.Contracts.Messaging;
 
 namespace Xpressive.Home.Plugins.MyStrom
 {
@@ -14,6 +15,7 @@ namespace Xpressive.Home.Plugins.MyStrom
             builder.RegisterType<MyStromGateway>()
                 .As<IGateway>()
                 .As<IMyStromGateway>()
+                .As<IMessageQueueListener<CommandMessage>>()
                 .SingleInstance()
                 .OnActivated(async g => await g.Instance.Observe());
 

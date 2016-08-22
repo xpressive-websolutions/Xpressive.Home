@@ -1,6 +1,7 @@
 ﻿using Autofac;
 using Xpressive.Home.Contracts.Automation;
 using Xpressive.Home.Contracts.Gateway;
+using Xpressive.Home.Contracts.Messaging;
 
 namespace Xpressive.Home.Plugins.Denon
 {
@@ -13,6 +14,7 @@ namespace Xpressive.Home.Plugins.Denon
             builder.RegisterType<DenonGateway>()
                 .As<IGateway>()
                 .As<IDenonGateway>()
+                .As<IMessageQueueListener<CommandMessage>>()
                 .SingleInstance();
 
             base.Load(builder);

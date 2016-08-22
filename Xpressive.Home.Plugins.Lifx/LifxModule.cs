@@ -1,6 +1,7 @@
 using Autofac;
 using Xpressive.Home.Contracts.Automation;
 using Xpressive.Home.Contracts.Gateway;
+using Xpressive.Home.Contracts.Messaging;
 
 namespace Xpressive.Home.Plugins.Lifx
 {
@@ -13,6 +14,7 @@ namespace Xpressive.Home.Plugins.Lifx
             builder.RegisterType<LifxGateway>()
                 .As<IGateway>()
                 .As<ILifxGateway>()
+                .As<IMessageQueueListener<CommandMessage>>()
                 .SingleInstance()
                 .OnActivated(async h => await h.Instance.FindBulbsAsync());
 

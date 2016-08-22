@@ -1,6 +1,7 @@
 ﻿using Autofac;
 using Xpressive.Home.Contracts.Automation;
 using Xpressive.Home.Contracts.Gateway;
+using Xpressive.Home.Contracts.Messaging;
 
 namespace Xpressive.Home.Plugins.Sonos
 {
@@ -15,6 +16,7 @@ namespace Xpressive.Home.Plugins.Sonos
             builder.RegisterType<SonosGateway>()
                 .As<IGateway>()
                 .As<ISonosGateway>()
+                .As<IMessageQueueListener<CommandMessage>>()
                 .SingleInstance();
 
             base.Load(builder);

@@ -1,5 +1,6 @@
 using Autofac;
 using Xpressive.Home.Contracts.Gateway;
+using Xpressive.Home.Contracts.Messaging;
 using Xpressive.Home.Plugins.Zwave.CommandClassHandlers;
 
 namespace Xpressive.Home.Plugins.Zwave
@@ -20,6 +21,7 @@ namespace Xpressive.Home.Plugins.Zwave
 
             builder.RegisterType<ZwaveGateway>()
                 .As<IGateway>()
+                .As<IMessageQueueListener<CommandMessage>>()
                 .SingleInstance()
                 .OnActivated(async g => await g.Instance.Start());
 
