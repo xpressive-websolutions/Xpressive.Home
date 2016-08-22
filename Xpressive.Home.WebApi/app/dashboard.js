@@ -250,7 +250,7 @@
                 var roomId = selectedRoom.id.replace(/-/g, "");
                 _.each(roomDevices, function(rd) {
                     if (rd.roomId.replace(/-/g, "") === roomId) {
-                        var device = _.find(devices, function(d) { return d.id === rd.id; });
+                        var device = _.find(devices, function(d) { return d.id === rd.deviceId; });
                         if (device) {
                             c.isEnabled = true;
                             c.device = device;
@@ -292,6 +292,10 @@
                     c.station = selectedItem.name;
                     c.imageUrl = selectedItem.imageUrl;
                     c.playing = "";
+
+                    if (c.device) {
+                        $http.post("/api/v1/radio/play/" + c.device.id, selectedItem);
+                    }
                 },
                 function() {
                     c.stationId = null;

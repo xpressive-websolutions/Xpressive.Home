@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web.Http;
+using Xpressive.Home.Contracts.Messaging;
 using Xpressive.Home.Contracts.Services;
 
 namespace Xpressive.Home.WebApi.Controllers
@@ -12,11 +13,16 @@ namespace Xpressive.Home.WebApi.Controllers
     {
         private readonly ITuneInRadioStationService _radioStationService;
         private readonly IFavoriteRadioStationService _favoriteRadioStationService;
+        private readonly IMessageQueue _messageQueue;
 
-        public RadioStationController(ITuneInRadioStationService radioStationService, IFavoriteRadioStationService favoriteRadioStationService)
+        public RadioStationController(
+            ITuneInRadioStationService radioStationService,
+            IFavoriteRadioStationService favoriteRadioStationService,
+            IMessageQueue messageQueue)
         {
             _radioStationService = radioStationService;
             _favoriteRadioStationService = favoriteRadioStationService;
+            _messageQueue = messageQueue;
         }
 
         [HttpGet, Route("category")]
@@ -59,6 +65,18 @@ namespace Xpressive.Home.WebApi.Controllers
         public async Task<object> GetPlaying([FromUri] string stationId)
         {
             return await _radioStationService.GetStationDetailAsync(stationId);
+        }
+
+        [HttpPost, Route("play/{deviceId}")]
+        public async Task PlayRadio(string deviceId, [FromBody] RadioStationDto radioStation)
+        {
+            var url = await _radioStationService.GetStreamUrlAsync(radioStation.Id);
+            var parameters = new Dictionary<string, string>
+            {
+                {"Stream", url},
+                {"Title", radioStation.Name}
+            };
+            _messageQueue.Publish(new CommandMessage("Sonos", deviceId, "Play Radio", parameters));
         }
 
         [HttpGet, Route("starred")]
