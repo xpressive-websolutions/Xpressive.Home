@@ -112,7 +112,7 @@
                             </div>
                         </div>
 
-                        <div class="row" ng-controller="musicController as mc" style="height: 55px; text-align: left;" ng-click="mc.selectStation()">
+                        <div class="row" ng-controller="musicController as mc" style="height: 55px; text-align: left;" ng-click="mc.selectStation()" ng-cloak ng-show="mc.isEnabled">
                             <div class="col-md-4 col-xs-4 col-sm-4">
                                 <div style="float: left;" ng-show="!mc.imageUrl">
                                     <button class="btn btn-default btn-lg" style="height: 55px; width: 55px;">

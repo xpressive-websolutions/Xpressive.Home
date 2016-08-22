@@ -75,6 +75,7 @@
     <Compile Include="Messaging\NotifyUserMessage.cs" />
     <Compile Include="Messaging\UpdateVariableMessage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Rooms\IRoomDeviceService.cs" />
     <Compile Include="Rooms\IRoomRepository.cs" />
     <Compile Include="Rooms\IRoomScriptGroupRepository.cs" />
     <Compile Include="Rooms\IRoomScriptRepository.cs" />

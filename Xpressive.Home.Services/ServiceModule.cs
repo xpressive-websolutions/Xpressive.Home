@@ -18,6 +18,7 @@ namespace Xpressive.Home.Services
             builder.RegisterType<RoomScriptGroupRepository>().As<IRoomScriptGroupRepository>();
             builder.RegisterType<RoomScriptRepository>().As<IRoomScriptRepository>();
             builder.RegisterType<FavoriteRadioStationService>().As<IFavoriteRadioStationService>();
+            builder.RegisterType<RoomDeviceService>().As<IRoomDeviceService>();
 
             builder.RegisterType<UpnpDeviceDiscoveringService>()
                 .As<IUpnpDeviceDiscoveringService>()

@@ -48,6 +48,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <EmbeddedResource Include="Scripts\0003 - pair rooms with devices.sql" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Scripts\0001 - create tables.sql" />

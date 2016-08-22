@@ -24,11 +24,29 @@
 
     <div class="row">
         <div class="col-md-3 col-sm-6 col-xs-12" ng-repeat="device in gateway.devices">
-            <div class="info-box" ng-click="showVariables(gateway.name, device.id)">
-                <span class="info-box-icon bg-aqua"><i class="fa fa-envelope-o"></i></span>
+            <div class="info-box">
+                <span class="info-box-icon bg-aqua" ng-click="showVariables(gateway.name, device.id)" style="cursor: pointer;">
+                    <i class="fa fa-envelope-o"></i>
+                </span>
 
                 <div class="info-box-content">
-                    <span class="info-box-text" title="{{ device.name }}">{{ device.name }}</span>
+                    <span class="info-box-text" style="padding-bottom: 10px; cursor: pointer;" title="{{ device.name }}" ng-click="showVariables(gateway.name, device.id)">{{ device.name }}</span>
+                    <div class="form-group">
+                        <div class="input-group">
+                            <ui-select allow-clear ng-model="device.room" theme="bootstrap" on-select="roomSelected(gateway, device, $item)">
+                                <ui-select-match placeholder="Select room">{{$selected.selected.icon}} {{$select.selected.name}}</ui-select-match>
+                                <ui-select-choices repeat="item in rooms | filter: $select.search">
+                                    <span class="{{ item.icon }}"></span>
+                                    <span ng-bind-html="item.name | highlight: $select.search"></span>
+                                </ui-select-choices>
+                            </ui-select>
+                            <span class="input-group-btn">
+                                <button type="button" ng-click="roomSelected(gateway, device, $item)" class="btn btn-default">
+                                    <span class="glyphicon glyphicon-trash"></span>
+                                </button>
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

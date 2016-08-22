@@ -1,6 +1,6 @@
-﻿(function() {
+﻿(function(_) {
 
-    var xha = angular.module("admin", ["ngRoute", "ui.bootstrap", "ui.codemirror"]);
+    var xha = angular.module("admin", ["ngRoute", "ui.bootstrap", "ui.codemirror", "ui.select", "ngSanitize"]);
 
     xha.config(function($routeProvider) {
         $routeProvider
@@ -57,8 +57,22 @@
             $http.get("/api/v1/gateway/" + gateway.name, { cache: false }).then(function(deviceResult) {
                 var devices = _.sortBy(deviceResult.data, function(d) { return d.name; });
                 gateway.devices = devices;
+
+                $http.get("/api/v1/roomdevice/" + gateway.name, { cache: false }).then(function (result) {
+                    _.each(result.data, function (p) {
+                        var room = _.find($scope.rooms, function(r) { return r.id === p.roomId; });
+                        var device = _.find(gateway.devices, function(d) { return d.id === p.deviceId; });
+                        if (room && device) {
+                            device.room = room;
+                        }
+                    });
+                });
             });
         };
+
+        $http.get("/api/v1/room", { cache: false }).then(function(result) {
+            $scope.rooms = result.data;
+        });
 
         $http.get("/api/v1/gateway", { cache: false }).then(function(result) {
             var gateways = _.sortBy(result.data, function(g) { return g.name; });
@@ -84,6 +98,20 @@
 
         $scope.showVariables = function(gatewayName, deviceId) {
             $location.path("/variables/" + gatewayName + "/" + deviceId);
+        };
+
+        $scope.roomSelected = function(gateway, device, room) {
+            var dto = {
+                gatewayName: gateway.name,
+                deviceId: device.id,
+                roomId: room ? room.id : ""
+            };
+
+            if (!room) {
+                device.room = null;
+            }
+
+            $http.post("/api/v1/roomdevice", dto);
         };
 
         $scope.addDevice = function(gatewayName) {
@@ -117,7 +145,6 @@
         $scope.gateway = gateway;
 
         $scope.keys = _.keys(device);
-        $log.debug(angular.toJson($scope.keys));
 
         $scope.ok = function() {
             $uibModalInstance.close(device);
@@ -529,4 +556,4 @@
         };
     }]);
 
-})();
+})(_);

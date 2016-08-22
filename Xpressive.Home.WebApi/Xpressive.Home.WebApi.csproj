@@ -117,6 +117,7 @@
     </Compile>
     <Compile Include="Controllers\RadioStationController.cs" />
     <Compile Include="Controllers\RoomController.cs" />
+    <Compile Include="Controllers\RoomDeviceController.cs" />
     <Compile Include="Controllers\RoomScriptController.cs" />
     <Compile Include="Controllers\RoomScriptGroupController.cs" />
     <Compile Include="Controllers\ScriptController.cs" />
@@ -161,6 +162,7 @@
     <Content Include="app\admin\variables.html" />
     <Content Include="app\dashboard.js" />
     <Content Include="app\musicSelectionController.html" />
+    <Content Include="Scripts\select.min.js" />
     <Content Include="index.html" />
     <Content Include="Scripts\adminlte.js" />
     <Content Include="Styles\AdminLTE.min.css" />
@@ -170,6 +172,7 @@
     <Content Include="Styles\Custom.min.css">
       <DependentUpon>Custom.css</DependentUpon>
     </Content>
+    <Content Include="Styles\select.min.css" />
     <Content Include="Styles\skin-black-light.min.css" />
   </ItemGroup>
   <ItemGroup />

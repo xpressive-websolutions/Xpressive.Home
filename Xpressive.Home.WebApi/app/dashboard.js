@@ -1,4 +1,4 @@
-﻿(function(jq) {
+﻿(function(jq, _) {
 
     var xh = angular.module("xpressivehome", ["ngRoute", "ui.bootstrap"]);
 
@@ -233,28 +233,51 @@
         });
     }]);
 
-    xh.controller("musicController", ["$rootScope", "$log", "$http", "$uibModal", "$interval", function($rootScope, $log, $http, $uibModal, $interval) {
+    xh.controller("musicController", ["$rootScope", "$log", "$http", "$uibModal", "$interval", "$q", function($rootScope, $log, $http, $uibModal, $interval, $q) {
         var c = this;
+        var devices = [];
+        var roomDevices = [];
+        var selectedRoom = null;
 
         c.isEnabled = false;
+        c.device = null;
+
+        var selectRoomDevice = function() {
+            c.isEnabled = false;
+            c.device = null;
+
+            if (devices.length > 0 && roomDevices.length > 0 && selectedRoom) {
+                var roomId = selectedRoom.id.replace(/-/g, "");
+                _.each(roomDevices, function(rd) {
+                    if (rd.roomId.replace(/-/g, "") === roomId) {
+                        var device = _.find(devices, function(d) { return d.id === rd.id; });
+                        if (device) {
+                            c.isEnabled = true;
+                            c.device = device;
+                        }
+                    }
+                });
+            }
+        };
 
         $http.get("/api/v1/gateway", { cache: false }).then(function(gateways) {
-            if (!_.find(gateways.data, function(g) { return g === "Sonos"; })) {
+            if (!_.find(gateways.data, function(g) { return g.name === "Sonos"; })) {
                 return;
             }
 
-            c.isEnabled = true;
-            $log.debug("Music is enabled");
+            var devicePromise = $http.get("/api/v1/gateway/Sonos", { cache: false });
+            var roomDevicePromise = $http.get("/api/v1/roomdevice/Sonos", { cache: false });
 
-            // TODO: only enable music if devices belongs to the selected room
-
-            $http.get("/api/v1/gateway/Sonos", { cache: false }).then(function(devices) {
-                $log.debug(angular.toJson(devices.data));
+            $q.all([devicePromise, roomDevicePromise]).then(function(result) {
+                devices = result[0].data;
+                roomDevices = result[1].data;
+                selectRoomDevice();
             });
         });
 
         $rootScope.$on("selectedRoomChanged", function(event, data) {
-            $log.debug("selected room: " + angular.toJson(data));
+            selectedRoom = data;
+            selectRoomDevice();
         });
 
         c.selectStation = function() {
@@ -363,4 +386,4 @@
         };
     }]);
 
-})($);
+})($, _);
