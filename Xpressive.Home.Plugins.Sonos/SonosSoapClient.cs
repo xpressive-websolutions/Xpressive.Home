@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
+using Polly;
 
 namespace Xpressive.Home.Plugins.Sonos
 {
@@ -21,6 +23,36 @@ namespace Xpressive.Home.Plugins.Sonos
                 ex.ToString();
                 throw;
             }
+        }
+
+        public async Task<Dictionary<string, string>> ExecuteAsync(SonosDevice device, UpnpService service, UpnpAction action, Dictionary<string, string> values)
+        {
+            var uri = new Uri($"http://{device.IpAddress}:1400{service.ControlUrl}");
+            var soapAction = $"{service.Id}#{action.Name}";
+
+            var body = new StringBuilder();
+            body.Append($"<u:{action.Name} xmlns:u=\"{service.Type}\">");
+
+            foreach (var argument in action.InputArguments)
+            {
+                string value;
+                if (values.TryGetValue(argument, out value))
+                {
+                    body.Append($"<{argument}>{value}</{argument}>");
+                }
+            }
+            body.Append($"</u:{action.Name}>");
+
+            var document = await PostRequestInternal(uri, soapAction, body.ToString());
+            var result = new Dictionary<string, string>();
+
+            foreach (var argument in action.OutputArguments)
+            {
+                var value = document.SelectSingleNode("//" + argument)?.InnerText;
+                result.Add(argument, value);
+            }
+
+            return result;
         }
 
         private async Task<XmlDocument> PostRequestInternal(Uri uri, string action, string body)
@@ -45,20 +77,32 @@ namespace Xpressive.Home.Plugins.Sonos
                 await stream.WriteAsync(data, 0, data.Length);
             }
 
-            using (var response = await request.GetResponseAsync())
-            {
-                using (var stream = response.GetResponseStream())
+            var policy = Policy
+                .Handle<Exception>()
+                .WaitAndRetryAsync(new[]
                 {
-                    using (var reader = new StreamReader(stream))
+                    TimeSpan.FromSeconds(1),
+                    TimeSpan.FromSeconds(2),
+                    TimeSpan.FromSeconds(5)
+                });
+
+            return await policy.ExecuteAsync(async () =>
+            {
+                using (var response = await request.GetResponseAsync())
+                {
+                    using (var stream = response.GetResponseStream())
                     {
-                        await stream.FlushAsync();
-                        var xml = await reader.ReadToEndAsync();
-                        var document = new XmlDocument();
-                        document.LoadXml(SanitizeXmlString(xml));
-                        return document;
+                        using (var reader = new StreamReader(stream))
+                        {
+                            await stream.FlushAsync();
+                            var xml = await reader.ReadToEndAsync();
+                            var document = new XmlDocument();
+                            document.LoadXml(SanitizeXmlString(xml));
+                            return document;
+                        }
                     }
                 }
-            }
+            });
         }
 
         private static string SanitizeXmlString(string xml)

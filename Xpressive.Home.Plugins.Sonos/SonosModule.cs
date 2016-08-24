@@ -17,7 +17,8 @@ namespace Xpressive.Home.Plugins.Sonos
                 .As<IGateway>()
                 .As<ISonosGateway>()
                 .As<IMessageQueueListener<CommandMessage>>()
-                .SingleInstance();
+                .SingleInstance()
+                .OnActivated(async g => await g.Instance.ObserveDevicesAsync());
 
             base.Load(builder);
         }

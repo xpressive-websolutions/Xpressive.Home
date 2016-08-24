@@ -11,5 +11,6 @@ namespace Xpressive.Home.Plugins.Sonos
         void Stop(SonosDevice device);
         void PlayRadio(SonosDevice device, string stream, string title);
         void PlayFile(SonosDevice device, string file, string title, string album);
+        void ChangeVolume(SonosDevice device, double volume);
     }
 }

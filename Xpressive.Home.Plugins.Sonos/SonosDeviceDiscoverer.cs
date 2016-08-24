@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using Xpressive.Home.Contracts.Services;
@@ -65,14 +64,10 @@ namespace Xpressive.Home.Plugins.Sonos
                 service.Actions.AddRange(actions);
             }
 
-            var zoneName = await GetZoneNameAsync(ip, port, upnpServices) ?? string.Empty;
-            var isMaster = await GetIsMaster(ip, port, upnpServices);
+            var device = new SonosDevice(id, ip, name);
 
-            var device = new SonosDevice(id, ip, name)
-            {
-                Zone = zoneName,
-                IsMaster = isMaster
-            };
+            device.Zone = await GetZoneNameAsync(device, upnpServices) ?? string.Empty;
+            device.IsMaster = await GetIsMasterAsync(device, upnpServices);
             device.Services.AddRange(upnpServices);
 
             OnDeviceFound(device);
@@ -148,13 +143,13 @@ namespace Xpressive.Home.Plugins.Sonos
             }
         }
 
-        private async Task<string> GetZoneNameAsync(string ip, int port, List<UpnpService> services)
+        private async Task<string> GetZoneNameAsync(SonosDevice device, List<UpnpService> services)
         {
             var service = services.Single(s => s.Id.Contains("DeviceProperties"));
             var action = service.Actions.Single(s => s.Name.Equals("GetZoneAttributes"));
             var values = new Dictionary<string, string>();
 
-            var result = await Execute(ip, port, service, action, values);
+            var result = await _soapClient.ExecuteAsync(device, service, action, values);
             string currentZoneName;
 
             if (result.TryGetValue("CurrentZoneName", out currentZoneName))
@@ -165,7 +160,7 @@ namespace Xpressive.Home.Plugins.Sonos
             return string.Empty;
         }
 
-        private async Task<bool> GetIsMaster(string ip, int port, List<UpnpService> services)
+        private async Task<bool> GetIsMasterAsync(SonosDevice device, List<UpnpService> services)
         {
             var service = services.Single(s => s.Id.Contains("AVTransport"));
             var action = service.Actions.Single(s => s.Name.Equals("GetPositionInfo"));
@@ -174,7 +169,7 @@ namespace Xpressive.Home.Plugins.Sonos
                 {"InstanceID", "0"}
             };
 
-            var result = await Execute(ip, port, service, action, values);
+            var result = await _soapClient.ExecuteAsync(device, service, action, values);
             string trackUri;
 
             if (result.TryGetValue("TrackURI", out trackUri))
@@ -183,36 +178,6 @@ namespace Xpressive.Home.Plugins.Sonos
             }
 
             return false;
-        }
-
-        private async Task<Dictionary<string, string>> Execute(string ip, int port, UpnpService service, UpnpAction action, Dictionary<string, string> values)
-        {
-            var uri = new Uri($"http://{ip}:{port}{service.ControlUrl}");
-            var soapAction = $"{service.Id}#{action.Name}";
-
-            var body = new StringBuilder();
-            body.Append($"<u:{action.Name} xmlns:u=\"{service.Type}\">");
-
-            foreach (var argument in action.InputArguments)
-            {
-                string value;
-                if (values.TryGetValue(argument, out value))
-                {
-                    body.Append($"<{argument}>{value}</{argument}>");
-                }
-            }
-            body.Append($"</u:{action.Name}>");
-
-            var document = await _soapClient.PostRequestAsync(uri, soapAction, body.ToString());
-            var result = new Dictionary<string, string>();
-
-            foreach (var argument in action.OutputArguments)
-            {
-                var value = document.SelectSingleNode("//" + argument)?.InnerText;
-                result.Add(argument, value);
-            }
-
-            return result;
         }
 
         private void OnDeviceFound(SonosDevice e)

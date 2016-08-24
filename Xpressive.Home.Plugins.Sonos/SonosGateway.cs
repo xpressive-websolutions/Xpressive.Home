@@ -4,22 +4,26 @@ using System.Linq;
 using System.Threading.Tasks;
 using RestSharp.Extensions.MonoHttp;
 using Xpressive.Home.Contracts.Gateway;
+using Xpressive.Home.Contracts.Messaging;
 using Action = Xpressive.Home.Contracts.Gateway.Action;
 
 namespace Xpressive.Home.Plugins.Sonos
 {
     internal class SonosGateway : GatewayBase, ISonosGateway
     {
+        private readonly IMessageQueue _messageQueue;
         private readonly ISonosSoapClient _soapClient;
 
-        public SonosGateway(ISonosDeviceDiscoverer deviceDiscoverer, ISonosSoapClient soapClient) : base("Sonos")
+        public SonosGateway(IMessageQueue messageQueue, ISonosDeviceDiscoverer deviceDiscoverer, ISonosSoapClient soapClient) : base("Sonos")
         {
+            _messageQueue = messageQueue;
             _soapClient = soapClient;
             _actions.Add(new Action("Play"));
             _actions.Add(new Action("Pause"));
             _actions.Add(new Action("Stop"));
             _actions.Add(new Action("Play Radio") { Fields = { "Stream", "Title" } });
             _actions.Add(new Action("Play File") { Fields = { "File", "Title", "Album" } });
+            _actions.Add(new Action("Change Volume") { Fields = { "Volume" } });
 
             _canCreateDevices = false;
             deviceDiscoverer.DeviceFound += (s, e) => _devices.Add(e);
@@ -73,6 +77,55 @@ namespace Xpressive.Home.Plugins.Sonos
             await ExecuteInternal(device, new Action("Play File"), parameters);
         }
 
+        public async void ChangeVolume(SonosDevice device, double volume)
+        {
+            var parameters = new Dictionary<string, string>
+            {
+                {"Volume", volume.ToString("F2")}
+            };
+
+            await ExecuteInternal(device, new Action("Change Volume"), parameters);
+        }
+
+        public async Task ObserveDevicesAsync()
+        {
+            while (true)
+            {
+                await Task.Delay(5000);
+                var devices = GetDevices().ToList();
+
+                foreach (var device in devices)
+                {
+                    var avTransport = device.Services.Single(s => s.Id.Contains("AVTransport"));
+                    var renderingControl = device.Services.Single(s => s.Id.Contains(":RenderingControl"));
+                    var getMediaInfo = avTransport.Actions.Single(s => s.Name.Equals("GetMediaInfo"));
+                    var getTransportInfo = avTransport.Actions.Single(s => s.Name.Equals("GetTransportInfo"));
+                    var getVolume = renderingControl.Actions.Single(s => s.Name.Equals("GetVolume"));
+
+                    var values = new Dictionary<string, string>
+                    {
+                        {"InstanceID", "0"}
+                    };
+
+                    var mediaInfo = await _soapClient.ExecuteAsync(device, avTransport, getMediaInfo, values);
+                    var transportInfo = await _soapClient.ExecuteAsync(device, avTransport, getTransportInfo, values);
+
+                    values.Add("Channel", "Master");
+                    var volume = await _soapClient.ExecuteAsync(device, renderingControl, getVolume, values);
+
+                    var currentUri = mediaInfo["CurrentURI"];
+                    var metadata = mediaInfo["CurrentURIMetaData"];
+                    var transportState = transportInfo["CurrentTransportState"];
+                    var currentVolume = volume["CurrentVolume"];
+
+                    transportState = transportState[0] + transportState.Substring(1).ToLowerInvariant();
+                    UpdateVariable(device, "TransportState", transportState);
+                    UpdateVariable(device, "CurrentUri", currentUri);
+                    UpdateVariable(device, "Volume", double.Parse(currentVolume));
+                }
+            }
+        }
+
         protected override async Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values)
         {
             var d = device as SonosDevice;
@@ -80,11 +133,13 @@ namespace Xpressive.Home.Plugins.Sonos
             string file;
             string title;
             string album;
+            string volume;
 
             values.TryGetValue("Stream", out stream);
             values.TryGetValue("File", out file);
             values.TryGetValue("Title", out title);
             values.TryGetValue("Album", out album);
+            values.TryGetValue("Volume", out volume);
 
             if (d == null)
             {
@@ -120,6 +175,18 @@ namespace Xpressive.Home.Plugins.Sonos
                         await SendAvTransportControl(d, "Play");
                     }
                     break;
+                case "change volume":
+                    var v = Math.Min(Math.Max((int)(100 * double.Parse(volume)), 0), 100);
+                    var rc = d.Services.Single(s => s.Id.Contains(":RenderingControl"));
+                    var sv = rc.Actions.Single(s => s.Name.Equals("SetVolume"));
+                    var parameters = new Dictionary<string, string>
+                    {
+                        {"InstanceID" , "0"},
+                        {"Channel" , "Master"},
+                        {"DesiredVolume" , v.ToString("D")}
+                    };
+                    await _soapClient.ExecuteAsync(d, rc, sv, parameters);
+                    break;
             }
         }
 
@@ -135,25 +202,30 @@ namespace Xpressive.Home.Plugins.Sonos
             metadata = HttpUtility.HtmlEncode(metadata);
             url = HttpUtility.HtmlEncode(url);
 
-            var uri = $"http://{device.IpAddress}:1400/MediaRenderer/AVTransport/Control";
-            var action = "urn:schemas-upnp-org:service:AVTransport:1#SetAVTransportURI";
-            var body = $"<InstanceID>0</InstanceID><CurrentURI>{url}</CurrentURI><CurrentURIMetaData>{metadata}</CurrentURIMetaData>";
-            var outerBody = $"<u:SetAVTransportURI xmlns:u=\"urn:schemas-upnp-org:service:AVTransport:1\">{body}</u:SetAVTransportURI>";
-            await _soapClient.PostRequestAsync(new Uri(uri), action, outerBody);
+            var service = device.Services.Single(s => s.Id.Contains("AVTransport"));
+            var action = service.Actions.Single(s => s.Name.Equals("SetAVTransportURI"));
+            var values = new Dictionary<string, string>
+            {
+                {"InstanceID", "0"},
+                {"CurrentURI", url},
+                {"CurrentURIMetaData", metadata}
+            };
+
+            await _soapClient.ExecuteAsync(device, service, action, values);
         }
 
         private async Task SendAvTransportControl(SonosDevice device, string command)
         {
-            var body = "<InstanceID>0</InstanceID><Speed>1</Speed>";
-            await SendAvTransportControl(device, command, body);
-        }
+            var service = device.Services.Single(s => s.Id.Contains("AVTransport"));
+            var action = service.Actions.Single(s => s.Name.Equals(command));
+            var values = new Dictionary<string, string>
+            {
+                {"InstanceID", "0"},
+                {"Speed", "1"}
 
-        private async Task SendAvTransportControl(SonosDevice device, string command, string body)
-        {
-            var uri = $"http://{device.IpAddress}:1400/MediaRenderer/AVTransport/Control";
-            var action = $"urn:schemas-upnp-org:service:AVTransport:1#{command}";
-            var outerBody = $"<u:{command} xmlns:u=\"urn:schemas-upnp-org:service:AVTransport:1\">{body}</u:{command}>";
-            await _soapClient.PostRequestAsync(new Uri(uri), action, outerBody);
+            };
+
+            await _soapClient.ExecuteAsync(device, service, action, values);
         }
 
         private string GetRadioMetadata(string title)
@@ -165,6 +237,11 @@ namespace Xpressive.Home.Plugins.Sonos
         private string GetFileMetadata(string title, string album)
         {
             return null;
+        }
+
+        private void UpdateVariable(SonosDevice device, string variable, object value)
+        {
+            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, variable, value));
         }
     }
 }

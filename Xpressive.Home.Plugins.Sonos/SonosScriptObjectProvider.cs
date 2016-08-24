@@ -68,6 +68,11 @@ namespace Xpressive.Home.Plugins.Sonos
             {
                 _gateway.PlayFile(_device, file, title, album);
             }
+
+            public void volume(double v)
+            {
+                _gateway.ChangeVolume(_device, v);
+            }
         }
     }
 }
