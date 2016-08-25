@@ -238,6 +238,12 @@ namespace Xpressive.Home.Plugins.Sonos
         private string ReplaceScheme(string url, string scheme)
         {
             var uri = new Uri(url);
+
+            if (uri.Scheme.StartsWith("x-", StringComparison.OrdinalIgnoreCase))
+            {
+                return url;
+            }
+
             var path = HttpUtility.UrlDecode(uri.PathAndQuery);
             return $"{scheme}://{uri.Authority}{path}";
         }

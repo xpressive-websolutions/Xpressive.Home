@@ -8,7 +8,7 @@ namespace Xpressive.Home.Contracts.Services
         Task<IEnumerable<TuneInRadioStationCategory>> GetCategoriesAsync(string parentId = null);
         Task<TuneInRadioStationDetail> GetStationDetailAsync(string stationId);
         Task<TuneInRadioStations> GetStationsAsync(string categoryId);
-        Task<string> GetStreamUrlAsync(string stationId);
+        string GetStreamUrl(string stationId);
         Task<TuneInRadioStations> SearchStationsAsync(string query);
     }
 

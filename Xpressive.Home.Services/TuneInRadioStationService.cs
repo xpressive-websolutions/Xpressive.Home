@@ -23,6 +23,8 @@ namespace Xpressive.Home.Services
             new ConcurrentDictionary<string, Uri>(StringComparer.Ordinal);
         private static readonly ConcurrentDictionary<string, Uri> _showMoreStations =
             new ConcurrentDictionary<string, Uri>(StringComparer.Ordinal);
+        private static readonly ConcurrentDictionary<string, Task<string>> _stationCallSigns =
+            new ConcurrentDictionary<string, Task<string>>(StringComparer.Ordinal);
 
         public async Task<IEnumerable<TuneInRadioStationCategory>> GetCategoriesAsync(string parentId = null)
         {
@@ -62,9 +64,15 @@ namespace Xpressive.Home.Services
             return await GetStationsInternalAsync(url);
         }
 
-        public async Task<string> GetStreamUrlAsync(string stationId)
+        public string GetStreamUrl(string stationId)
         {
-            var url = $"http://opml.radiotime.com/Tune.ashx?id={stationId}&c=ebrowse";
+            return $"x-sonosapi-stream:{stationId}?sid=254&flags=32";
+        }
+
+        public async Task<TuneInRadioStationDetail> GetStationDetailAsync(string stationId)
+        {
+            var callSign = await _stationCallSigns.GetOrAdd(stationId, GetStationCallSignAsync);
+            var url = $"http://opml.radiotime.com/Search.ashx?query={callSign}&call";
             var opml = await GetDocumentAsync(url);
 
             if (opml.Header.Status != 200)
@@ -72,24 +80,23 @@ namespace Xpressive.Home.Services
                 return null;
             }
 
-            var tuneUrl = opml.Body.Outlines
-                .Where(o => o.MediaType.Equals("mp3", StringComparison.OrdinalIgnoreCase))
-                .OrderByDescending(o => o.Reliability)
-                .FirstOrDefault()?.Url;
+            var outline = opml.Body.Outlines?.FirstOrDefault(o => stationId.Equals(o.GuideId));
 
-            if (string.IsNullOrEmpty(tuneUrl))
+            if (outline == null)
             {
                 return null;
             }
 
-            using (var client = new HttpClient())
+            return new TuneInRadioStationDetail
             {
-                var result = await client.GetStringAsync(tuneUrl);
-                return result?.Split('\n', '\r')[0];
-            }
+                Id = outline.GuideId,
+                Name = outline.Text,
+                Playing = outline.Playing ?? outline.Subtext,
+                PlayingImageUrl = outline.PlayingImage ?? outline.Image
+            };
         }
 
-        public async Task<TuneInRadioStationDetail> GetStationDetailAsync(string stationId)
+        private static async Task<string> GetStationCallSignAsync(string stationId)
         {
             using (var client = new HttpClient())
             {
@@ -105,29 +112,7 @@ namespace Xpressive.Home.Services
                 }
 
                 var callSign = document.SelectSingleNode("/opml/body/outline/station/call_sign")?.InnerText;
-                var encoded = WebUtility.UrlEncode(callSign).Replace("+", "%20");
-                var url = $"http://opml.radiotime.com/Search.ashx?query={encoded}&call";
-                var opml = await GetDocumentAsync(url);
-
-                if (opml.Header.Status != 200)
-                {
-                    return null;
-                }
-
-                var outline = opml.Body.Outlines?.FirstOrDefault(o => stationId.Equals(o.GuideId));
-
-                if (outline == null)
-                {
-                    return null;
-                }
-
-                return new TuneInRadioStationDetail
-                {
-                    Id = outline.GuideId,
-                    Name = outline.Text,
-                    Playing = outline.Playing ?? outline.Subtext,
-                    PlayingImageUrl = outline.PlayingImage ?? outline.Image
-                };
+                return WebUtility.UrlEncode(callSign).Replace("+", "%20");
             }
         }
 

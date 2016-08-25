@@ -80,9 +80,9 @@ namespace Xpressive.Home.WebApi.Controllers
         }
 
         [HttpPost, Route("play/radio")]
-        public async Task PlayRadio([FromUri] string deviceId, [FromBody] RadioStationDto radioStation)
+        public void PlayRadio([FromUri] string deviceId, [FromBody] RadioStationDto radioStation)
         {
-            var url = await _radioStationService.GetStreamUrlAsync(radioStation.Id);
+            var url = _radioStationService.GetStreamUrl(radioStation.Id);
             var parameters = new Dictionary<string, string>
             {
                 {"Stream", url},

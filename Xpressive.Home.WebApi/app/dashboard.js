@@ -238,6 +238,7 @@
         var devices = [];
         var roomDevices = [];
         var selectedRoom = null;
+        var nextPlayingUpdate = new Date();
 
         c.isEnabled = false;
         c.device = null;
@@ -249,8 +250,10 @@
             if (Math.abs(c.deviceVolume - change.newValue) < 2) {
                 return;
             }
+
+            nextPlayingUpdate = new Date();
+            nextPlayingUpdate.setSeconds(nextPlayingUpdate.getSeconds() + 10);
             c.deviceVolume = change.newValue;
-            $log.debug(new Date() + " volume=" + c.deviceVolume);
 
             if (c.device) {
                 $http.post("/api/v1/radio/volume?deviceId=" + encodeURIComponent(c.device.id) + "&volume=" + c.deviceVolume);
@@ -328,6 +331,13 @@
 
             modalInstance.result.then(
                 function(selectedItem) {
+                    if (selectedItem.id === c.stationId && c.isPlaying) {
+                        return;
+                    }
+
+                    nextPlayingUpdate = new Date();
+                    nextPlayingUpdate.setSeconds(nextPlayingUpdate.getSeconds() + 10);
+
                     c.stationId = selectedItem.id;
                     c.station = selectedItem.name;
                     c.imageUrl = selectedItem.imageUrl;
@@ -346,6 +356,11 @@
         };
 
         $interval(function() {
+            if (nextPlayingUpdate > new Date()) {
+                $log.debug("skip");
+                return;
+            }
+
             if (c.device) {
                 $http.get("/api/v1/variable/Sonos?deviceId=" + encodeURIComponent(c.device.id)).then(function(result) {
                     _.each(result.data, function(d) {
@@ -354,6 +369,12 @@
                             $scope.volume = d.value;
                         } else if (d.name === "TransportState") {
                             c.isPlaying = d.value === "Playing";
+                        } else if (d.name === "CurrentUri") {
+                            var r = /x-(?:rincon-mp3radio:\/\/|sonosapi-stream:)(s[0-9]+)\?.*/g;
+                            var result = r.exec(d.value);
+                            if (result && result.length === 2) {
+                                c.stationId = result[1];
+                            }
                         }
                     });
                 });
@@ -361,7 +382,7 @@
         }, 10000);
 
         $interval(function() {
-            if (c.stationId) {
+            if (c.stationId && c.isPlaying) {
                 $http.get("/api/v1/radio/playing?stationId=" + c.stationId, { cache: false }).then(function(result) {
                     if (result.data) {
                         c.imageUrl = result.data.playingImageUrl;
