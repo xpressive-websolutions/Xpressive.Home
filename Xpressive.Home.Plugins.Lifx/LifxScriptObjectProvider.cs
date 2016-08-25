@@ -27,7 +27,7 @@ namespace Xpressive.Home.Plugins.Lifx
             var deviceResolver = new Func<string, LifxScriptObject>(id =>
             {
                 var device = _gateway.GetDevices().SingleOrDefault(d => d.Id.Equals(id));
-                return device != null ? new LifxScriptObject(_gateway, device) : null;
+                return new LifxScriptObject(_gateway, device);
             });
 
             yield return new Tuple<string, Delegate>("lifx", deviceResolver);

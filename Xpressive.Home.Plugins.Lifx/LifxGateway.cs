@@ -193,6 +193,12 @@ namespace Xpressive.Home.Plugins.Lifx
                 return;
             }
 
+            if (device == null)
+            {
+                _log.Warn($"Unable to execute action {action.Name} because the device was not found.");
+                return;
+            }
+
             var bulb = (LifxDevice) device;
             int seconds;
             double brightness;
