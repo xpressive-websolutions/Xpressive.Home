@@ -26,7 +26,11 @@ namespace Xpressive.Home.Plugins.Sonos
             _actions.Add(new Action("Change Volume") { Fields = { "Volume" } });
 
             _canCreateDevices = false;
-            deviceDiscoverer.DeviceFound += (s, e) => _devices.Add(e);
+            deviceDiscoverer.DeviceFound += (s, e) =>
+            {
+                e.Id = e.Id.Replace("uuid:", string.Empty);
+                _devices.Add(e);
+            };
         }
 
         public override IDevice CreateEmptyDevice()
@@ -93,36 +97,11 @@ namespace Xpressive.Home.Plugins.Sonos
             {
                 await Task.Delay(5000);
                 var devices = GetDevices().ToList();
+                var masterDevices = devices.Where(d => d.IsMaster).ToList();
+                var others = devices.Except(masterDevices).ToList();
 
-                foreach (var device in devices)
-                {
-                    var avTransport = device.Services.Single(s => s.Id.Contains("AVTransport"));
-                    var renderingControl = device.Services.Single(s => s.Id.Contains(":RenderingControl"));
-                    var getMediaInfo = avTransport.Actions.Single(s => s.Name.Equals("GetMediaInfo"));
-                    var getTransportInfo = avTransport.Actions.Single(s => s.Name.Equals("GetTransportInfo"));
-                    var getVolume = renderingControl.Actions.Single(s => s.Name.Equals("GetVolume"));
-
-                    var values = new Dictionary<string, string>
-                    {
-                        {"InstanceID", "0"}
-                    };
-
-                    var mediaInfo = await _soapClient.ExecuteAsync(device, avTransport, getMediaInfo, values);
-                    var transportInfo = await _soapClient.ExecuteAsync(device, avTransport, getTransportInfo, values);
-
-                    values.Add("Channel", "Master");
-                    var volume = await _soapClient.ExecuteAsync(device, renderingControl, getVolume, values);
-
-                    var currentUri = mediaInfo["CurrentURI"];
-                    var metadata = mediaInfo["CurrentURIMetaData"];
-                    var transportState = transportInfo["CurrentTransportState"];
-                    var currentVolume = volume["CurrentVolume"];
-
-                    transportState = transportState[0] + transportState.Substring(1).ToLowerInvariant();
-                    UpdateVariable(device, "TransportState", transportState);
-                    UpdateVariable(device, "CurrentUri", currentUri);
-                    UpdateVariable(device, "Volume", double.Parse(currentVolume));
-                }
+                masterDevices.ForEach(async d => await UpdateDeviceVariablesAsync(d));
+                others.ForEach(async d => await UpdateDeviceVariablesAsync(d));
             }
         }
 
@@ -146,24 +125,26 @@ namespace Xpressive.Home.Plugins.Sonos
                 return;
             }
 
+            var master = GetMaster(d);
+
             switch (action.Name.ToLowerInvariant())
             {
                 case "play":
-                    await SendAvTransportControl(d, "Play");
+                    await SendAvTransportControl(master, "Play");
                     break;
                 case "pause":
-                    await SendAvTransportControl(d, "Pause");
+                    await SendAvTransportControl(master, "Pause");
                     break;
                 case "stop":
-                    await SendAvTransportControl(d, "Stop");
+                    await SendAvTransportControl(master, "Stop");
                     break;
                 case "play radio":
                     if (!string.IsNullOrEmpty(stream) && !string.IsNullOrEmpty(title))
                     {
                         var metadata = GetRadioMetadata(title);
                         var url = ReplaceScheme(stream, "x-rincon-mp3radio");
-                        await SendUrl(d, url, metadata);
-                        await SendAvTransportControl(d, "Play");
+                        await SendUrl(master, url, metadata);
+                        await SendAvTransportControl(master, "Play");
                     }
                     break;
                 case "play file":
@@ -171,8 +152,8 @@ namespace Xpressive.Home.Plugins.Sonos
                     {
                         var metadata = GetFileMetadata(file, album);
                         var url = ReplaceScheme(file, "x-file-cifs");
-                        await SendUrl(d, url, metadata);
-                        await SendAvTransportControl(d, "Play");
+                        await SendUrl(master, url, metadata);
+                        await SendAvTransportControl(master, "Play");
                     }
                     break;
                 case "change volume":
@@ -188,6 +169,70 @@ namespace Xpressive.Home.Plugins.Sonos
                     await _soapClient.ExecuteAsync(d, rc, sv, parameters);
                     break;
             }
+        }
+
+        private async Task UpdateDeviceVariablesAsync(SonosDevice device)
+        {
+            var avTransport = device.Services.Single(s => s.Id.Contains("AVTransport"));
+            var renderingControl = device.Services.Single(s => s.Id.Contains(":RenderingControl"));
+            var deviceProperties = device.Services.Single(s => s.Id.Contains("DeviceProperties"));
+            var getMediaInfo = avTransport.Actions.Single(s => s.Name.Equals("GetMediaInfo"));
+            var getTransportInfo = avTransport.Actions.Single(s => s.Name.Equals("GetTransportInfo"));
+            var getPositionInfo = avTransport.Actions.Single(s => s.Name.Equals("GetPositionInfo"));
+            var getVolume = renderingControl.Actions.Single(s => s.Name.Equals("GetVolume"));
+            var getZoneAttributes = deviceProperties.Actions.Single(s => s.Name.Equals("GetZoneAttributes"));
+
+            var values = new Dictionary<string, string>
+            {
+                {"InstanceID", "0"}
+            };
+
+            var mediaInfo = await _soapClient.ExecuteAsync(device, avTransport, getMediaInfo, values);
+            var transportInfo = await _soapClient.ExecuteAsync(device, avTransport, getTransportInfo, values);
+            var positionInfo = await _soapClient.ExecuteAsync(device, avTransport, getPositionInfo, values);
+
+            values.Add("Channel", "Master");
+            var volume = await _soapClient.ExecuteAsync(device, renderingControl, getVolume, values);
+
+            values.Clear();
+            var zoneAttributes = await _soapClient.ExecuteAsync(device, deviceProperties, getZoneAttributes, values);
+
+            var currentUri = mediaInfo["CurrentURI"];
+            var metadata = mediaInfo["CurrentURIMetaData"];
+            var transportState = transportInfo["CurrentTransportState"];
+            var currentVolume = volume["CurrentVolume"];
+
+            transportState = transportState[0] + transportState.Substring(1).ToLowerInvariant();
+
+            device.CurrentUri = currentUri;
+            device.TransportState = transportState;
+            device.Volume = double.Parse(currentVolume);
+            device.IsMaster = string.IsNullOrEmpty(positionInfo["TrackURI"]) || !positionInfo["TrackURI"].StartsWith("x-rincon:RINCON");
+            device.Zone = zoneAttributes["CurrentZoneName"] ?? string.Empty;
+
+            var master = GetMaster(device);
+            if (!ReferenceEquals(master, device))
+            {
+                device.TransportState = master.TransportState;
+            }
+
+            UpdateVariable(device, "TransportState", device.TransportState);
+            UpdateVariable(device, "CurrentUri", device.CurrentUri);
+            UpdateVariable(device, "Volume", device.Volume);
+            UpdateVariable(device, "IsMaster", device.IsMaster);
+            UpdateVariable(device, "Zone", device.Zone);
+        }
+
+        private SonosDevice GetMaster(SonosDevice device)
+        {
+            if (device.IsMaster)
+            {
+                return device;
+            }
+
+            var masterId = device.CurrentUri?.Replace("x-rincon:", string.Empty) ?? string.Empty;
+            var master = (SonosDevice) Devices.SingleOrDefault(d => d.Id.Equals(masterId, StringComparison.OrdinalIgnoreCase));
+            return master ?? device;
         }
 
         private string ReplaceScheme(string url, string scheme)

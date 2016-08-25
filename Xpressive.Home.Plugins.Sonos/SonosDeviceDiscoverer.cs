@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Xml;
 using Xpressive.Home.Contracts.Services;
 
@@ -11,28 +10,25 @@ namespace Xpressive.Home.Plugins.Sonos
     {
         private readonly object _lock = new object();
         private readonly HashSet<string> _detectedSonosIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        private readonly ISonosSoapClient _soapClient;
 
-        public SonosDeviceDiscoverer(IUpnpDeviceDiscoveringService upnpDeviceDiscoveringService, ISonosSoapClient soapClient)
+        public SonosDeviceDiscoverer(IUpnpDeviceDiscoveringService upnpDeviceDiscoveringService)
         {
-            _soapClient = soapClient;
-
             upnpDeviceDiscoveringService.DeviceFound += OnUpnpDeviceFound;
         }
 
         public event EventHandler<SonosDevice> DeviceFound;
 
-        private async void OnUpnpDeviceFound(object sender, IUpnpDeviceResponse e)
+        private void OnUpnpDeviceFound(object sender, IUpnpDeviceResponse e)
         {
             if (e.Server.IndexOf("sonos", StringComparison.OrdinalIgnoreCase) < 0)
             {
                 return;
             }
 
-            await CreateDeviceAsync(e.Location);
+            CreateDevice(e.Location);
         }
 
-        private async Task CreateDeviceAsync(string deviceDescriptionXmlPath)
+        private void CreateDevice(string deviceDescriptionXmlPath)
         {
             var document = new XmlDocument();
             document.Load(deviceDescriptionXmlPath);
@@ -65,9 +61,6 @@ namespace Xpressive.Home.Plugins.Sonos
             }
 
             var device = new SonosDevice(id, ip, name);
-
-            device.Zone = await GetZoneNameAsync(device, upnpServices) ?? string.Empty;
-            device.IsMaster = await GetIsMasterAsync(device, upnpServices);
             device.Services.AddRange(upnpServices);
 
             OnDeviceFound(device);
@@ -141,43 +134,6 @@ namespace Xpressive.Home.Plugins.Sonos
                     DescriptionUrl = childNodes.SingleOrDefault(n => n.Name.Equals("SCPDURL"))?.InnerText
                 };
             }
-        }
-
-        private async Task<string> GetZoneNameAsync(SonosDevice device, List<UpnpService> services)
-        {
-            var service = services.Single(s => s.Id.Contains("DeviceProperties"));
-            var action = service.Actions.Single(s => s.Name.Equals("GetZoneAttributes"));
-            var values = new Dictionary<string, string>();
-
-            var result = await _soapClient.ExecuteAsync(device, service, action, values);
-            string currentZoneName;
-
-            if (result.TryGetValue("CurrentZoneName", out currentZoneName))
-            {
-                return currentZoneName;
-            }
-
-            return string.Empty;
-        }
-
-        private async Task<bool> GetIsMasterAsync(SonosDevice device, List<UpnpService> services)
-        {
-            var service = services.Single(s => s.Id.Contains("AVTransport"));
-            var action = service.Actions.Single(s => s.Name.Equals("GetPositionInfo"));
-            var values = new Dictionary<string, string>
-            {
-                {"InstanceID", "0"}
-            };
-
-            var result = await _soapClient.ExecuteAsync(device, service, action, values);
-            string trackUri;
-
-            if (result.TryGetValue("TrackURI", out trackUri))
-            {
-                return string.IsNullOrEmpty(trackUri) || !trackUri.StartsWith("x-rincon:RINCON");
-            }
-
-            return false;
         }
 
         private void OnDeviceFound(SonosDevice e)

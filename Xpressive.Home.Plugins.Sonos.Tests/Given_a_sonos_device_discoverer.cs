@@ -18,9 +18,8 @@ namespace Xpressive.Home.Plugins.Sonos.Tests
         [Fact]
         public void Then_the_devices_are_discovered()
         {
-            var client = new SonosSoapClient();
             var upnpDeviceDiscoveringService = new UpnpDeviceDiscoveringService();
-            var service = new SonosDeviceDiscoverer(upnpDeviceDiscoveringService, client);
+            var service = new SonosDeviceDiscoverer(upnpDeviceDiscoveringService);
             service.DeviceFound += (s, e) => _output.WriteLine($"Found sonos device {e.Zone} @ {e.IpAddress}");
 
             var task1 = Task.Run(async () => await upnpDeviceDiscoveringService.StartDiscoveringAsync());

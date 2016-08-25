@@ -19,6 +19,9 @@ namespace Xpressive.Home.Plugins.Sonos
         public string Type { get; set; }
         public string Zone { get; set; }
         public bool IsMaster { get; set; }
+        public string CurrentUri { get; set; }
+        public string TransportState { get; set; }
+        public double Volume { get; set; }
         public List<UpnpService> Services { get; }
     }
 }

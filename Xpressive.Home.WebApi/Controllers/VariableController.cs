@@ -19,8 +19,8 @@ namespace Xpressive.Home.WebApi.Controllers
             _gateways = gateways.ToDictionary(g => g.Name);
         }
 
-        [HttpGet, Route("{gatewayName}/{deviceId}")]
-        public IEnumerable<VariableDto> Get(string gatewayName, string deviceId)
+        [HttpGet, Route("{gatewayName}")]
+        public IEnumerable<VariableDto> Get(string gatewayName, [FromUri] string deviceId)
         {
             IGateway gateway;
             if (!_gateways.TryGetValue(gatewayName, out gateway) ||

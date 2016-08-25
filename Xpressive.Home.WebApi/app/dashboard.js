@@ -1,6 +1,6 @@
 ﻿(function(jq, _) {
 
-    var xh = angular.module("xpressivehome", ["ngRoute", "ui.bootstrap"]);
+    var xh = angular.module("xpressivehome", ["ngRoute", "ui.bootstrap", "rzModule", "rx"]);
 
     // TODO: sidebar mit "pinned" scripts z.B. für alarm scharf stellen, also raumübergreiffend
 
@@ -155,7 +155,7 @@
                     c.forecast[0].name = "Current";
                     c.forecast[0].prefixes.push("H+0.");
 
-                    $http.get("/api/v1/variable/Weather/" + device.id, { cache: false }).then(function(variables) {
+                    $http.get("/api/v1/variable/Weather?deviceId=" + device.id, { cache: false }).then(function(variables) {
                         var now = new Date();
                         var hour = now.getHours();
                         var hoursUntilNextStep = 6 - (hour % 6);
@@ -233,7 +233,7 @@
         });
     }]);
 
-    xh.controller("musicController", ["$rootScope", "$log", "$http", "$uibModal", "$interval", "$q", function($rootScope, $log, $http, $uibModal, $interval, $q) {
+    xh.controller("musicController", ["$rootScope", "$scope", "$log", "$http", "$uibModal", "$interval", "$q", "observeOnScope", function($rootScope, $scope, $log, $http, $uibModal, $interval, $q, observeOnScope) {
         var c = this;
         var devices = [];
         var roomDevices = [];
@@ -241,8 +241,22 @@
 
         c.isEnabled = false;
         c.device = null;
+        c.deviceVolume = 0;
+        $scope.volume = 0;
 
-        var selectRoomDevice = function() {
+        observeOnScope($scope, "volume").sample(1000).subscribe(function (change) {
+            if (Math.abs(c.deviceVolume - change.newValue) < 2) {
+                return;
+            }
+            c.deviceVolume = change.newValue;
+            $log.debug(new Date() + " volume=" + c.deviceVolume);
+
+            if (c.device) {
+                $http.post("/api/v1/radio/volume?deviceId=" + encodeURIComponent(c.device.id) + "&volume=" + c.deviceVolume);
+            }
+        });
+
+        var selectRoomDevice = function () {
             c.isEnabled = false;
             c.device = null;
 
@@ -280,6 +294,15 @@
             selectRoomDevice();
         });
 
+        c.sliderOptions = {
+            floor: 0,
+            ceil: 100,
+            boundPointerLabels: false,
+            hidePointerLabels: true,
+            hideLimitLabels: true,
+            interval: 1000
+        };
+
         c.selectStation = function() {
             var modalInstance = $uibModal.open({
                 templateUrl: "/app/musicSelectionController.html",
@@ -294,7 +317,7 @@
                     c.playing = "";
 
                     if (c.device) {
-                        $http.post("/api/v1/radio/play/" + c.device.id, selectedItem);
+                        $http.post("/api/v1/radio/play?deviceId=" + encodeURIComponent(c.device.id), selectedItem);
                     }
                 },
                 function() {
@@ -304,6 +327,19 @@
                     c.playing = "";
                 });
         };
+
+        $interval(function() {
+            if (c.device) {
+                $http.get("/api/v1/variable/Sonos?deviceId=" + encodeURIComponent(c.device.id)).then(function(result) {
+                    _.each(result.data, function(d) {
+                        if (d.name === "Volume") {
+                            c.deviceVolume = d.value;
+                            $scope.volume = d.value;
+                        }
+                    });
+                });
+            }
+        }, 10000);
 
         $interval(function() {
             if (c.stationId) {

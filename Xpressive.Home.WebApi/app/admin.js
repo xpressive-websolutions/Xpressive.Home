@@ -158,8 +158,9 @@
     xha.controller("variableController", ["$scope", "$routeParams", "$log", "$http", function($scope, $routeParams, $log, $http) {
         var gateway = $routeParams.gateway;
         var deviceId = $routeParams.device;
+        var deviceIdEncoded = encodeURIComponent(deviceId);
 
-        $http.get("/api/v1/variable/" + gateway + "/" + deviceId, { cache: false }).then(function(result) {
+        $http.get("/api/v1/variable/" + gateway + "?deviceId=" + deviceIdEncoded, { cache: false }).then(function (result) {
             $scope.variables = result.data;
         });
 

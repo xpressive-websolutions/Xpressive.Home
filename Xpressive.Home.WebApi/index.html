@@ -17,16 +17,20 @@
     <script src="//use.fontawesome.com/781e101300.js"></script>
 
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/weather-icons/2.0.9/css/weather-icons.min.css" />
-    <link rel="stylesheet" href="/Styles/Custom.min.css" />
     <link rel="stylesheet" href="//seiyria.com/bootstrap-slider/css/bootstrap-slider.css" />
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ubuntu" type="text/css" />
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/angularjs-slider/5.4.3/rzslider.min.css">
+    <link rel="stylesheet" href="/Styles/Custom.min.css" />
 
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular-resource.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular-route.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/2.0.1/ui-bootstrap-tpls.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/angularjs-slider/5.4.3/rzslider.min.js"></script>
 
+    <script src="/app/rx.all.js"></script>
+    <script src="/app/rx.angular.min.js"></script>
     <script src="/app/dashboard.js"></script>
 
     <style>
@@ -112,8 +116,8 @@
                             </div>
                         </div>
 
-                        <div class="row" ng-controller="musicController as mc" style="height: 55px; text-align: left;" ng-click="mc.selectStation()" ng-cloak ng-show="mc.isEnabled">
-                            <div class="col-md-4 col-xs-4 col-sm-4">
+                        <div class="row" ng-controller="musicController as mc" style="height: 55px; text-align: left;" ng-cloak ng-show="mc.isEnabled">
+                            <div class="col-md-4 col-xs-4 col-sm-4" ng-click="mc.selectStation()">
                                 <div style="float: left;" ng-show="!mc.imageUrl">
                                     <button class="btn btn-default btn-lg" style="height: 55px; width: 55px;">
                                         <span class="glyphicon glyphicon-list"></span>
@@ -141,7 +145,7 @@
                                 </div>
                             </div>
                             <div class="col-md-4 col-xs-4 col-sm-4 center-block text-center">
-                                <input id="ex5" type="text" data-slider-min="-5" data-slider-max="20" data-slider-step="1" data-slider-value="0"/>
+                                <rzslider rz-slider-model="volume" rz-slider-options="mc.sliderOptions"></rzslider>
                             </div>
                         </div>
                     </div>
@@ -212,8 +216,6 @@
 
             return height;
         };
-
-        jQuery("#ex5").slider();
 
     </script>
 
