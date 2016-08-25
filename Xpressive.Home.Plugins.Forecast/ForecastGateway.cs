@@ -35,21 +35,27 @@ namespace Xpressive.Home.Plugins.Forecast
 
             await LoadDevicesAsync((id, name) => new ForecastDevice { Id = id, Name = name });
 
+            if (string.IsNullOrEmpty(_apiKey))
+            {
+                _messageQueue.Publish(new NotifyUserMessage("Add forecast.io configuration to config file."));
+                return;
+            }
+
             while (true)
             {
                 var recentUpdate = DateTime.UtcNow;
 
-                if (string.IsNullOrEmpty(_apiKey))
-                {
-                    _log.Warn("ApiKey for forcast.io (forecast.apikey) not in config file.");
-                }
-                else
+                try
                 {
                     var devices = _devices.Cast<ForecastDevice>().ToList();
                     devices.ForEach(async d => await GetWeatherInfo(d));
                 }
+                catch (Exception e)
+                {
+                    _log.Error(e.Message, e);
+                }
 
-                var minutes = Math.Max(_devices.Count * 2.5, 10);
+                var minutes = Math.Max(_devices.Count*2.5, 10);
                 var nextUpdate = recentUpdate + TimeSpan.FromMinutes(minutes);
                 await Task.Delay(nextUpdate - recentUpdate);
             }
