@@ -136,8 +136,8 @@
                                     <button type="button" class="btn btn-default" style="border-radius: 50%; height: 40px; width: 40px; margin-top: 6px;">
                                         <span class="glyphicon glyphicon-backward" style="margin-right: 2px;"></span>
                                     </button>
-                                    <button type="button" class="btn btn-default btn-lg" style="border-radius: 50%; height: 55px; width: 55px; margin-left: 10px; margin-right: 10px;">
-                                        <span class="glyphicon glyphicon-play"></span>
+                                    <button type="button" class="btn btn-default btn-lg" style="border-radius: 50%; height: 55px; width: 55px; margin-left: 10px; margin-right: 10px;" ng-click="mc.togglePlay()">
+                                        <span class="glyphicon glyphicon-play" ng-class="{'glyphicon-play': !mc.isPlaying, 'glyphicon-stop': mc.isPlaying}"></span>
                                     </button>
                                     <button type="button" class="btn btn-default" style="border-radius: 50%; height: 40px; width: 40px; margin-top: 6px;">
                                         <span class="glyphicon glyphicon-forward" style="margin-left: 4px;"></span>

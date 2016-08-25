@@ -68,6 +68,18 @@ namespace Xpressive.Home.WebApi.Controllers
         }
 
         [HttpPost, Route("play")]
+        public void Play([FromUri] string deviceId)
+        {
+            _messageQueue.Publish(new CommandMessage("Sonos", deviceId, "Play", new Dictionary<string, string>()));
+        }
+
+        [HttpPost, Route("stop")]
+        public void Stop([FromUri] string deviceId)
+        {
+            _messageQueue.Publish(new CommandMessage("Sonos", deviceId, "Stop", new Dictionary<string, string>()));
+        }
+
+        [HttpPost, Route("play/radio")]
         public async Task PlayRadio([FromUri] string deviceId, [FromBody] RadioStationDto radioStation)
         {
             var url = await _radioStationService.GetStreamUrlAsync(radioStation.Id);

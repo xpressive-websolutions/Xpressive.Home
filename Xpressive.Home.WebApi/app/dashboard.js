@@ -241,6 +241,7 @@
 
         c.isEnabled = false;
         c.device = null;
+        c.isPlaying = false;
         c.deviceVolume = 0;
         $scope.volume = 0;
 
@@ -303,6 +304,22 @@
             interval: 1000
         };
 
+        c.togglePlay = function () {
+            if (!c.device) {
+                return;
+            }
+
+            if (c.isPlaying) {
+                $http.post("/api/v1/radio/stop?deviceId=" + encodeURIComponent(c.device.id)).then(function () {
+                    c.isPlaying = false;
+                });
+            } else {
+                $http.post("/api/v1/radio/play?deviceId=" + encodeURIComponent(c.device.id)).then(function() {
+                    c.isPlaying = true;
+                });
+            }
+        };
+
         c.selectStation = function() {
             var modalInstance = $uibModal.open({
                 templateUrl: "/app/musicSelectionController.html",
@@ -317,7 +334,7 @@
                     c.playing = "";
 
                     if (c.device) {
-                        $http.post("/api/v1/radio/play?deviceId=" + encodeURIComponent(c.device.id), selectedItem);
+                        $http.post("/api/v1/radio/play/radio?deviceId=" + encodeURIComponent(c.device.id), selectedItem);
                     }
                 },
                 function() {
@@ -335,6 +352,8 @@
                         if (d.name === "Volume") {
                             c.deviceVolume = d.value;
                             $scope.volume = d.value;
+                        } else if (d.name === "TransportState") {
+                            c.isPlaying = d.value === "Playing";
                         }
                     });
                 });
