@@ -86,10 +86,6 @@
       <Name>Xpressive.Home.Contracts</Name>
       <Private>False</Private>
     </ProjectReference>
-    <ProjectReference Include="..\Xpressive.Home\Xpressive.Home.csproj">
-      <Project>{0D0C6AE1-EF4F-426C-835A-6C491A6395F9}</Project>
-      <Name>Xpressive.Home</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
