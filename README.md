@@ -1,2 +1,3 @@
-# Xpressive.Home.ProofOfConcept
-Proof of concept of a home automation solution in .NET
+# Xpressive.Home
+
+Home automation solution in .NET
