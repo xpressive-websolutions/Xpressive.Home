@@ -21,7 +21,7 @@ namespace Xpressive.Home.Deployment.Sign
             var hash = GetHash(file);
             var signature = Sign(hash, keys.Item1);
             var signatureFile = file + ".sign";
-            File.WriteAllText(signatureFile, Convert.ToBase64String(signature));
+            File.WriteAllBytes(signatureFile, signature);
         }
 
         private static byte[] GetHash(string filePath)

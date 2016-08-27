@@ -11,7 +11,8 @@ Task("Default").Does(() =>
 Setup(context =>
 {
     var build = (int)(DateTime.Now - new DateTime(2015, 1, 1)).TotalHours;
-    var version = string.Format("1.0.0.{0}", build);
+    var versionPrefix = "1.0.0";
+    var version = string.Format("{0}.{1}", versionPrefix, build);
 
     var assemblyInfo = new AssemblyInfoSettings
     {
@@ -23,7 +24,7 @@ Setup(context =>
         ComVisible = false,
         Version = version,
         FileVersion = version,
-        InformationalVersion = version + "-beta1"
+        InformationalVersion = versionPrefix + "-beta1"
     };
 
     CreateAssemblyInfo("./Xpressive.Home/Properties/AssemblyInfo.shared.cs", assemblyInfo);
