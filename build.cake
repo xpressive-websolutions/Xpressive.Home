@@ -3,11 +3,6 @@ var configuration = Argument("Configuration", "Release");
 
 Information(configuration);
 
-Task("Default").Does(() =>
-{
-    Information("Hello World!");
-});
-
 Setup(context =>
 {
     var build = (int)(DateTime.Now - new DateTime(2015, 1, 1)).TotalHours;
@@ -46,6 +41,15 @@ Task("Pre-Build Clean Up").Does(() =>
             CleanDirectory("Build/Plugins");
         }
 
+        if (DirectoryExists("Build/Web"))
+        {
+            if (DirectoryExists("Build/Web/app")) CleanDirectory("Build/Web/app");
+            if (DirectoryExists("Build/Web/Scripts")) CleanDirectory("Build/Web/Scripts");
+            if (DirectoryExists("Build/Web/Styles")) CleanDirectory("Build/Web/Styles");
+
+            CleanDirectory("Build/Web");
+        }
+
         CleanDirectory("Build");
     }
 });
@@ -78,6 +82,7 @@ Task("Copy").IsDependentOn("Build").Does(() =>
     }
 
     CopyFiles(GetFiles("Xpressive.Home.ConsoleHost/bin/" + configuration + "/*.*"), "./Build");
+    CopyFiles(GetFiles("Xpressive.Home.Service/bin/" + configuration + "/*.*"), "./Build");
     CopyFiles(GetFiles("Xpressive.Home.WebApi/bin/" + configuration + "/*.*"), "./Build");
 
     DeleteFiles("./Build/**/*.xml");
@@ -91,7 +96,7 @@ Task("Copy Web").IsDependentOn("Copy").Does(() =>
     CreateDirectory("Build/Web/Styles");
 
     CopyFiles(GetFiles("Xpressive.Home.WebApi/*.html"), "./Build/Web");
-    CopyFiles(GetFiles("Xpressive.Home.WebApi/app/**/*.*"), "./Build/Web/app");
+    CopyDirectory("Xpressive.Home.WebApi/app", "./Build/Web/app");
     CopyFiles(GetFiles("Xpressive.Home.WebApi/Scripts/*.js"), "./Build/Web/Scripts");
     CopyFiles(GetFiles("Xpressive.Home.WebApi/Styles/*.min.css"), "./Build/Web/Styles");
     CopyFiles(GetFiles("Xpressive.Home.WebApi/Styles/*.jpg"), "./Build/Web/Styles");
