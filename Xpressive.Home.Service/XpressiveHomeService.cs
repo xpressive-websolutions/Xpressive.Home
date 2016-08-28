@@ -22,7 +22,7 @@ namespace Xpressive.Home.Service
 
         protected override void OnStop()
         {
-            _log.Info("Stopping Xpressive.Home");
+            _log.Debug("Stopping Xpressive.Home");
             _application.Dispose();
             _log.Info("Stopped Xpressive.Home");
         }

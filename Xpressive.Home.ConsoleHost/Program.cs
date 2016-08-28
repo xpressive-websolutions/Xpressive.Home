@@ -13,7 +13,7 @@ namespace Xpressive.Home.ConsoleHost
             using (Setup.Run())
             {
                 Console.ReadLine();
-                log.Info("Stopping Xpressive.Home");
+                log.Debug("Stopping Xpressive.Home");
             }
 
             log.Info("Stopped Xpressive.Home");

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
-using Xpressive.Home.Contracts.Services;
 using Xpressive.Home.DatabaseMigrator;
 
 namespace Xpressive.Home
@@ -15,9 +14,6 @@ namespace Xpressive.Home
             DbMigrator.Run();
             IocContainer.Build();
             RegisterMessageQueueListeners();
-
-            var service = IocContainer.Resolve<ISoftwareUpdateDownloadService>();
-            service.DownloadNewestVersionAsync();
 
             var gateways = IocContainer.Resolve<IList<IGateway>>();
 
