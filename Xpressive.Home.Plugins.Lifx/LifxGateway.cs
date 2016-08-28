@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using log4net;
 using Polly;
@@ -18,6 +19,8 @@ namespace Xpressive.Home.Plugins.Lifx
         private readonly string _token;
         private readonly object _deviceLock = new object();
         private readonly LifxLocalClient _localClient = new LifxLocalClient();
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0);
+        private bool _isRunning = true;
 
         public LifxGateway(IMessageQueue messageQueue) : base("Lifx")
         {
@@ -128,18 +131,24 @@ namespace Xpressive.Home.Plugins.Lifx
             await ExecuteInternal(device, action, parameters);
         }
 
-        public async Task FindBulbsAsync()
+        public override async Task StartAsync()
         {
-            FindLocalBulbs();
+            await Task.Delay(TimeSpan.FromSeconds(1));
 
-            await Task.Delay(TimeSpan.FromSeconds(5));
-
+            await FindLocalBulbsAsync();
             await FindCloudBulbs();
+        }
+
+        public override void Stop()
+        {
+            _isRunning = false;
+            _localClient.Stop();
+            _semaphore.Wait(TimeSpan.FromSeconds(5));
         }
 
         private async Task FindCloudBulbs()
         {
-            while (true)
+            while (_isRunning)
             {
                 if (!string.IsNullOrEmpty(_token))
                 {
@@ -170,15 +179,20 @@ namespace Xpressive.Home.Plugins.Lifx
                     _log.Error(e.Message, e);
                 }
 
-                await Task.Delay(TimeSpan.FromMinutes(1));
+                for (var s = 0; s < 600 && _isRunning; s++)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(0.1));
+                }
             }
+
+            _semaphore.Release();
         }
 
-        private void FindLocalBulbs()
+        private async Task FindLocalBulbsAsync()
         {
             try
             {
-                _localClient.StartDeviceDiscovery();
+                await _localClient.StartDeviceDiscoveryAsync();
             }
             catch (Exception e)
             {
@@ -384,6 +398,7 @@ namespace Xpressive.Home.Plugins.Lifx
         {
             if (disposing)
             {
+                _isRunning = false;
                 _localClient.Dispose();
             }
         }

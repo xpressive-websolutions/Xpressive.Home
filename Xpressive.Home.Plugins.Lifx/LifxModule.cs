@@ -15,8 +15,7 @@ namespace Xpressive.Home.Plugins.Lifx
                 .As<IGateway>()
                 .As<ILifxGateway>()
                 .As<IMessageQueueListener<CommandMessage>>()
-                .SingleInstance()
-                .OnActivated(async h => await h.Instance.FindBulbsAsync());
+                .SingleInstance();
 
             base.Load(builder);
         }

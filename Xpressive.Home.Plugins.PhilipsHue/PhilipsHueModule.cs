@@ -15,8 +15,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                 .As<IGateway>()
                 .As<IPhilipsHueGateway>()
                 .As<IMessageQueueListener<CommandMessage>>()
-                .SingleInstance()
-                .OnActivated(async h => await h.Instance.ObserveBulbStatusAsync());
+                .SingleInstance();
 
             builder.RegisterType<PhilipsHueDeviceDiscoveringService>()
                 .As<IPhilipsHueDeviceDiscoveringService>()

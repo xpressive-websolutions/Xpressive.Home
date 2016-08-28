@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.IO.Ports;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using log4net;
 using Xpressive.Home.Contracts.Gateway;
@@ -21,6 +22,7 @@ namespace Xpressive.Home.Plugins.Zwave
         private readonly string _comPortName;
         private readonly ZwaveDeviceLibrary _library;
         private readonly Dictionary<byte, ZwaveCommandQueue> _nodeCommandQueues;
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0);
         private ZWaveController _controller;
         private bool _isRunning;
 
@@ -47,13 +49,14 @@ namespace Xpressive.Home.Plugins.Zwave
             throw new NotImplementedException();
         }
 
-        internal async Task Start()
+        public override async Task StartAsync()
         {
-            await Task.Delay(TimeSpan.FromSeconds(5));
+            await Task.Delay(TimeSpan.FromSeconds(1));
 
             if (string.IsNullOrEmpty(_comPortName))
             {
                 _messageQueue.Publish(new NotifyUserMessage("Add z-wave configuration (port) to config file."));
+                _semaphore.Release();
                 return;
             }
 
@@ -61,6 +64,7 @@ namespace Xpressive.Home.Plugins.Zwave
             if (!validComPorts.Contains(_comPortName))
             {
                 _messageQueue.Publish(new NotifyUserMessage("COM Port for z-wave configuration is invalid."));
+                _semaphore.Release();
                 return;
             }
 
@@ -90,6 +94,14 @@ namespace Xpressive.Home.Plugins.Zwave
             {
                 _log.Error(e.Message, e);
             }
+
+            _semaphore.Release();
+        }
+
+        public override void Stop()
+        {
+            _isRunning = false;
+            _semaphore.Wait(TimeSpan.FromSeconds(5));
         }
 
         private async Task DiscoverNodes()

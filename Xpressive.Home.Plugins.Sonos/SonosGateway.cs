@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using RestSharp.Extensions.MonoHttp;
 using Xpressive.Home.Contracts.Gateway;
@@ -13,6 +14,8 @@ namespace Xpressive.Home.Plugins.Sonos
     {
         private readonly IMessageQueue _messageQueue;
         private readonly ISonosSoapClient _soapClient;
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0);
+        private bool _isRunning = true;
 
         public SonosGateway(IMessageQueue messageQueue, ISonosDeviceDiscoverer deviceDiscoverer, ISonosSoapClient soapClient) : base("Sonos")
         {
@@ -91,11 +94,11 @@ namespace Xpressive.Home.Plugins.Sonos
             await ExecuteInternal(device, new Action("Change Volume"), parameters);
         }
 
-        public async Task ObserveDevicesAsync()
+        public override async Task StartAsync()
         {
-            while (true)
+            while (_isRunning)
             {
-                await Task.Delay(5000);
+                await Task.Delay(TimeSpan.FromSeconds(1));
                 var devices = GetDevices().ToList();
                 var masterDevices = devices.Where(d => d.IsMaster).ToList();
                 var others = devices.Except(masterDevices).ToList();
@@ -103,6 +106,14 @@ namespace Xpressive.Home.Plugins.Sonos
                 masterDevices.ForEach(async d => await UpdateDeviceVariablesAsync(d));
                 others.ForEach(async d => await UpdateDeviceVariablesAsync(d));
             }
+
+            _semaphore.Release();
+        }
+
+        public override void Stop()
+        {
+            _isRunning = false;
+            _semaphore.Wait(TimeSpan.FromSeconds(5));
         }
 
         protected override async Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values)

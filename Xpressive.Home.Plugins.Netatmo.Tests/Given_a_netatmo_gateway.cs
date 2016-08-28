@@ -19,7 +19,7 @@ namespace Xpressive.Home.Plugins.Netatmo.Tests
         public async Task X()
         {
             var gateway = new NetatmoGateway(new MessageQueueMock(_output.WriteLine));
-            await gateway.ScanDeviceAndDataAsync();
+            await gateway.StartAsync();
         }
     }
 

@@ -16,8 +16,7 @@ namespace Xpressive.Home.Plugins.MyStrom
                 .As<IGateway>()
                 .As<IMyStromGateway>()
                 .As<IMessageQueueListener<CommandMessage>>()
-                .SingleInstance()
-                .OnActivated(async g => await g.Instance.Observe());
+                .SingleInstance();
 
             base.Load(builder);
         }

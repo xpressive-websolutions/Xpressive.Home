@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using log4net;
 using RestSharp;
@@ -20,6 +21,8 @@ namespace Xpressive.Home.Plugins.Netatmo
         private readonly string _username;
         private readonly string _password;
         private readonly bool _isValidConfiguration;
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0);
+        private bool _isRunning = true;
 
         public NetatmoGateway(IMessageQueue messageQueue) : base("Netatmo")
         {
@@ -48,19 +51,20 @@ namespace Xpressive.Home.Plugins.Netatmo
             throw new NotSupportedException();
         }
 
-        public async Task ScanDeviceAndDataAsync()
+        public override async Task StartAsync()
         {
-            await Task.Delay(TimeSpan.FromSeconds(5));
+            await Task.Delay(TimeSpan.FromSeconds(1));
 
             if (!_isValidConfiguration)
             {
                 _messageQueue.Publish(new NotifyUserMessage("Add netatmo configuration to config file."));
+                _semaphore.Release();
                 return;
             }
 
             var token = await GetTokenAsync();
 
-            while (true)
+            while (_isRunning)
             {
                 try
                 {
@@ -76,8 +80,19 @@ namespace Xpressive.Home.Plugins.Netatmo
                     _log.Error(e.Message, e);
                 }
 
-                await Task.Delay(TimeSpan.FromMinutes(1));
+                for (var s = 0; s < 600 && _isRunning; s++)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(0.1));
+                }
             }
+
+            _semaphore.Release();
+        }
+
+        public override void Stop()
+        {
+            _isRunning = false;
+            _semaphore.Wait(TimeSpan.FromSeconds(5));
         }
 
         private async Task GetDeviceData(TokenResponseDto token)

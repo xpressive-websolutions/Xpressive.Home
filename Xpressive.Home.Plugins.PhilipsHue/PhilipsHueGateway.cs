@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using log4net;
 using Polly;
@@ -20,6 +21,8 @@ namespace Xpressive.Home.Plugins.PhilipsHue
         private readonly IVariableRepository _variableRepository;
         private readonly IMessageQueue _messageQueue;
         private readonly object _devicesLock = new object();
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0);
+        private bool _isRunning = true;
 
         public PhilipsHueGateway(
             IVariableRepository variableRepository,
@@ -108,11 +111,11 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             throw new NotSupportedException();
         }
 
-        public async Task ObserveBulbStatusAsync()
+        public override async Task StartAsync()
         {
-            await Task.Delay(TimeSpan.FromSeconds(5));
+            await Task.Delay(TimeSpan.FromSeconds(1));
 
-            while (true)
+            while (_isRunning)
             {
                 List<PhilipsHueDevice> bulbs;
 
@@ -150,8 +153,19 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                     }
                 }
 
-                await Task.Delay(TimeSpan.FromSeconds(30));
+                for (int s = 0; s < 300 && _isRunning; s++)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(0.1));
+                }
             }
+
+            _semaphore.Release();
+        }
+
+        public override void Stop()
+        {
+            _isRunning = false;
+            _semaphore.Wait(TimeSpan.FromSeconds(5));
         }
 
         protected override async Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values)

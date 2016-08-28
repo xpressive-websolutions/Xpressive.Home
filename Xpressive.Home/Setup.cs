@@ -16,6 +16,12 @@ namespace Xpressive.Home
             RegisterMessageQueueListeners();
 
             var gateways = IocContainer.Resolve<IList<IGateway>>();
+
+            foreach (var gateway in gateways)
+            {
+                gateway.StartAsync();
+            }
+
             return new Disposer(gateways);
         }
 
@@ -35,19 +41,22 @@ namespace Xpressive.Home
 
         private class Disposer : IDisposable
         {
-            private readonly IEnumerable<IDisposable> _disposables;
+            private readonly IEnumerable<IGateway> _gateways;
 
-            public Disposer(IEnumerable<IDisposable> disposables)
+            public Disposer(IEnumerable<IGateway> gateways)
             {
-                _disposables = disposables;
+                _gateways = gateways;
             }
 
             public void Dispose()
             {
-                foreach (var disposable in _disposables)
+                foreach (var gateway in _gateways)
                 {
-                    disposable.Dispose();
+                    gateway.Stop();
+                    gateway.Dispose();
                 }
+
+                IocContainer.Dispose();
             }
         }
     }

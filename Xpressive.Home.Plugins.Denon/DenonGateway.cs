@@ -18,12 +18,14 @@ namespace Xpressive.Home.Plugins.Denon
     {
         private static readonly ILog _log = LogManager.GetLogger(typeof (DenonGateway));
         private readonly IMessageQueue _messageQueue;
+        private readonly IUpnpDeviceDiscoveringService _upnpDeviceDiscoveringService;
 
         public DenonGateway(
             IMessageQueue messageQueue,
             IUpnpDeviceDiscoveringService upnpDeviceDiscoveringService) : base("Denon")
         {
             _messageQueue = messageQueue;
+            _upnpDeviceDiscoveringService = upnpDeviceDiscoveringService;
 
             _actions.Add(new Action("Change Volume") { Fields = { "Volume" } });
             _actions.Add(new Action("Volume Up"));
@@ -151,6 +153,16 @@ namespace Xpressive.Home.Plugins.Denon
                     await stream.FlushAsync();
                 }
             }
+        }
+
+        public override Task StartAsync()
+        {
+            return Task.CompletedTask;
+        }
+
+        public override void Stop()
+        {
+            _upnpDeviceDiscoveringService.DeviceFound -= OnUpnpDeviceFound;
         }
 
         private async void OnUpnpDeviceFound(object sender, IUpnpDeviceResponse e)

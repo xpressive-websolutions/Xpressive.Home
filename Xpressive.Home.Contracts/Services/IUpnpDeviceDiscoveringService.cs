@@ -2,7 +2,7 @@
 
 namespace Xpressive.Home.Contracts.Services
 {
-    public interface IUpnpDeviceDiscoveringService
+    public interface IUpnpDeviceDiscoveringService : IDisposable
     {
         event EventHandler<IUpnpDeviceResponse> DeviceFound;
     }

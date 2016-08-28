@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Xpressive.Home.Contracts.Gateway
 {
@@ -13,5 +14,8 @@ namespace Xpressive.Home.Contracts.Gateway
 
         IDevice CreateEmptyDevice();
         bool AddDevice(IDevice device);
+
+        Task StartAsync();
+        void Stop();
     }
 }

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Xpressive.Home.Plugins.Lifx.Utils;
 
@@ -13,6 +14,7 @@ namespace Xpressive.Home.Plugins.Lifx
     internal class LifxLocalClient : IDisposable
     {
         private readonly UdpClient _listeningClient;
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0);
         private bool _isRunning = true;
         private readonly Dictionary<string, LifxLocalLight> _discoveredBulbs = new Dictionary<string, LifxLocalLight>();
         private static readonly Random _randomizer = new Random();
@@ -35,33 +37,52 @@ namespace Xpressive.Home.Plugins.Lifx
         {
             while (_isRunning)
             {
-                var result = await _listeningClient.ReceiveAsync();
-
-                HandleIncomingMessages(result.Buffer, result.RemoteEndPoint);
+                try
+                {
+                    var result = await _listeningClient.ReceiveAsync();
+                    HandleIncomingMessages(result.Buffer, result.RemoteEndPoint);
+                }
+                catch (ObjectDisposedException)
+                {
+                }
             }
+
+            _semaphore.Release();
         }
 
-        public void StartDeviceDiscovery()
+        public async Task StartDeviceDiscoveryAsync()
         {
-            var source = (uint)_randomizer.Next(int.MaxValue);
-
-            Task.Run(async () =>
+            var source = (uint) _randomizer.Next(int.MaxValue);
+            var header = new FrameHeader
             {
-                System.Diagnostics.Debug.WriteLine("Sending GetServices");
-                FrameHeader header = new FrameHeader()
+                Identifier = source
+            };
+
+            while (_isRunning)
+            {
+                try
                 {
-                    Identifier = source
-                };
-                while (_isRunning)
-                {
-                    try
-                    {
-                        await BroadcastMessageAsync(null, header, MessageType.DeviceGetService, null);
-                    }
-                    catch { }
-                    await Task.Delay(5000);
+                    await BroadcastMessageAsync(null, header, MessageType.DeviceGetService, null);
                 }
-            });
+                catch
+                {
+                }
+
+                for (int s = 0; s < 50 && _isRunning; s++)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(0.1));
+                }
+            }
+
+            _semaphore.Release();
+        }
+
+        public void Stop()
+        {
+            _isRunning = false;
+            _listeningClient.Dispose();
+            _semaphore.Wait(TimeSpan.FromSeconds(5));
+            _semaphore.Wait(TimeSpan.FromSeconds(3));
         }
 
         private void HandleIncomingMessages(byte[] data, IPEndPoint remoteEndPoint)
@@ -385,7 +406,7 @@ namespace Xpressive.Home.Plugins.Lifx
         public void Dispose()
         {
             _isRunning = false;
-            _listeningClient.Dispose();
+            _listeningClient?.Dispose();
         }
     }
 

@@ -8,7 +8,7 @@ using Xpressive.Home.Contracts.Automation;
 
 namespace Xpressive.Home.Automation
 {
-    internal class CronService : IStartable, ICronService
+    internal class CronService : IStartable, ICronService, IDisposable
     {
         private static readonly object _schedulerLock = new object();
         private static volatile IScheduler _scheduler;
@@ -46,6 +46,11 @@ namespace Xpressive.Home.Automation
         public void Start()
         {
             Task.Run(InitAsync);
+        }
+
+        public void Dispose()
+        {
+            _scheduler.Shutdown(false);
         }
 
         private async Task InitAsync()

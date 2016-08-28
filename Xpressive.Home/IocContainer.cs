@@ -42,5 +42,10 @@ namespace Xpressive.Home
         {
             return _container.Resolve<T>();
         }
+
+        public static void Dispose()
+        {
+            _container.Dispose();
+        }
     }
 }

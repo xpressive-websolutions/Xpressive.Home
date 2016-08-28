@@ -8,10 +8,11 @@ using Xpressive.Home.Contracts.Variables;
 
 namespace Xpressive.Home.Plugins.PhilipsHue
 {
-    internal class PhilipsHueBridgeDiscoveringService : IPhilipsHueBridgeDiscoveringService
+    internal class PhilipsHueBridgeDiscoveringService : IPhilipsHueBridgeDiscoveringService, IDisposable
     {
         private readonly IMessageQueue _messageQueue;
         private readonly IVariableRepository _variableRepository;
+        private readonly IUpnpDeviceDiscoveringService _upnpDeviceDiscoveringService;
         private readonly object _lock;
         private readonly Dictionary<string, PhilipsHueBridge> _bridges;
 
@@ -24,8 +25,9 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             _bridges = new Dictionary<string, PhilipsHueBridge>(StringComparer.OrdinalIgnoreCase);
             _messageQueue = messageQueue;
             _variableRepository = variableRepository;
+            _upnpDeviceDiscoveringService = upnpDeviceDiscoveringService;
 
-            upnpDeviceDiscoveringService.DeviceFound += OnUpnpDeviceFound;
+            _upnpDeviceDiscoveringService.DeviceFound += OnUpnpDeviceFound;
         }
 
         public event EventHandler<PhilipsHueBridge> BridgeFound;
@@ -102,6 +104,11 @@ namespace Xpressive.Home.Plugins.PhilipsHue
         private void OnBridgeFound(PhilipsHueBridge e)
         {
             BridgeFound?.Invoke(this, e);
+        }
+
+        public void Dispose()
+        {
+            _upnpDeviceDiscoveringService.DeviceFound -= OnUpnpDeviceFound;
         }
     }
 }

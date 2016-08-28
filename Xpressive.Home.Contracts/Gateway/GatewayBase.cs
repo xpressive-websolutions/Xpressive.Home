@@ -36,6 +36,10 @@ namespace Xpressive.Home.Contracts.Gateway
             return AddDeviceInternal(d);
         }
 
+        public abstract Task StartAsync();
+        public abstract void Stop();
+        public abstract IDevice CreateEmptyDevice();
+
         public async void Notify(CommandMessage message)
         {
             if (!message.ActionId.StartsWith(_name, StringComparison.Ordinal))
@@ -91,8 +95,6 @@ namespace Xpressive.Home.Contracts.Gateway
             PersistingService.SaveAsync(Name, device);
             return true;
         }
-
-        public abstract IDevice CreateEmptyDevice();
 
         protected abstract Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values);
 

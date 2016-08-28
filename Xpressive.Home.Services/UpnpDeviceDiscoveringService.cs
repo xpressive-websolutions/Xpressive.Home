@@ -11,6 +11,8 @@ namespace Xpressive.Home.Services
 {
     public class UpnpDeviceDiscoveringService : IUpnpDeviceDiscoveringService
     {
+        private bool _isRunning = true;
+
         public event EventHandler<IUpnpDeviceResponse> DeviceFound;
 
         public async Task StartDiscoveringAsync()
@@ -20,7 +22,7 @@ namespace Xpressive.Home.Services
 
             await Task.Delay(TimeSpan.FromSeconds(5));
 
-            while (true)
+            while (_isRunning)
             {
                 using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp))
                 {
@@ -37,7 +39,7 @@ namespace Xpressive.Home.Services
 
                     socket.SendTo(data, new IPEndPoint(IPAddress.Parse(multicastIpAddress), multicastPort));
 
-                    while (DateTime.UtcNow < timeout)
+                    while (_isRunning && DateTime.UtcNow < timeout)
                     {
                         await Task.Delay(10);
 
@@ -53,7 +55,10 @@ namespace Xpressive.Home.Services
                     socket.Close();
                 }
 
-                await Task.Delay(TimeSpan.FromSeconds(30));
+                for (var i = 0; i < 300 && _isRunning; i++)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(0.1));
+                }
             }
         }
 
@@ -98,6 +103,11 @@ namespace Xpressive.Home.Services
         protected virtual void OnDeviceFound(IUpnpDeviceResponse device)
         {
             DeviceFound?.Invoke(this, device);
+        }
+
+        public void Dispose()
+        {
+            _isRunning = false;
         }
     }
 }

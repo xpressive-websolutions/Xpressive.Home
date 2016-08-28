@@ -6,14 +6,16 @@ using Xpressive.Home.Contracts.Services;
 
 namespace Xpressive.Home.Plugins.Sonos
 {
-    internal sealed class SonosDeviceDiscoverer : ISonosDeviceDiscoverer
+    internal sealed class SonosDeviceDiscoverer : ISonosDeviceDiscoverer, IDisposable
     {
+        private readonly IUpnpDeviceDiscoveringService _upnpDeviceDiscoveringService;
         private readonly object _lock = new object();
         private readonly HashSet<string> _detectedSonosIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         public SonosDeviceDiscoverer(IUpnpDeviceDiscoveringService upnpDeviceDiscoveringService)
         {
-            upnpDeviceDiscoveringService.DeviceFound += OnUpnpDeviceFound;
+            _upnpDeviceDiscoveringService = upnpDeviceDiscoveringService;
+            _upnpDeviceDiscoveringService.DeviceFound += OnUpnpDeviceFound;
         }
 
         public event EventHandler<SonosDevice> DeviceFound;
@@ -139,6 +141,11 @@ namespace Xpressive.Home.Plugins.Sonos
         private void OnDeviceFound(SonosDevice e)
         {
             DeviceFound?.Invoke(this, e);
+        }
+
+        public void Dispose()
+        {
+            _upnpDeviceDiscoveringService.DeviceFound -= OnUpnpDeviceFound;
         }
     }
 }

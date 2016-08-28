@@ -10,8 +10,7 @@ namespace Xpressive.Home.Plugins.Daylight
             builder.RegisterType<DaylightGateway>()
                 .As<IGateway>()
                 .PropertiesAutowired()
-                .SingleInstance()
-                .OnActivated(async h => await h.Instance.StartObservationAsync());
+                .SingleInstance();
 
             base.Load(builder);
         }

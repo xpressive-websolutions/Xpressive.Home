@@ -22,7 +22,8 @@ namespace Xpressive.Home.Services
 
             builder.RegisterType<UpnpDeviceDiscoveringService>()
                 .As<IUpnpDeviceDiscoveringService>()
-                .OnActivated(async a => await a.Instance.StartDiscoveringAsync());
+                .OnActivated(async a => await a.Instance.StartDiscoveringAsync())
+                .SingleInstance();
 
             base.Load(builder);
         }

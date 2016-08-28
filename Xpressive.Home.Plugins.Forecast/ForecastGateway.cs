@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using ForecastIO;
 using log4net;
@@ -16,6 +17,8 @@ namespace Xpressive.Home.Plugins.Forecast
         private static readonly ILog _log = LogManager.GetLogger(typeof(ForecastGateway));
         private readonly string _apiKey;
         private readonly IMessageQueue _messageQueue;
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0);
+        private bool _isRunning = true;
 
         public ForecastGateway(IMessageQueue messageQueue) : base("Weather")
         {
@@ -29,19 +32,20 @@ namespace Xpressive.Home.Plugins.Forecast
             return new ForecastDevice();
         }
 
-        public async Task StartAsync()
+        public override async Task StartAsync()
         {
-            await Task.Delay(TimeSpan.FromSeconds(5));
+            await Task.Delay(TimeSpan.FromSeconds(1));
 
             await LoadDevicesAsync((id, name) => new ForecastDevice { Id = id, Name = name });
 
             if (string.IsNullOrEmpty(_apiKey))
             {
                 _messageQueue.Publish(new NotifyUserMessage("Add forecast.io configuration to config file."));
+                _semaphore.Release();
                 return;
             }
 
-            while (true)
+            while (_isRunning)
             {
                 var recentUpdate = DateTime.UtcNow;
 
@@ -57,13 +61,31 @@ namespace Xpressive.Home.Plugins.Forecast
 
                 var minutes = Math.Max(_devices.Count*2.5, 10);
                 var nextUpdate = recentUpdate + TimeSpan.FromMinutes(minutes);
-                await Task.Delay(nextUpdate - recentUpdate);
+
+                while (_isRunning && DateTime.UtcNow < nextUpdate)
+                {
+                    await Task.Delay(100);
+                }
             }
+
+            _semaphore.Release();
+        }
+
+        public override void Stop()
+        {
+            _isRunning = false;
+            _semaphore.Wait(TimeSpan.FromSeconds(5));
         }
 
         protected override Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values)
         {
             throw new NotSupportedException();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            _isRunning = false;
+            base.Dispose(disposing);
         }
 
         private async Task GetWeatherInfo(ForecastDevice device)

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using log4net;
 using RestSharp;
@@ -17,7 +18,10 @@ namespace Xpressive.Home.Plugins.MyStrom
         private static readonly ILog _log = LogManager.GetLogger(typeof (MyStromGateway));
         private readonly IMessageQueue _messageQueue;
         private readonly IMyStromDeviceNameService _myStromDeviceNameService;
+        private readonly IUpnpDeviceDiscoveringService _upnpDeviceDiscoveringService;
         private readonly object _deviceListLock = new object();
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0);
+        private bool _isRunning = true;
 
         public MyStromGateway(
             IMessageQueue messageQueue,
@@ -26,13 +30,14 @@ namespace Xpressive.Home.Plugins.MyStrom
         {
             _messageQueue = messageQueue;
             _myStromDeviceNameService = myStromDeviceNameService;
+            _upnpDeviceDiscoveringService = upnpDeviceDiscoveringService;
 
             _canCreateDevices = false;
 
             _actions.Add(new Action("Switch On"));
             _actions.Add(new Action("Switch Off"));
 
-            upnpDeviceDiscoveringService.DeviceFound += OnUpnpDeviceFound;
+            _upnpDeviceDiscoveringService.DeviceFound += OnUpnpDeviceFound;
         }
 
         public IEnumerable<MyStromDevice> GetDevices()
@@ -50,17 +55,15 @@ namespace Xpressive.Home.Plugins.MyStrom
             await ExecuteInternal(device, new Action("Switch Off"), null);
         }
 
-        public async Task Observe()
+        public override async Task StartAsync()
         {
-            await Task.Delay(TimeSpan.FromSeconds(5));
+            await Task.Delay(TimeSpan.FromSeconds(1));
 
             var previousPowers = new Dictionary<string, double>();
 
-            while (true)
+            while (_isRunning)
             {
-                await Task.Delay(TimeSpan.FromSeconds(10));
-
-                foreach (MyStromDevice device in _devices)
+                foreach (var device in _devices.Cast<MyStromDevice>())
                 {
                     var dto = await GetReport(device.IpAddress);
 
@@ -87,12 +90,25 @@ namespace Xpressive.Home.Plugins.MyStrom
                         previousPowers[device.Id] = dto.Power;
                     }
                 }
+
+                for (var s = 0; s < 100 && _isRunning; s++)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(0.1));
+                }
             }
+
+            _semaphore.Release();
         }
 
         public override IDevice CreateEmptyDevice()
         {
             throw new NotSupportedException();
+        }
+
+        public override void Stop()
+        {
+            _isRunning = false;
+            _semaphore.Wait(TimeSpan.FromSeconds(5));
         }
 
         protected override async Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values)
@@ -114,6 +130,13 @@ namespace Xpressive.Home.Plugins.MyStrom
             }
 
             await client.ExecuteTaskAsync(request);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            _isRunning = false;
+            _upnpDeviceDiscoveringService.DeviceFound -= OnUpnpDeviceFound;
+            base.Dispose(disposing);
         }
 
         private async void OnUpnpDeviceFound(object sender, IUpnpDeviceResponse e)
