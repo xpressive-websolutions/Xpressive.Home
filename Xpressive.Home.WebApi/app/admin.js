@@ -1,6 +1,6 @@
 ﻿(function(_) {
 
-    var xha = angular.module("admin", ["ngRoute", "ui.bootstrap", "ui.codemirror", "ui.select", "ngSanitize"]);
+    var xha = angular.module("admin", ["ngRoute", "ui.bootstrap", "ui.codemirror", "ui.select", "ngSanitize", "toaster"]);
 
     xha.config(function($routeProvider) {
         $routeProvider
@@ -40,6 +40,31 @@
         };
     });
 
+    xha.controller("installController", ["$http", function($http) {
+        var c = this;
+
+        c.yes = function() {
+            $http.post("/api/v1/softwareupdate/start");
+        };
+    }]);
+
+    xha.controller("updateController", ["toaster", "$http", "$interval", "$timeout", function(toaster, $http, $interval, $timeout) {
+        var showToast = function() {
+            toaster.pop("info", "Update available", "softwareUpdateTemplate.html", null, "template");
+        };
+
+        var checkForUpdate = function() {
+            $http.get("/api/v1/softwareupdate/hasNewVersion", { cache: false }).then(function(result) {
+                if (result.data === true) {
+                    showToast();
+                }
+            });
+        };
+
+        $timeout(checkForUpdate, 1 * 60 * 1000);
+        $interval(checkForUpdate, 60 * 60 * 1000);
+    }]);
+
     xha.controller("navigationController", ["$rootScope", "$location", function($rootScope, $location) {
         var c = this;
 
@@ -58,8 +83,8 @@
                 var devices = _.sortBy(deviceResult.data, function(d) { return d.name; });
                 gateway.devices = devices;
 
-                $http.get("/api/v1/roomdevice/" + gateway.name, { cache: false }).then(function (result) {
-                    _.each(result.data, function (p) {
+                $http.get("/api/v1/roomdevice/" + gateway.name, { cache: false }).then(function(result) {
+                    _.each(result.data, function(p) {
                         var room = _.find($scope.rooms, function(r) { return r.id === p.roomId; });
                         var device = _.find(gateway.devices, function(d) { return d.id === p.deviceId; });
                         if (room && device) {
@@ -160,7 +185,7 @@
         var deviceId = $routeParams.device;
         var deviceIdEncoded = encodeURIComponent(deviceId);
 
-        $http.get("/api/v1/variable/" + gateway + "?deviceId=" + deviceIdEncoded, { cache: false }).then(function (result) {
+        $http.get("/api/v1/variable/" + gateway + "?deviceId=" + deviceIdEncoded, { cache: false }).then(function(result) {
             $scope.variables = result.data;
         });
 

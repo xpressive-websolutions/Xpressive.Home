@@ -127,6 +127,7 @@
     <Compile Include="Controllers\ScriptController.cs" />
     <Compile Include="Controllers\ScriptSchedulerController.cs" />
     <Compile Include="Controllers\ScriptTriggerController.cs" />
+    <Compile Include="Controllers\SoftwareUpdateController.cs" />
     <Compile Include="Controllers\VariableController.cs" />
     <Compile Include="WebApiStartable.cs" />
     <Compile Include="Controllers\GatewayController.cs" />
