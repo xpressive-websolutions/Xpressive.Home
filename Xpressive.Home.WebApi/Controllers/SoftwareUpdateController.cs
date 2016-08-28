@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Diagnostics;
+using System.Threading.Tasks;
 using System.Web.Http;
 using Xpressive.Home.Contracts.Services;
 
@@ -23,7 +24,13 @@ namespace Xpressive.Home.WebApi.Controllers
         [HttpPost, Route("start")]
         public async Task Update()
         {
-            await _service.DownloadNewestVersionAsync();
+            var file = await _service.DownloadNewestVersionAsync();
+            if (file == null)
+            {
+                return;
+            }
+
+            Process.Start("Xpressive.Home.Deployment.Updater.exe", "\"" + file.FullName + "\"");
         }
     }
 }

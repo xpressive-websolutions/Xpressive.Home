@@ -69,6 +69,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Deployment", "Deployment", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xpressive.Home.Deployment.Sign", "Xpressive.Home.Deployment.Sign\Xpressive.Home.Deployment.Sign.csproj", "{EB3F6EEB-B029-4888-913B-E13C43001B0C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xpressive.Home.Deployment.Updater", "Xpressive.Home.Deployment.Updater\Xpressive.Home.Deployment.Updater.csproj", "{BA1EACA5-2DE5-4B86-9DAD-AF9E5986878C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -159,6 +161,10 @@ Global
 		{EB3F6EEB-B029-4888-913B-E13C43001B0C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EB3F6EEB-B029-4888-913B-E13C43001B0C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EB3F6EEB-B029-4888-913B-E13C43001B0C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BA1EACA5-2DE5-4B86-9DAD-AF9E5986878C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA1EACA5-2DE5-4B86-9DAD-AF9E5986878C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA1EACA5-2DE5-4B86-9DAD-AF9E5986878C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA1EACA5-2DE5-4B86-9DAD-AF9E5986878C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -179,5 +185,6 @@ Global
 		{09E2EAFA-A757-4A8F-9D5F-0CBD7C9DCB9D} = {76420CFE-43A4-4E16-8AA5-8659E142AE4A}
 		{FC90E250-E5A7-4C6D-BF4C-209729DEC3DB} = {76420CFE-43A4-4E16-8AA5-8659E142AE4A}
 		{EB3F6EEB-B029-4888-913B-E13C43001B0C} = {66BA7D8D-AF08-4FAE-AB0F-58AB6E5EFB77}
+		{BA1EACA5-2DE5-4B86-9DAD-AF9E5986878C} = {66BA7D8D-AF08-4FAE-AB0F-58AB6E5EFB77}
 	EndGlobalSection
 EndGlobal
