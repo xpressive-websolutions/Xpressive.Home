@@ -24,7 +24,7 @@ Setup(context =>
         ComVisible = false,
         Version = version,
         FileVersion = version,
-        InformationalVersion = versionPrefix + "-beta1"
+        InformationalVersion = versionPrefix + "-beta.1"
     };
 
     CreateAssemblyInfo("./Xpressive.Home/Properties/AssemblyInfo.shared.cs", assemblyInfo);
@@ -96,8 +96,8 @@ Task("Sign").IsDependentOn("Zip").Does(() =>
 
 Task("Clean Up").IsDependentOn("Sign").Does(() =>
 {
-    CleanDirectory("Build");
-    DeleteDirectory("Build", true);
+    //CleanDirectory("Build");
+    //DeleteDirectory("Build", true);
 });
 
 RunTarget("Clean Up");
