@@ -135,8 +135,8 @@ namespace Xpressive.Home.Plugins.Lifx
         {
             await Task.Delay(TimeSpan.FromSeconds(1));
 
-            await FindLocalBulbsAsync();
-            await FindCloudBulbs();
+            FindLocalBulbsAsync().ConfigureAwait(false);
+            FindCloudBulbs().ConfigureAwait(false);
         }
 
         public override void Stop()

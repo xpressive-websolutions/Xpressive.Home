@@ -13,7 +13,7 @@ namespace Xpressive.Home.Plugins.Lifx
 {
     internal class LifxLocalClient : IDisposable
     {
-        private readonly UdpClient _listeningClient;
+        private UdpClient _listeningClient;
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0);
         private bool _isRunning = true;
         private readonly Dictionary<string, LifxLocalLight> _discoveredBulbs = new Dictionary<string, LifxLocalLight>();
@@ -21,15 +21,6 @@ namespace Xpressive.Home.Plugins.Lifx
 
         public event EventHandler<LifxLocalLight> DeviceDiscovered;
         public event EventHandler<Tuple<LifxLocalLight, string, object>> VariableChanged;
-
-        public LifxLocalClient()
-        {
-            _listeningClient = new UdpClient(56700);
-            _listeningClient.Client.Blocking = false;
-            _listeningClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-
-            Task.Run(async () => await Receive());
-        }
 
         public IEnumerable<LifxLocalLight> Lights => _discoveredBulbs.Values;
 
@@ -52,6 +43,12 @@ namespace Xpressive.Home.Plugins.Lifx
 
         public async Task StartDeviceDiscoveryAsync()
         {
+            _listeningClient = new UdpClient(56700);
+            _listeningClient.Client.Blocking = false;
+            _listeningClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+
+            Receive().ConfigureAwait(false);
+
             var source = (uint) _randomizer.Next(int.MaxValue);
             var header = new FrameHeader
             {
