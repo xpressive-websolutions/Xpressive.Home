@@ -83,7 +83,21 @@ Task("Copy").IsDependentOn("Build").Does(() =>
     DeleteFiles("./Build/**/*.xml");
 });
 
-Task("Zip").IsDependentOn("Copy").Does(() =>
+Task("Copy Web").IsDependentOn("Copy").Does(() =>
+{
+    CreateDirectory("Build/Web");
+    CreateDirectory("Build/Web/app");
+    CreateDirectory("Build/Web/Scripts");
+    CreateDirectory("Build/Web/Styles");
+
+    CopyFiles(GetFiles("Xpressive.Home.WebApi/*.html"), "./Build/Web");
+    CopyFiles(GetFiles("Xpressive.Home.WebApi/app/**/*.*"), "./Build/Web/app");
+    CopyFiles(GetFiles("Xpressive.Home.WebApi/Scripts/*.js"), "./Build/Web/Scripts");
+    CopyFiles(GetFiles("Xpressive.Home.WebApi/Styles/*.min.css"), "./Build/Web/Styles");
+    CopyFiles(GetFiles("Xpressive.Home.WebApi/Styles/*.jpg"), "./Build/Web/Styles");
+});
+
+Task("Zip").IsDependentOn("Copy Web").Does(() =>
 {
     Zip("./Build/", "Build.zip", "./Build/**/*.*");
 });
@@ -96,8 +110,8 @@ Task("Sign").IsDependentOn("Zip").Does(() =>
 
 Task("Clean Up").IsDependentOn("Sign").Does(() =>
 {
-    //CleanDirectory("Build");
-    //DeleteDirectory("Build", true);
+    CleanDirectory("Build");
+    DeleteDirectory("Build", true);
 });
 
 RunTarget("Clean Up");
