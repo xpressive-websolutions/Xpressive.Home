@@ -85,6 +85,7 @@
     <Compile Include="Services\FavoriteRadioStation.cs" />
     <Compile Include="Services\IFavoriteRadioStationService.cs" />
     <Compile Include="Services\IIpAddressService.cs" />
+    <Compile Include="Services\ISoftwareUpdateDownloadService.cs" />
     <Compile Include="Services\ITuneInRadioStationService.cs" />
     <Compile Include="Services\IUpnpDeviceDiscoveringService.cs" />
     <Compile Include="Services\IUpnpDeviceResponse.cs" />
