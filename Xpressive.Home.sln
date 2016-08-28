@@ -69,6 +69,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Deployment", "Deployment", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xpressive.Home.Deployment.Sign", "Xpressive.Home.Deployment.Sign\Xpressive.Home.Deployment.Sign.csproj", "{EB3F6EEB-B029-4888-913B-E13C43001B0C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xpressive.Home.Service", "Xpressive.Home.Service\Xpressive.Home.Service.csproj", "{3E96C478-C4B1-4479-8A40-59FDAC020986}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -159,6 +161,10 @@ Global
 		{EB3F6EEB-B029-4888-913B-E13C43001B0C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EB3F6EEB-B029-4888-913B-E13C43001B0C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EB3F6EEB-B029-4888-913B-E13C43001B0C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3E96C478-C4B1-4479-8A40-59FDAC020986}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3E96C478-C4B1-4479-8A40-59FDAC020986}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3E96C478-C4B1-4479-8A40-59FDAC020986}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3E96C478-C4B1-4479-8A40-59FDAC020986}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
