@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using Xpressive.Home.Contracts.Automation;
+using Xpressive.Home.Contracts.Gateway;
 
 namespace Xpressive.Home.Plugins.Pushalot
 {
@@ -8,6 +9,11 @@ namespace Xpressive.Home.Plugins.Pushalot
         protected override void Load(ContainerBuilder builder)
         {
             builder.RegisterType<PushalotScriptObjectProvider>().As<IScriptObjectProvider>();
+
+            builder
+                .RegisterType<PushalotGateway>()
+                .As<IGateway>()
+                .SingleInstance();
 
             base.Load(builder);
         }

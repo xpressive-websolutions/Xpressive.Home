@@ -46,6 +46,7 @@
     <Compile Include="..\Xpressive.Home\Properties\AssemblyInfo.shared.cs">
       <Link>Properties\AssemblyInfo.shared.cs</Link>
     </Compile>
+    <Compile Include="PushalotGateway.cs" />
     <Compile Include="PushalotModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PushalotScriptObjectProvider.cs" />

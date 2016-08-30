@@ -148,31 +148,27 @@ namespace Xpressive.Home.Plugins.Lifx
 
         private async Task FindCloudBulbs()
         {
+            if (string.IsNullOrEmpty(_token))
+            {
+                _messageQueue.Publish(new NotifyUserMessage("Add LIFX cloud token to config file."));
+                _semaphore.Release();
+                return;
+            }
+
             while (_isRunning)
             {
-                if (!string.IsNullOrEmpty(_token))
-                {
-                    try
-                    {
-                        var policy = Policy
-                            .Handle<Exception>()
-                            .WaitAndRetryAsync(new[]
-                            {
-                                TimeSpan.FromSeconds(1),
-                                TimeSpan.FromSeconds(2),
-                                TimeSpan.FromSeconds(5)
-                            });
-
-                        await policy.ExecuteAsync(async () => await GetHttpLights());
-                    }
-                    catch (Exception e)
-                    {
-                        _log.Error(e.Message, e);
-                    }
-                }
-
                 try
                 {
+                    var policy = Policy
+                        .Handle<Exception>()
+                        .WaitAndRetryAsync(new[]
+                        {
+                            TimeSpan.FromSeconds(1),
+                            TimeSpan.FromSeconds(2),
+                            TimeSpan.FromSeconds(5)
+                        });
+
+                    await policy.ExecuteAsync(async () => await GetHttpLights());
                 }
                 catch (Exception e)
                 {

@@ -4,19 +4,22 @@ using System.Configuration;
 using System.Threading.Tasks;
 using Nito.AsyncEx;
 using RestSharp;
+using Xpressive.Home.Contracts.Messaging;
 
 namespace Xpressive.Home.Plugins.MyStrom
 {
     internal class MyStromDeviceNameService : IMyStromDeviceNameService
     {
+        private readonly IMessageQueue _messageQueue;
         private readonly string _username;
         private readonly string _password;
         private readonly AsyncLock _lock = new AsyncLock();
         private DateTime _recentResultTimestamp;
         private IDictionary<string, string> _recentResult;
 
-        public MyStromDeviceNameService()
+        public MyStromDeviceNameService(IMessageQueue messageQueue)
         {
+            _messageQueue = messageQueue;
             _username = ConfigurationManager.AppSettings["mystrom.username"];
             _password = ConfigurationManager.AppSettings["mystrom.password"];
 
@@ -37,6 +40,7 @@ namespace Xpressive.Home.Plugins.MyStrom
 
                 if (string.IsNullOrEmpty(_username) || string.IsNullOrEmpty(_password))
                 {
+                    _messageQueue.Publish(new NotifyUserMessage("Add mystrom configuration to config file."));
                     return result;
                 }
 
