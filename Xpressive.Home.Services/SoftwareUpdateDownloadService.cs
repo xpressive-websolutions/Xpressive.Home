@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -7,43 +6,22 @@ using System.Net.Http;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using Autofac;
+using Octokit;
 using Org.BouncyCastle.Crypto.Digests;
-using RestSharp;
+using Polly;
 using Xpressive.Home.Contracts.Services;
 
 namespace Xpressive.Home.Services
 {
-    internal sealed class SoftwareUpdateDownloadService : ISoftwareUpdateDownloadService
+    internal sealed class SoftwareUpdateDownloadService : ISoftwareUpdateDownloadService, IStartable, IDisposable
     {
-        private static readonly object _lock = new object();
-        private static DateTime _lastCheck = DateTime.MinValue;
-        private static bool _lastResult;
+        private bool _isUpdateAvailable;
+        private bool _isRunning;
 
-        public async Task<bool> IsNewVersionAvailableAsync()
+        public bool IsNewVersionAvailable()
         {
-            lock (_lock)
-            {
-                if ((DateTime.UtcNow - _lastCheck) < TimeSpan.FromHours(3))
-                {
-                    return _lastResult;
-                }
-                _lastCheck = DateTime.UtcNow;
-            }
-
-            var attribute = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>();
-            var newestRelease = await GetNewestReleaseAsync();
-
-            if (newestRelease == null)
-            {
-                _lastResult = false;
-                return false;
-            }
-
-            var newestVersion = newestRelease.Name.TrimStart('v');
-            var version = attribute.InformationalVersion.TrimStart('v');
-
-            _lastResult = !string.Equals(newestVersion, version);
-            return _lastResult;
+            return _isUpdateAvailable;
         }
 
         public async Task<FileInfo> DownloadNewestVersionAsync()
@@ -69,6 +47,52 @@ namespace Xpressive.Home.Services
             return null;
         }
 
+        public void Start()
+        {
+            _isRunning = true;
+
+            Task.Run(async () =>
+            {
+                while (_isRunning)
+                {
+                    await CheckForUpdateAsync();
+
+                    for (var s = 0; s < 36000 && _isRunning; s++)
+                    {
+                        await Task.Delay(100);
+                    }
+                }
+            });
+        }
+
+        public void Dispose()
+        {
+            _isRunning = false;
+        }
+
+        private async Task CheckForUpdateAsync()
+        {
+            var policy = Policy
+                .Handle<RateLimitExceededException>()
+                .WaitAndRetryAsync(5, retry => TimeSpan.FromSeconds(Math.Pow(2, retry)));
+
+            await policy.ExecuteAsync(async () =>
+            {
+                var release = await GetNewestReleaseAsync();
+
+                if (release == null)
+                {
+                    _isUpdateAvailable = false;
+                    return;
+                }
+
+                var newestVersion = release.Name.TrimStart('v');
+                var version = GetCurrentVersion();
+
+                _isUpdateAvailable = !string.Equals(newestVersion, version);
+            });
+        }
+
         private static byte[] GetHash(string filePath)
         {
             var data = File.ReadAllBytes(filePath);
@@ -83,7 +107,8 @@ namespace Xpressive.Home.Services
 
         private bool ValidateHash(byte[] hash, byte[] signature)
         {
-            const string publicKey = "RUNTNUIAAAABLcbMBFKtpFlBY0j6TnD5DTeDjy2UoTt3ik2yhY9RGB8AdkZ44DTLG3L3e8S7g+bRmhwygtlsGUFEUMGiJ2SBeGAABS5nBJRfQhAA+vmishz0EWYXD5FUYClQaRHlrH9clkB9pDakzPSvPbGnpMuHgCWa6LniAb1zExIPbYv9zHlfqOA=";
+            const string publicKey =
+                "RUNTNUIAAAABLcbMBFKtpFlBY0j6TnD5DTeDjy2UoTt3ik2yhY9RGB8AdkZ44DTLG3L3e8S7g+bRmhwygtlsGUFEUMGiJ2SBeGAABS5nBJRfQhAA+vmishz0EWYXD5FUYClQaRHlrH9clkB9pDakzPSvPbGnpMuHgCWa6LniAb1zExIPbYv9zHlfqOA=";
 
             using (var key = CngKey.Import(Convert.FromBase64String(publicKey), CngKeyBlobFormat.EccPublicBlob))
             {
@@ -145,42 +170,22 @@ namespace Xpressive.Home.Services
             }
         }
 
-        private async Task<GithubReleaseDto> GetNewestReleaseAsync()
+        private async Task<Release> GetNewestReleaseAsync()
         {
-            var releases = await GetReleasesAsync();
+            var client = new GitHubClient(new ProductHeaderValue("Xpressive.Home", GetCurrentVersion()));
+            var releases = await client.Repository.Release.GetAll("xpressive-websolutions", "Xpressive.Home");
+
             return releases
                 .Where(r => !r.Draft)
                 .OrderByDescending(r => r.CreatedAt)
                 .FirstOrDefault();
         }
 
-        private async Task<IEnumerable<GithubReleaseDto>> GetReleasesAsync()
+        private string GetCurrentVersion()
         {
-            var client = new RestClient("https://api.github.com");
-            var request = new RestRequest("/repos/xpressive-websolutions/Xpressive.Home/releases", Method.GET);
-            request.AddHeader("Accept", "application/vnd.github.v3+json");
-            var response = await client.ExecuteGetTaskAsync<List<GithubReleaseDto>>(request);
-
-            if (response?.Data == null)
-            {
-                return Enumerable.Empty<GithubReleaseDto>();
-            }
-
-            return response.Data;
-        }
-
-        public class GithubReleaseDto
-        {
-            public string Name { get; set; }
-            public DateTime CreatedAt { get; set; }
-            public DateTime PublishedAt { get; set; }
-            public bool Draft { get; set; }
-            public List<GithubReleaseAssetDto> Assets { get; set; }
-        }
-
-        public class GithubReleaseAssetDto
-        {
-            public string BrowserDownloadUrl { get; set; }
+            var attribute = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>();
+            var version = attribute.InformationalVersion.TrimStart('v');
+            return version;
         }
     }
 }

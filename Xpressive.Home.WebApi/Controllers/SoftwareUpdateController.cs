@@ -16,9 +16,9 @@ namespace Xpressive.Home.WebApi.Controllers
         }
 
         [HttpGet, Route("hasNewVersion")]
-        public async Task<bool> IsUpdateAvailable()
+        public bool IsUpdateAvailable()
         {
-            return await _service.IsNewVersionAvailableAsync();
+            return _service.IsNewVersionAvailable();
         }
 
         [HttpPost, Route("start")]

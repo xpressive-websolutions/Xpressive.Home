@@ -5,7 +5,7 @@ namespace Xpressive.Home.Contracts.Services
 {
     public interface ISoftwareUpdateDownloadService
     {
-        Task<bool> IsNewVersionAvailableAsync();
+        bool IsNewVersionAvailable();
 
         Task<FileInfo> DownloadNewestVersionAsync();
     }
