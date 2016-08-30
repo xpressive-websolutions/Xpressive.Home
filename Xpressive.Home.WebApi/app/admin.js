@@ -1,4 +1,4 @@
-﻿(function(_) {
+﻿(function(_, $) {
 
     var xha = angular.module("admin", ["ngRoute", "ui.bootstrap", "ui.codemirror", "ui.select", "ngSanitize", "toaster"]);
 
@@ -31,6 +31,10 @@
             .when("/group/:id", {
                 templateUrl: "/app/admin/scriptgroup.html",
                 controller: "scriptGroupController"
+            })
+            .when("/log", {
+                templateUrl: "/app/admin/log.html",
+                controller: "logController"
             });
     });
 
@@ -40,29 +44,27 @@
         };
     });
 
+    xha.factory("$storage", function($window) {
+        return {
+            get: function(key) {
+                var value = $window.localStorage[key];
+                return value ? JSON.parse(value) : null;
+            },
+            set: function(key, value) {
+                $window.localStorage[key] = JSON.stringify(value);
+            },
+            remove: function(key) {
+                $window.localStorage.removeItem(key);
+            }
+        }
+    });
+
     xha.controller("installController", ["$http", function($http) {
         var c = this;
 
         c.yes = function() {
             $http.post("/api/v1/softwareupdate/start");
         };
-    }]);
-
-    xha.controller("updateController", ["toaster", "$http", "$interval", "$timeout", function(toaster, $http, $interval, $timeout) {
-        var showToast = function() {
-            toaster.pop("info", "Update available", "softwareUpdateTemplate.html", null, "template");
-        };
-
-        var checkForUpdate = function() {
-            $http.get("/api/v1/softwareupdate/hasNewVersion", { cache: false }).then(function(result) {
-                if (result.data === true) {
-                    showToast();
-                }
-            });
-        };
-
-        $timeout(checkForUpdate, 1 * 60 * 1000);
-        $interval(checkForUpdate, 60 * 60 * 1000);
     }]);
 
     xha.controller("navigationController", ["$rootScope", "$location", function($rootScope, $location) {
@@ -582,4 +584,90 @@
         };
     }]);
 
-})(_);
+    xha.controller("logController", ["$scope", function($scope) {
+        var connection = $.hubConnection();
+
+        var proxy = connection.createHubProxy("loggingHub");
+        proxy.on("onLoggedEvent", function(msg, event) {
+            var dateCell = $("<td>").css("white-space", "nowrap").text(event.TimeStamp);
+            var levelCell = $("<td>").text(event.Level);
+            var detailsCell = $("<td>").text(event.Message);
+            var row = $("<tr>").append(dateCell, levelCell, detailsCell);
+
+            if (event.Level === "WARN") {
+                row.css("background-color", "#FFFFCC");
+            } else if (event.Level === "DEBUG") {
+                row.css("color", "lightgray");
+            } else if (event.Level === "ERROR") {
+                row.css("background-color", "#FF9966");
+            }
+
+            $("#log-table tbody").append(row);
+        });
+
+        connection.start();
+
+        $scope.$on("$destroy", function() {
+            if (connection) {
+                connection.stop();
+            }
+        });
+    }]);
+
+    xha.controller("updateController", ["$scope", "toaster", "$http", "$interval", "$timeout", "$storage", function($scope, toaster, $http, $interval, $timeout, $storage) {
+        function guid() {
+            function s4() {
+                return Math.floor((1 + Math.random()) * 0x10000)
+                  .toString(16)
+                  .substring(1);
+            }
+            return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+              s4() + '-' + s4() + s4() + s4();
+        }
+
+        var connection = $.hubConnection();
+
+        var proxy = connection.createHubProxy("notificationHub");
+        proxy.on("onNotification", function(notification) {
+            toaster.pop({
+                type: "info",
+                title: new Date(notification.Timestamp).toLocaleString(),
+                body: notification.Message,
+                timeout: 0
+            });
+        });
+
+        connection.start().done(function () {
+            var id = $storage.get("signalr.notificationhub.id");
+
+            if (!id) {
+                id = guid();
+                $storage.set("signalr.notificationhub.id", id);
+            }
+
+            proxy.invoke("register", id);
+        });
+
+        $scope.$on("$destroy", function() {
+            if (connection) {
+                connection.stop();
+            }
+        });
+
+        var showToast = function() {
+            toaster.pop("info", "Update available", "softwareUpdateTemplate.html", null, "template");
+        };
+
+        var checkForUpdate = function() {
+            $http.get("/api/v1/softwareupdate/hasNewVersion", { cache: false }).then(function(result) {
+                if (result.data === true) {
+                    showToast();
+                }
+            });
+        };
+
+        $timeout(checkForUpdate, 1 * 60 * 1000);
+        $interval(checkForUpdate, 60 * 60 * 1000);
+    }]);
+
+})(_, window.jQuery);

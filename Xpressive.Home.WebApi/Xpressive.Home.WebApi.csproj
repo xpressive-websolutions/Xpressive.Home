@@ -50,12 +50,12 @@
       <HintPath>..\packages\log4net.2.0.5\lib\net45-full\log4net.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Microsoft.AspNet.SignalR.Core, Version=2.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.AspNet.SignalR.Core.2.2.0\lib\net45\Microsoft.AspNet.SignalR.Core.dll</HintPath>
+    <Reference Include="Microsoft.AspNet.SignalR.Core, Version=2.2.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.SignalR.Core.2.2.1\lib\net45\Microsoft.AspNet.SignalR.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Microsoft.AspNet.SignalR.SystemWeb, Version=2.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.AspNet.SignalR.SystemWeb.2.2.0\lib\net45\Microsoft.AspNet.SignalR.SystemWeb.dll</HintPath>
+    <Reference Include="Microsoft.AspNet.SignalR.SystemWeb, Version=2.2.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.SignalR.SystemWeb.2.2.1\lib\net45\Microsoft.AspNet.SignalR.SystemWeb.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.Owin, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
@@ -127,7 +127,9 @@
     <Compile Include="Controllers\ScriptController.cs" />
     <Compile Include="Controllers\ScriptSchedulerController.cs" />
     <Compile Include="Controllers\ScriptTriggerController.cs" />
+    <Compile Include="Controllers\LoggingHub.cs" />
     <Compile Include="Controllers\SoftwareUpdateController.cs" />
+    <Compile Include="Controllers\UserNotificationHub.cs" />
     <Compile Include="Controllers\VariableController.cs" />
     <Compile Include="WebApiStartable.cs" />
     <Compile Include="Controllers\GatewayController.cs" />
@@ -164,11 +166,13 @@
     <Content Include="app\admin\createDeviceDialog.html" />
     <Content Include="app\admin\devices.html" />
     <Content Include="app\admin\scripts.html" />
+    <Content Include="app\admin\log.html" />
     <Content Include="app\admin\variables.html" />
     <Content Include="app\dashboard.js" />
     <Content Include="app\musicSelectionController.html" />
     <Content Include="app\rx.all.js" />
     <Content Include="app\rx.angular.min.js" />
+    <Content Include="Scripts\jquery.signalR-2.2.1.min.js" />
     <Content Include="Scripts\select.min.js" />
     <Content Include="index.html" />
     <Content Include="Scripts\adminlte.js" />
