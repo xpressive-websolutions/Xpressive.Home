@@ -1,0 +1,150 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>index2</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/weather-icons/2.0.9/css/weather-icons.min.css"/>
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ubuntu" type="text/css" />
+
+    <style>
+        div.musicfooter {
+            position: absolute;
+            margin: 0 auto;
+            bottom: 0;
+            width: 100%;
+        }
+
+        div.weatherfooter {
+            position: absolute;
+            width: 100%;
+            bottom: 20px;
+        }
+
+        div.datepart {
+            float: left;
+            text-align: right;
+            font-size: 14px;
+        }
+
+        div.xh-logo {
+            text-align: center;
+        }
+
+        div.xh-weathericon {
+            height: 110px;
+            width: 25%;
+            text-align: center;
+        }
+
+        div.xh-weathericon .wi {
+            font-size: 30px;
+            padding-top: 10px;
+        }
+
+        @media (min-width: 768px) {
+            div.xh-logo {
+                text-align: left;
+                font-size: 36px;
+            }
+
+            div.xh-weathericon {
+                height: 120px;
+                min-width: 110px;
+            }
+
+            div.xh-weathericon .wi {
+                font-size: 60px;
+                padding-top: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+
+    <div class="row header">
+        <div class="col-sm-6 col-xs-12 xh-logo">Xpressive.Home</div>
+        <div class="col-sm-6 hidden-xs clearfix">
+            <div class="clearfix" style="float:right">
+                <div class="datepart">Dienstag<br/>30. August 2016</div>
+                <div class="datepart" style="font-size: 36px;">20:08&nbsp;Uhr</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row maincontent">
+        <div class="col-xs-12">
+
+            <div class="row xh-room-row">
+
+            </div>
+
+            <div class="row xh-scriptgroup-row">
+                
+            </div>
+
+        </div>
+    </div>
+
+    <div class="row weatherfooter">
+        <div class="col-xs-12 col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3 col-lg-4 col-lg-offset-4">
+            <div class="row">
+                <div class="xh-weathericon col-xs-3">
+                    <div>Current</div>
+                    <div>
+                        <span>19°</span>
+                    </div>
+                    <div>
+                        <i class="wi wi-forecast-io-partly-cloudy-day"></i>
+                    </div>
+                </div>
+                <div class="xh-weathericon col-xs-3">
+                    <div>Night</div>
+                    <div>
+                        <span>13°</span>
+                        <span style="margin-left: 6px;">15°</span>
+                    </div>
+                    <div>
+                        <i class="wi wi-forecast-io-clear-night"></i>
+                    </div>
+                </div>
+                <div class="xh-weathericon col-xs-3">
+                    <div>Morning</div>
+                    <div>
+                        <span>13°</span>
+                        <span style="margin-left: 6px;">21°</span>
+                    </div>
+                    <div>
+                        <i class="wi wi-forecast-io-clear-day"></i>
+                    </div>
+                </div>
+                <div class="xh-weathericon col-xs-3">
+                    <div>Afternoon</div>
+                    <div>
+                        <span>23°</span>
+                        <span style="margin-left: 6px;">30°</span>
+                    </div>
+                    <div>
+                        <i class="wi wi-forecast-io-clear-day"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row musicfooter">
+        <div class="col-sm-4 col-xs-12">Album</div>
+        <div class="col-sm-4 col-xs-6">Controls</div>
+        <div class="col-sm-4 col-xs-6">Volume</div>
+    </div>
+
+</div>
+
+</body>
+</html>

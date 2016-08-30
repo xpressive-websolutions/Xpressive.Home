@@ -172,6 +172,7 @@
     <Content Include="app\musicSelectionController.html" />
     <Content Include="app\rx.all.js" />
     <Content Include="app\rx.angular.min.js" />
+    <Content Include="index2.html" />
     <Content Include="Scripts\jquery.signalR-2.2.1.min.js" />
     <Content Include="Scripts\select.min.js" />
     <Content Include="index.html" />
