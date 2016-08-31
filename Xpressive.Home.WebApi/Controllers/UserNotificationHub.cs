@@ -30,7 +30,11 @@ namespace Xpressive.Home.WebApi.Controllers
                 _notifications.Add(dto);
 
                 var connectionIds = _connectionsByUser.Keys.ToList();
-                Clients.Clients(connectionIds).onNotification(dto);
+
+                if (connectionIds.Any())
+                {
+                    Clients.Clients(connectionIds).onNotification(dto);
+                }
             }
         }
 
