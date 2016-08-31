@@ -18,7 +18,7 @@
                 <table class="table table-striped">
                     <tbody>
                         <tr>
-                            <th style="width: 65px"></th>
+                            <th style="width: 85px"></th>
                             <th>Name</th>
                         </tr>
                         <tr ng-repeat="script in scripts">
@@ -31,6 +31,9 @@
                                 </button>
                                 <button type="button" class="btn btn-default btn-xs btn-row-action" title="Execute" ng-click="execute(script)">
                                     <span class="glyphicon glyphicon-play"></span>
+                                </button>
+                                <button type="button" class="btn btn-default btn-xs btn-row-action" title="Delete" ng-click="delete(script)">
+                                    <span class="glyphicon glyphicon-trash"></span>
                                 </button>
                             </td>
                             <td ng-click="openScript(script.id)">

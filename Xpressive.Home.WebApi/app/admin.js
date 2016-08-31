@@ -229,6 +229,13 @@
             $location.path("/scripts/" + id);
         };
 
+        $scope.delete = function(script) {
+            $http.delete("/api/v1/script/" + script.id).then(function() {
+                var i = $scope.scripts.indexOf(script);
+                $scope.scripts.splice(i, 1);
+            });
+        };
+
         $scope.createScript = function() {
             var modal = $uibModal.open({
                 animation: false,
@@ -519,6 +526,10 @@
         });
 
         getScripts();
+
+        $scope.save = function() {
+            $http.post("/api/v1/roomscriptgroup", $scope.group);
+        };
 
         $scope.addScript = function() {
             var modal = $uibModal.open({

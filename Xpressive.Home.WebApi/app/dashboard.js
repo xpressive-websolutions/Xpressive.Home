@@ -387,9 +387,11 @@
                     if (result.data) {
                         c.imageUrl = result.data.playingImageUrl;
                         c.playing = result.data.playing;
+                        c.station = result.data.name;
                     } else {
                         c.imageUrl = null;
                         c.playing = "";
+                        c.station = "";
                     }
                 },
                 function() {

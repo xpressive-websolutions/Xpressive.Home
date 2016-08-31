@@ -73,5 +73,28 @@ namespace Xpressive.Home.WebApi.Controllers
 
             return group;
         }
+
+        [HttpPost, Route("")]
+        public async Task<IHttpActionResult> Save([FromBody] RoomScriptGroup group)
+        {
+            if (group == null || group.Id == Guid.Empty)
+            {
+                return NotFound();
+            }
+
+            var existing = await _repository.GetAsync(group.Id);
+
+            if (existing == null)
+            {
+                return NotFound();
+            }
+
+            existing.Icon = group.Icon;
+            existing.Name = group.Name;
+            existing.SortOrder = group.SortOrder;
+
+            await _repository.SaveAsync(existing);
+            return Ok();
+        }
     }
 }

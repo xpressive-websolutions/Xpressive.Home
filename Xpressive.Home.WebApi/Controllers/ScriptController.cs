@@ -26,7 +26,14 @@ namespace Xpressive.Home.WebApi.Controllers
         public async Task<IEnumerable<ScriptDto>> GetScripts()
         {
             var scripts = await _repository.GetAsync();
-            return scripts.Select(s => new ScriptDto { Id = s.Id.ToString("n"), Name = s.Name, IsEnabled = s.IsEnabled });
+            return scripts
+                .OrderBy(s => s.Name, StringComparer.OrdinalIgnoreCase)
+                .Select(s => new ScriptDto
+                {
+                    Id = s.Id.ToString("n"),
+                    Name = s.Name,
+                    IsEnabled = s.IsEnabled
+                });
         }
 
         [HttpGet, Route("{id}")]
