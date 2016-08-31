@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title>Xpressive.Home</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
     <script src="//code.jquery.com/jquery-3.1.0.min.js"></script>
 
@@ -12,10 +12,9 @@
 
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
-    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 
-    <script src="//use.fontawesome.com/781e101300.js"></script>
-
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-T8Gy5hrqNKT+hzMclPo118YTQO6cYprQmhrYwIiQ/3axmI1hQomh7Ud2hPOy8SP1" crossorigin="anonymous">
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/weather-icons/2.0.9/css/weather-icons.min.css" />
     <link rel="stylesheet" href="//seiyria.com/bootstrap-slider/css/bootstrap-slider.css" />
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Ubuntu" type="text/css" />
@@ -34,18 +33,6 @@
     <script src="/app/dashboard.js"></script>
 
     <style>
-        div.btn-blog {
-            float: left;
-            margin: 4px;
-        }
-
-        div.btn-blog button {
-            width: 130px;
-            height: 120px;
-            background-color: #ffffff;
-            background-color: rgba(255, 255, 255, .4);
-        }
-
         div.btn-blog ul.dropdown-menu {
             overflow: auto;
             position: fixed;
@@ -76,84 +63,78 @@
     <div class="site-wrapper">
         <div class="site-wrapper-inner">
             <div class="container-fluid">
-                <div class="masthead clearfix">
-                    <div class="inner">
-                        <h3 class="masthead-brand">Xpressive.Home</h3>
-                        <div class="nav navbar-nav navbar-right">
-                            <div class="row date" ng-controller="dateTimeController as dt" ng-cloak>
 
-                                <div class="col-md-6 datetime-date">
-                                    <div class="col-md-12">
-                                        {{ dt.date | date:'EEEE' }}
-                                    </div>
-                                    <div class="col-md-12">
-                                        {{ dt.date | date:'dd. MMMM yyyy' }}
-                                    </div>
-                                </div>
-                                <div class="col-md-4 datetime-time">
-                                    {{ dt.date | date:'HH:mm' }}&nbsp;Uhr
-                                </div>
-
+                <div class="row xh-header">
+                    <div class="col-sm-6 col-xs-12 xh-logo">Xpressive.Home</div>
+                    <div class="col-sm-6 hidden-xs clearfix">
+                        <div class="clearfix" style="float: right" ng-controller="dateTimeController as dt" ng-cloak>
+                            <div class="datepart">
+                                {{dt.date | date:'EEEE'}}<br />{{dt.date | date:'dd. MMMM yyyy'}}
                             </div>
+                            <div class="timepart">{{dt.date | date:'HH:mm'}}&nbsp;Uhr</div>
                         </div>
                     </div>
                 </div>
 
-                <div class="mastfoot">
-                    <div class="inner">
-
-                        <div style="margin-bottom: 50px;">
-                            <div class="cover center-block" style="display: flex; width: 450px; align-items: center;" ng-controller="weatherController as wc" ng-cloak ng-show="wc.isEnabled">
-
-                                <div ng-repeat="fc in wc.forecast" style="height: 120px; width: 110px;">
+                <div class="row xh-footer">
+                    <div class="weatherfooter">
+                        <div class="col-xs-12 col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3 col-lg-4 col-lg-offset-4">
+                            <div class="row" ng-controller="weatherController as wc" ng-cloak ng-show="wc.isEnabled">
+                                <div class="xh-weathericon col-xs-3" ng-repeat="fc in wc.forecast">
                                     <div>{{fc.name}}</div>
                                     <div>
                                         <span>{{fc.tempMin}}°</span>
-                                        <span style="margin-left: 6px;" ng-if="$index > 0">{{fc.tempMax}}°</span>
+                                        <span class="temp-max" ng-if="$index > 0">{{fc.tempMax}}°</span>
                                     </div>
-                                    <div><i style="font-size: 60px; padding-top: 15px;" ng-class="fc.icon"></i></div>
+                                    <div>
+                                        <i ng-class="fc.icon"></i>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="row" ng-controller="musicController as mc" style="height: 55px; text-align: left;" ng-cloak ng-show="mc.isEnabled">
-                            <div class="col-md-4 col-xs-4 col-sm-4" ng-click="mc.selectStation()">
-                                <div style="float: left;" ng-show="!mc.imageUrl">
+                    <div class="musicfooter" ng-controller="musicController as mc" ng-cloak ng-show="mc.isEnabled">
+                        <div class="col-sm-4 col-xs-12 hidden-xs">
+                            <div class="center-block clearfix" style="display: table" ng-click="mc.selectStation()">
+                                <div style="position: absolute; left: 0;" ng-show="!mc.imageUrl">
                                     <button class="btn btn-default btn-lg" style="height: 55px; width: 55px;">
                                         <span class="glyphicon glyphicon-list"></span>
                                     </button>
                                 </div>
-                                <div style="float: left;" ng-show="mc.imageUrl">
-                                    <img style="height: 55px; width: 55px;" ng-src="{{ mc.imageUrl }}"/>
+                                <div style="position: absolute; left: 0;" ng-show="mc.imageUrl">
+                                    <img style="height: 55px; width: 55px;" ng-src="{{mc.imageUrl}}">
                                 </div>
-                                <div style="height: 55px; padding-left: 65px; margin-top: 8px;">
-                                    <div>{{ mc.station }}</div>
-                                    <div>{{ mc.playing }}</div>
-                                </div>
-                            </div>
-                            <div class="col-md-4 col-xs-4 col-sm-4 center-block text-center">
-                                <div class="btn-group">
-                                    <button type="button" class="btn btn-default" style="border-radius: 50%; height: 40px; width: 40px; margin-top: 6px;">
-                                        <span class="glyphicon glyphicon-backward" style="margin-right: 2px;"></span>
-                                    </button>
-                                    <button type="button" class="btn btn-default btn-lg" style="border-radius: 50%; height: 55px; width: 55px; margin-left: 10px; margin-right: 10px;" ng-click="mc.togglePlay()">
-                                        <span class="glyphicon glyphicon-play" ng-class="{'glyphicon-play': !mc.isPlaying, 'glyphicon-stop': mc.isPlaying}"></span>
-                                    </button>
-                                    <button type="button" class="btn btn-default" style="border-radius: 50%; height: 40px; width: 40px; margin-top: 6px;">
-                                        <span class="glyphicon glyphicon-forward" style="margin-left: 4px;"></span>
-                                    </button>
+                                <div style="position: absolute; height: 55px; left: 60px; top: 8px;">
+                                    <div>{{mc.station}}</div>
+                                    <div>{{mc.playing}}</div>
                                 </div>
                             </div>
-                            <div class="col-md-4 col-xs-4 col-sm-4 center-block text-center">
-                                <rzslider rz-slider-model="volume" rz-slider-options="mc.sliderOptions"></rzslider>
+                        </div>
+                        <div class="col-sm-4 col-xs-6 center-block text-center">
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-default btn-play visible-xs-inline-block" ng-click="mc.selectStation()">
+                                    <span class="glyphicon glyphicon-list"></span>
+                                </button>
+                                <button type="button" class="btn btn-default btn-backward">
+                                    <span class="glyphicon glyphicon-backward"></span>
+                                </button>
+                                <button type="button" class="btn btn-default btn-play" ng-click="mc.togglePlay()">
+                                    <span class="glyphicon" ng-class="{'glyphicon-play': !mc.isPlaying, 'glyphicon-stop': mc.isPlaying}"></span>
+                                </button>
+                                <button type="button" class="btn btn-default btn-forward">
+                                    <span class="glyphicon glyphicon-forward"></span>
+                                </button>
                             </div>
+                        </div>
+                        <div class="col-sm-4 col-xs-6">
+                            <rzslider rz-slider-model="volume" rz-slider-options="mc.sliderOptions"></rzslider>
                         </div>
                     </div>
                 </div>
 
-                <div class="inner cover center-block" ng-controller="roomController as rc" ng-cloak>
-                    <div class="row" style="display: flex; align-items: center;">
-
+                <div class="row maincontent center-block" ng-controller="roomController as rc" ng-cloak>
+                    <div class="col-xs-12">
                         <div id="roomdd" class="btn-group btn-blog" uib-dropdown on-toggle="rc.toggle('roomdd')">
                             <button type="button" class="btn btn-default" uib-dropdown-toggle>
                                 <span class="selection">
@@ -194,13 +175,10 @@
                         <div class="clearfix"></div>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
 
-    <script src="//cdnjs.cloudflare.com/ajax/libs/respond.js/1.4.2/respond.min.js"></script>
-    <script src="//seiyria.com/bootstrap-slider/js/bootstrap-slider.js"></script>
     <script>
 
         $.fn.actualHeight = function () {

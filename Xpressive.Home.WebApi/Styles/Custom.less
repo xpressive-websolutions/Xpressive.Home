@@ -6,7 +6,7 @@ body {
 
 body {
     background-color: transparent;
-    background: linear-gradient(rgba(25, 25, 25, 0.5), rgba(25, 25, 25, 0.5)), url("/styles/photo-1452794268575-9819db203a5a.jpg") no-repeat center center fixed;
+//    background: linear-gradient(rgba(25, 25, 25, 0.5), rgba(25, 25, 25, 0.5)), url("/styles/photo-1452794268575-9819db203a5a.jpg") no-repeat center center fixed;
     -webkit-background-size: cover;
     -moz-background-size: cover;
     -o-background-size: cover;
@@ -21,6 +21,105 @@ body {
         padding-right: 0;
         display: flex;
         align-items: center;
+    }
+
+    div.xh-header {
+        position: fixed;
+        top: 0;
+        left: 15px;
+        width: 100%;
+
+        div.datepart,
+        div.timepart {
+            float: left;
+            text-align: right;
+        }
+
+        div.datepart {
+            padding-top: 4px;
+            padding-right: 10px;
+            font-size: 14px;
+        }
+
+        div.timepart {
+            font-size: 36px;
+        }
+
+        div.xh-logo {
+            text-align: center;
+            font-size: 20px;
+            padding-top: 10px;
+        }
+    }
+
+    div.xh-footer {
+        position: absolute;
+        margin: 0 auto;
+        bottom: 0;
+        width: 100%;
+        padding: 0 10px 10px 10px;
+
+        div.musicfooter {
+            width: 100%;
+
+            button.btn-backward,
+            button.btn-forward,
+            button.btn-play {
+                height: 28px;
+                width: 28px;
+                padding: 4px 6px;
+            }
+
+            div.rzslider {
+                margin-top: 20px !important;
+
+                span.rz-bar,
+                span.rz-pointer {
+                    color: #fff;
+                    text-shadow: none; /* Prevent inheritence from `body` */
+                    background-color: rgba(255, 255, 255, 0.4);
+                    border: none;
+                    background-image: none;
+                }
+            }
+        }
+
+        div.weatherfooter {
+            width: 100%;
+            display: inline-block;
+            margin-bottom: 25px;
+
+            div.xh-weathericon {
+                height: 110px;
+                width: 25%;
+                text-align: center;
+
+                .wi {
+                    font-size: 30px;
+                    padding-top: 10px;
+                }
+
+                span.temp-max {
+                    margin-left: 3px;
+                }
+            }
+        }
+    }
+
+    div.maincontent {
+        text-align: center;
+
+        button {
+            width: 130px;
+            height: 120px;
+
+            .button-icon {
+                font-size: 36px;
+                display: block;
+                margin-top: 20px;
+                margin-bottom: 10px;
+            }
+        }
     }
 
     /* Links */
@@ -41,6 +140,10 @@ body {
     ul.dropdown-menu {
         background-color: #e8e8e8;
         background-image: none;
+    }
+
+    div.btn-group {
+        padding: 5px;
     }
 
     /* Custom default button */
@@ -64,102 +167,25 @@ body {
 
     /* Extra markup and styles for table-esque vertical and horizontal centering */
     .site-wrapper {
-      display: table;
-      width: 100%;
-      height: 100%; /* For at least Firefox */
-      min-height: 100%;
-      -webkit-box-shadow: inset 0 0 100px rgba(0,0,0,.7);
-              box-shadow: inset 0 0 100px rgba(0,0,0,.7);
-    }
-    .site-wrapper-inner {
-      display: table-cell;
-      vertical-align: top;
-    }
-    .cover-container {
-      margin-right: auto;
-      margin-left: auto;
+        display: table;
+        width: 100%;
+        height: 100%; /* For at least Firefox */
+        min-height: 100%;
+        -webkit-box-shadow: inset 0 0 100px rgba(0,0,0,.7);
+                box-shadow: inset 0 0 100px rgba(0,0,0,.7);
+        color: #999;
+        color: rgba(255, 255, 255, .5);
+        
+        .site-wrapper-inner {
+            display: block;
+            vertical-align: middle;
+            padding-top: 20%;
+        }
     }
 
     /* Padding for spacing */
     .inner {
       padding: 30px;
-    }
-
-    .mastfoot {
-        color: #999; /* IE8 proofing */
-        color: rgba(255,255,255,.5);
-        .inner {
-            padding-bottom: 10px;
-        }
-    }
-    .masthead {
-        .inner {
-            padding-top: 10px;
-        }
-        .date {
-            margin: 0 !important;
-            
-            .datetime-date {
-                font-size: 14px;
-                text-align: right;
-                padding-right: 0;
-                padding-top: 4px;
-            }
-            .datetime-time {
-                font-size: 36px;
-                text-align: left;
-                padding-top: 0;
-                padding-right: 15px;
-                padding-left: 0;
-            }
-        }
-    }
-
-    /*
-     * Header
-     */
-    .masthead-brand {
-        font-size: 36px;
-        margin-top: 10px;
-        margin-bottom: 10px;
-    }
-
-    .masthead-nav > li {
-      display: inline-block;
-    }
-    .masthead-nav > li + li {
-      margin-left: 20px;
-    }
-    .masthead-nav > li > a {
-      padding-right: 0;
-      padding-left: 0;
-      font-size: 16px;
-      font-weight: bold;
-      color: #fff; /* IE8 proofing */
-      color: rgba(255,255,255,.75);
-      border-bottom: 2px solid transparent;
-    }
-    .masthead-nav > li > a:hover,
-    .masthead-nav > li > a:focus {
-      background-color: transparent;
-      border-bottom-color: #a9a9a9;
-      border-bottom-color: rgba(255,255,255,.25);
-    }
-    .masthead-nav > .active > a,
-    .masthead-nav > .active > a:hover,
-    .masthead-nav > .active > a:focus {
-      color: #fff;
-      border-bottom-color: #fff;
-    }
-
-    div.rzslider {
-        span.rz-pointer {
-            color: #fff;
-            text-shadow: none; /* Prevent inheritence from `body` */
-            background-color: rgba(255, 255, 255, 0.4);
-            border: none;
-            background-image: none;
-        }
     }
 }
 
@@ -279,55 +305,86 @@ body.winter-night {
     background-size: cover;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 420px) {
+    button.btn-backward,
+    button.btn-forward,
+    button.btn-play {
+        height: 40px;
+        width: 40px;
+    }
+
+    div.rzslider {
+        margin-top: 25px !important;
+    }
+}
+
+@media (min-width: 430px) {
     body {
-        .masthead-brand {
-            float: left;
+        div.site-wrapper {
+            div.site-wrapper-inner {
+                display: table-cell;
+                vertical-align: middle;
+                padding-top: 0;
+            }
         }
-        .masthead-nav {
-            float: right;
-        }
-  }
+    }
 }
-
-
-/*
- * Cover
- */
-
-.cover {
-  padding: 0 20px;
-}
-.cover .btn-lg {
-  padding: 10px 20px;
-  font-weight: bold;
-}
-
-
-/*
- * Affix and center
- */
 
 @media (min-width: 768px) {
     body {
-        /* Pull out the header and footer */
-        .masthead {
-            position: fixed;
-            top: 0;
+        div.xh-header {
+            padding: 10px;
+
+            div.xh-logo {
+                text-align: left;
+                font-size: 36px;
+                padding-top: 0;
+                padding-left: 15px;
+            }
         }
-        .mastfoot {
-            position: fixed;
-            bottom: 0;
-        }
-        /* Start the vertical centering */
-        .site-wrapper-inner {
-            vertical-align: middle;
-        }
-        /* Handle the widths */
-        .masthead,
-        .mastfoot,
-        .cover-container {
-            width: 100%; /* Must be percentage or pixels for horizontal alignment */
+
+        div.xh-footer {
+            div.weatherfooter {
+                div.xh-weathericon {
+                    height: 120px;
+                    min-width: 110px;
+
+                    .wi {
+                        font-size: 60px;
+                        padding-top: 15px;
+                    }
+
+                    span.temp-max {
+                        margin-left: 6px;
+                    }
+                }
+            }
+            div.musicfooter {
+                button.btn-backward,
+                    button.btn-forward,
+                    button.btn-play {
+                        border-radius: 50% !important;
+                        padding: 6px 12px;
+                    }
+
+                    button.btn-backward,
+                    button.btn-forward {
+                        height: 40px;
+                        width: 40px;
+                        margin-top: 6px;
+                    }
+
+                    button.btn-play {
+                        height: 55px;
+                        width: 55px;
+                        margin-left: 10px !important;
+                        margin-right: 10px;
+                    }
+
+                    div.rzslider {
+                        margin-top: 31px !important;
+                    }
+            }
         }
     }
 }
