@@ -17,6 +17,22 @@
             height: 100%;
         }
 
+        body {
+            background: linear-gradient(rgba(25, 25, 25, .5), rgba(25, 25, 25, .5)), url("/styles/summer_evening.jpg") no-repeat center center fixed;
+            font-family: "ubuntu";
+            color: #999;
+            color: rgba(255, 255, 255, .5);
+            text-shadow: 0 1px 3px rgba(0, 0, 0, .5);
+        }
+
+        button.btn-default {
+            color: #fff;
+            text-shadow: none;
+            background-color: rgba(255, 255, 255, .4);
+            border: none;
+            background-image: none;
+        }
+
         div.site-wrapper {
             height: 100%;
             width: 100%;
@@ -63,10 +79,20 @@
             margin-bottom: 25px;
         }
 
-        div.datepart {
+        div.datepart,
+        div.timepart {
             float: left;
             text-align: right;
+        }
+
+        div.datepart {
+            padding-top: 4px;
+            padding-right: 10px;
             font-size: 14px;
+        }
+
+        div.timepart {
+            font-size: 36px;
         }
 
         div.xh-logo {
@@ -120,6 +146,12 @@
 
         div.rzslider {
             margin-top: 20px !important;
+        }
+
+        .rzslider .rz-bar,
+        .rz-pointer {
+            background: none;
+            background-color: rgba(255, 255, 255, .4) !important;
         }
 
         @media (min-width: 420px) {
@@ -208,7 +240,7 @@
                             <div class="datepart">
                                 Dienstag<br />30. August 2016
                             </div>
-                            <div class="datepart" style="font-size: 36px;">20:08&nbsp;Uhr</div>
+                            <div class="timepart">20:08&nbsp;Uhr</div>
                         </div>
                     </div>
                 </div>
