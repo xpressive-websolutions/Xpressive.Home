@@ -73,6 +73,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xpressive.Home.Service", "X
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xpressive.Home.Deployment.Updater", "Xpressive.Home.Deployment.Updater\Xpressive.Home.Deployment.Updater.csproj", "{BA1EACA5-2DE5-4B86-9DAD-AF9E5986878C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xpressive.Home.Plugins.Sms", "Xpressive.Home.Plugins.Sms\Xpressive.Home.Plugins.Sms.csproj", "{061ACF4D-C609-4E85-997C-5154562549DB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -171,6 +173,10 @@ Global
 		{BA1EACA5-2DE5-4B86-9DAD-AF9E5986878C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BA1EACA5-2DE5-4B86-9DAD-AF9E5986878C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BA1EACA5-2DE5-4B86-9DAD-AF9E5986878C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{061ACF4D-C609-4E85-997C-5154562549DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{061ACF4D-C609-4E85-997C-5154562549DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{061ACF4D-C609-4E85-997C-5154562549DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{061ACF4D-C609-4E85-997C-5154562549DB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -192,5 +198,6 @@ Global
 		{FC90E250-E5A7-4C6D-BF4C-209729DEC3DB} = {76420CFE-43A4-4E16-8AA5-8659E142AE4A}
 		{EB3F6EEB-B029-4888-913B-E13C43001B0C} = {66BA7D8D-AF08-4FAE-AB0F-58AB6E5EFB77}
 		{BA1EACA5-2DE5-4B86-9DAD-AF9E5986878C} = {66BA7D8D-AF08-4FAE-AB0F-58AB6E5EFB77}
+		{061ACF4D-C609-4E85-997C-5154562549DB} = {76420CFE-43A4-4E16-8AA5-8659E142AE4A}
 	EndGlobalSection
 EndGlobal
