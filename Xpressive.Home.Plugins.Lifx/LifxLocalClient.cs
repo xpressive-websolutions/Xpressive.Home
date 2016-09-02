@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Xpressive.Home.Contracts;
 using Xpressive.Home.Plugins.Lifx.Utils;
 
 namespace Xpressive.Home.Plugins.Lifx
@@ -65,10 +66,7 @@ namespace Xpressive.Home.Plugins.Lifx
                 {
                 }
 
-                for (int s = 0; s < 50 && _isRunning; s++)
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(0.1));
-                }
+                await TaskHelper.DelayAsync(TimeSpan.FromSeconds(5), () => _isRunning);
             }
 
             _semaphore.Release();

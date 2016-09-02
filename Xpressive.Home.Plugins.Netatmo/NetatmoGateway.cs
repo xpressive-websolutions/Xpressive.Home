@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using log4net;
 using RestSharp;
+using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 
@@ -80,10 +81,7 @@ namespace Xpressive.Home.Plugins.Netatmo
                     _log.Error(e.Message, e);
                 }
 
-                for (var s = 0; s < 600 && _isRunning; s++)
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(0.1));
-                }
+                await TaskHelper.DelayAsync(TimeSpan.FromMinutes(1), () => _isRunning);
             }
 
             _semaphore.Release();

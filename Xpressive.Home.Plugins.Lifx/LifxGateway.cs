@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using log4net;
 using Polly;
+using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 using Action = Xpressive.Home.Contracts.Gateway.Action;
@@ -136,7 +137,7 @@ namespace Xpressive.Home.Plugins.Lifx
             await Task.Delay(TimeSpan.FromSeconds(1));
 
             FindLocalBulbsAsync().ConfigureAwait(false);
-            FindCloudBulbs().ConfigureAwait(false);
+            FindCloudBulbsAsync().ConfigureAwait(false);
         }
 
         public override void Stop()
@@ -146,7 +147,7 @@ namespace Xpressive.Home.Plugins.Lifx
             _semaphore.Wait(TimeSpan.FromSeconds(5));
         }
 
-        private async Task FindCloudBulbs()
+        private async Task FindCloudBulbsAsync()
         {
             if (string.IsNullOrEmpty(_token))
             {
@@ -175,10 +176,7 @@ namespace Xpressive.Home.Plugins.Lifx
                     _log.Error(e.Message, e);
                 }
 
-                for (var s = 0; s < 600 && _isRunning; s++)
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(0.1));
-                }
+                await TaskHelper.DelayAsync(TimeSpan.FromMinutes(1), () => _isRunning);
             }
 
             _semaphore.Release();

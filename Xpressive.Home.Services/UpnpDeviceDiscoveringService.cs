@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Services;
 
 namespace Xpressive.Home.Services
@@ -20,7 +21,7 @@ namespace Xpressive.Home.Services
             const string multicastIpAddress = "239.255.255.250";
             const int multicastPort = 1900;
 
-            await Task.Delay(TimeSpan.FromSeconds(5));
+            await TaskHelper.DelayAsync(TimeSpan.FromSeconds(5), () => _isRunning);
 
             while (_isRunning)
             {
@@ -55,10 +56,7 @@ namespace Xpressive.Home.Services
                     socket.Close();
                 }
 
-                for (var i = 0; i < 300 && _isRunning; i++)
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(0.1));
-                }
+                await TaskHelper.DelayAsync(TimeSpan.FromSeconds(30), () => _isRunning);
             }
         }
 

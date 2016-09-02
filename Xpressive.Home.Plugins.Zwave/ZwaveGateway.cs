@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using log4net;
+using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 using ZWave;
@@ -76,18 +77,12 @@ namespace Xpressive.Home.Plugins.Zwave
                 _controller.Open();
                 _controller.Channel.NodeEventReceived += (s, e) => ContinueNodeQueueWorker(e.NodeID);
 
-                var lastNodeDiscovery = DateTime.MinValue;
-
                 while (_isRunning)
                 {
-                    await Task.Delay(10);
+                    _log.Debug("Discover Nodes");
+                    await DiscoverNodes();
 
-                    if ((DateTime.UtcNow - lastNodeDiscovery).TotalHours > 1)
-                    {
-                        lastNodeDiscovery = DateTime.UtcNow;
-                        _log.Debug("Discover Nodes");
-                        await DiscoverNodes();
-                    }
+                    await TaskHelper.DelayAsync(TimeSpan.FromHours(1), () => _isRunning);
                 }
             }
             catch (Exception e)

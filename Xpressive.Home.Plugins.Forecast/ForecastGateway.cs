@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ForecastIO;
 using log4net;
+using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 
@@ -62,10 +63,7 @@ namespace Xpressive.Home.Plugins.Forecast
                 var minutes = Math.Max(_devices.Count*2.5, 10);
                 var nextUpdate = recentUpdate + TimeSpan.FromMinutes(minutes);
 
-                while (_isRunning && DateTime.UtcNow < nextUpdate)
-                {
-                    await Task.Delay(100);
-                }
+                await TaskHelper.DelayAsync(nextUpdate - DateTime.UtcNow, () => _isRunning);
             }
 
             _semaphore.Release();
@@ -121,7 +119,7 @@ namespace Xpressive.Home.Plugins.Forecast
                 UpdateVariables(deviceId, data);
             }
 
-            await Task.Delay(TimeSpan.FromSeconds(10));
+            await TaskHelper.DelayAsync(TimeSpan.FromSeconds(10), () => _isRunning);
         }
 
         private void UpdateVariables(string deviceId, object data)

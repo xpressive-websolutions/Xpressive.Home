@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using log4net;
 using RestSharp;
+using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 using Xpressive.Home.Contracts.Services;
@@ -73,6 +74,8 @@ namespace Xpressive.Home.Plugins.MyStrom
                         continue;
                     }
 
+                    device.Power = dto.Power;
+                    device.Relay = dto.Relay;
                     _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Relay", dto.Relay));
                     _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Name", device.Name));
 
@@ -91,10 +94,7 @@ namespace Xpressive.Home.Plugins.MyStrom
                     }
                 }
 
-                for (var s = 0; s < 100 && _isRunning; s++)
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(0.1));
-                }
+                await TaskHelper.DelayAsync(TimeSpan.FromSeconds(10), () => _isRunning);
             }
 
             _semaphore.Release();

@@ -10,6 +10,7 @@ using Autofac;
 using Octokit;
 using Org.BouncyCastle.Crypto.Digests;
 using Polly;
+using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Services;
 
 namespace Xpressive.Home.Services
@@ -56,11 +57,7 @@ namespace Xpressive.Home.Services
                 while (_isRunning)
                 {
                     await CheckForUpdateAsync();
-
-                    for (var s = 0; s < 36000 && _isRunning; s++)
-                    {
-                        await Task.Delay(100);
-                    }
+                    await TaskHelper.DelayAsync(TimeSpan.FromHours(1), () => _isRunning);
                 }
             });
         }

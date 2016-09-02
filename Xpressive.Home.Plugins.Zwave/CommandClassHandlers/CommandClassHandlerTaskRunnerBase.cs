@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Messaging;
 using ZWave;
 using ZWave.Channel;
@@ -17,18 +18,9 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
         {
             Task.Run(async () =>
             {
-                var lastUpdate = DateTime.MinValue;
-
                 while (!_isDisposing)
                 {
-                    await Task.Delay(10);
-
-                    if ((DateTime.UtcNow - lastUpdate) < interval)
-                    {
-                        continue;
-                    }
-
-                    lastUpdate = DateTime.UtcNow;
+                    await TaskHelper.DelayAsync(interval, () => !_isDisposing);
                     Execute(device, node, queue);
                 }
             });

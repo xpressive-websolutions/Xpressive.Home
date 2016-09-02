@@ -8,6 +8,7 @@ using Polly;
 using Q42.HueApi;
 using Q42.HueApi.ColorConverters;
 using Q42.HueApi.ColorConverters.HSB;
+using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 using Xpressive.Home.Contracts.Variables;
@@ -153,10 +154,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                     }
                 }
 
-                for (int s = 0; s < 300 && _isRunning; s++)
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(0.1));
-                }
+                await TaskHelper.DelayAsync(TimeSpan.FromSeconds(30), () => _isRunning);
             }
 
             _semaphore.Release();

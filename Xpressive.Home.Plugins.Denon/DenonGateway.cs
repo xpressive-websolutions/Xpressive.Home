@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Xml;
 using log4net;
 using RestSharp;
+using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 using Xpressive.Home.Contracts.Services;
@@ -19,6 +20,7 @@ namespace Xpressive.Home.Plugins.Denon
         private static readonly ILog _log = LogManager.GetLogger(typeof (DenonGateway));
         private readonly IMessageQueue _messageQueue;
         private readonly IUpnpDeviceDiscoveringService _upnpDeviceDiscoveringService;
+        private bool _isRunning;
 
         public DenonGateway(
             IMessageQueue messageQueue,
@@ -161,13 +163,27 @@ namespace Xpressive.Home.Plugins.Denon
             }
         }
 
-        public override Task StartAsync()
+        public override async Task StartAsync()
         {
-            return Task.CompletedTask;
+            _isRunning = true;
+
+            while (_isRunning)
+            {
+                await TaskHelper.DelayAsync(TimeSpan.FromMinutes(1), () => _isRunning);
+
+                foreach (var device in GetDevices())
+                {
+                    if (_isRunning)
+                    {
+                        await UpdateVariablesAsync(device);
+                    }
+                }
+            }
         }
 
         public override void Stop()
         {
+            _isRunning = false;
             _upnpDeviceDiscoveringService.DeviceFound -= OnUpnpDeviceFound;
         }
 
@@ -179,10 +195,11 @@ namespace Xpressive.Home.Plugins.Denon
                 return;
             }
 
-            await RegisterDevice(e.Location, e.IpAddress);
+            var device = await RegisterDeviceAsync(e.Location, e.IpAddress);
+            await UpdateVariablesAsync(device);
         }
 
-        private async Task RegisterDevice(string url, string ipAddress)
+        private async Task<DenonDevice> RegisterDeviceAsync(string url, string ipAddress)
         {
             var xmlResponse = await new RestClient(url).ExecuteGetTaskAsync<object>(new RestRequest(Method.GET));
             var xml = new XmlDocument();
@@ -197,19 +214,27 @@ namespace Xpressive.Home.Plugins.Denon
 
             if (mn == null || fn == null || sn == null || !"Denon".Equals(mn.InnerText, StringComparison.Ordinal))
             {
-                return;
+                return null;
             }
 
-            var client = new RestClient($"http://{ipAddress}/");
+            var device = new DenonDevice(sn.InnerText, ipAddress);
+            _devices.Add(device);
+            return device;
+        }
+
+        private async Task UpdateVariablesAsync(DenonDevice device)
+        {
+            var client = new RestClient($"http://{device.IpAddress}/");
             var request = new RestRequest("goform/formMainZone_MainZoneXml.xml", Method.GET);
             var response = await client.ExecuteTaskAsync<DenonDeviceDto>(request);
-
-            var device = new DenonDevice(sn.InnerText, ipAddress, response.Data);
-            _devices.Add(device);
 
             var volume = double.Parse(response.Data.MasterVolume.Value);
             var isMute = response.Data.Mute.Value.Equals("on", StringComparison.OrdinalIgnoreCase);
             var select = response.Data.InputFuncSelect.Value;
+            device.Name = response.Data.FriendlyName.Value;
+            device.Volume = volume;
+            device.IsMute = isMute;
+            device.Source = select;
 
             _messageQueue.Publish(new UpdateVariableMessage($"{Name}.{device.Id}.Volume", volume));
             _messageQueue.Publish(new UpdateVariableMessage($"{Name}.{device.Id}.IsMute", isMute));

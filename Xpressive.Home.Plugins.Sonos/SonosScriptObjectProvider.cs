@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using log4net;
 using Xpressive.Home.Contracts.Automation;
 
 namespace Xpressive.Home.Plugins.Sonos
@@ -35,6 +36,7 @@ namespace Xpressive.Home.Plugins.Sonos
 
         public class SonosScriptObject
         {
+            private static readonly ILog _log = LogManager.GetLogger(typeof(SonosScriptObject));
             private readonly ISonosGateway _gateway;
             private readonly SonosDevice _device;
 
@@ -69,9 +71,42 @@ namespace Xpressive.Home.Plugins.Sonos
                 _gateway.PlayFile(_device, file, title, album);
             }
 
+            public object volume()
+            {
+                if (_device == null)
+                {
+                    _log.Warn("Unable to get variable value because the device was not found.");
+                    return null;
+                }
+
+                return _device.Volume;
+            }
+
             public void volume(double v)
             {
                 _gateway.ChangeVolume(_device, v);
+            }
+
+            public object master()
+            {
+                if (_device == null)
+                {
+                    _log.Warn("Unable to get variable value because the device was not found.");
+                    return null;
+                }
+
+                return _device.IsMaster;
+            }
+
+            public string state()
+            {
+                if (_device == null)
+                {
+                    _log.Warn("Unable to get variable value because the device was not found.");
+                    return null;
+                }
+
+                return _device.TransportState;
             }
         }
     }

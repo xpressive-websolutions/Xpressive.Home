@@ -14,6 +14,8 @@ namespace Xpressive.Home.Plugins.Daylight
         [DeviceProperty(5)]
         public int OffsetInMinutes { get; set; }
 
+        internal bool IsDaylight { get; set; }
+
         public override bool IsConfigurationValid()
         {
             if (Longitude < -180 || Longitude > 180)

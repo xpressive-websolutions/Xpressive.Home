@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using log4net;
 using Xpressive.Home.Contracts.Automation;
 
 namespace Xpressive.Home.Plugins.Denon
@@ -35,6 +36,7 @@ namespace Xpressive.Home.Plugins.Denon
 
         public class DenonScriptObject
         {
+            private static readonly ILog _log = LogManager.GetLogger(typeof(DenonScriptObject));
             private readonly IDenonGateway _gateway;
             private readonly DenonDevice _device;
 
@@ -54,19 +56,54 @@ namespace Xpressive.Home.Plugins.Denon
                 _gateway.PowerOff(_device);
             }
 
-            public void mute()
+            public object mute()
             {
-                _gateway.Mute(_device);
+                if (_device == null)
+                {
+                    _log.Warn("Unable to get variable value because the device was not found.");
+                    return null;
+                }
+
+                return _device.IsMute;
             }
 
-            public void unmute()
+            public void mute(bool isMute)
             {
-                _gateway.Unmute(_device);
+                if (isMute)
+                {
+                    _gateway.Mute(_device);
+                }
+                else
+                {
+                    _gateway.Unmute(_device);
+                }
+            }
+
+            public string source()
+            {
+                if (_device == null)
+                {
+                    _log.Warn("Unable to get variable value because the device was not found.");
+                    return null;
+                }
+
+                return _device.Source;
             }
 
             public void source(string s)
             {
                 _gateway.ChangeInput(_device, s);
+            }
+
+            public object volume()
+            {
+                if (_device == null)
+                {
+                    _log.Warn("Unable to get variable value because the device was not found.");
+                    return null;
+                }
+
+                return (int) (_device.Volume*100);
             }
 
             public void volume(int v)

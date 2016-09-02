@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using log4net;
 using RestSharp.Extensions.MonoHttp;
+using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 using Action = Xpressive.Home.Contracts.Gateway.Action;
@@ -98,15 +99,18 @@ namespace Xpressive.Home.Plugins.Sonos
 
         public override async Task StartAsync()
         {
+            await TaskHelper.DelayAsync(TimeSpan.FromSeconds(1), () => _isRunning);
+
             while (_isRunning)
             {
-                await Task.Delay(TimeSpan.FromSeconds(1));
                 var devices = GetDevices().ToList();
                 var masterDevices = devices.Where(d => d.IsMaster).ToList();
                 var others = devices.Except(masterDevices).ToList();
 
                 masterDevices.ForEach(async d => await UpdateDeviceVariablesAsync(d));
                 others.ForEach(async d => await UpdateDeviceVariablesAsync(d));
+
+                await TaskHelper.DelayAsync(TimeSpan.FromSeconds(10), () => _isRunning);
             }
 
             _semaphore.Release();

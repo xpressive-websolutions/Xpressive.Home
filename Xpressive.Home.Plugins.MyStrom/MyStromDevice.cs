@@ -13,5 +13,7 @@ namespace Xpressive.Home.Plugins.MyStrom
 
         public string IpAddress { get; set; }
         public string MacAddress => Id;
+        public bool Relay { get; set; }
+        public double Power { get; set; }
     }
 }

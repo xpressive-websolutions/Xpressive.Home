@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 
 namespace Xpressive.Home.Plugins.Daylight
 {
-    internal class DaylightGateway : GatewayBase
+    internal class DaylightGateway : GatewayBase, IDaylightGateway
     {
         private readonly IMessageQueue _messageQueue;
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0);
@@ -26,6 +27,11 @@ namespace Xpressive.Home.Plugins.Daylight
             return new DaylightDevice();
         }
 
+        public IEnumerable<DaylightDevice> GetDevices()
+        {
+            return Devices.OfType<DaylightDevice>();
+        }
+
         public override async Task StartAsync()
         {
             await Task.Delay(TimeSpan.FromSeconds(1));
@@ -34,16 +40,14 @@ namespace Xpressive.Home.Plugins.Daylight
 
             while (_isRunning)
             {
-                foreach (var device in Devices.Cast<DaylightDevice>())
+                foreach (var device in GetDevices())
                 {
                     var daylight = IsDaylight(device);
+                    device.IsDaylight = daylight;
                     _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsDaylight", daylight));
                 }
 
-                for (var s = 0; s < 600 && _isRunning; s++)
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(0.1));
-                }
+                await TaskHelper.DelayAsync(TimeSpan.FromMinutes(1), () => _isRunning);
             }
 
             _semaphore.Release();

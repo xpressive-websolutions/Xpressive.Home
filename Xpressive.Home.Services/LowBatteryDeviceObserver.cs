@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
+using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 
@@ -33,16 +34,9 @@ namespace Xpressive.Home.Services
 
         private async Task Observe()
         {
-            var lastRun = DateTime.MinValue;
-
             while (_isRunning)
             {
-                while (_isRunning && ((DateTime.UtcNow - lastRun) < TimeSpan.FromMinutes(1)))
-                {
-                    await Task.Delay(10);
-                }
-
-                lastRun = DateTime.UtcNow;
+                await TaskHelper.DelayAsync(TimeSpan.FromMinutes(1), () => _isRunning);
 
                 foreach (var gateway in _gateways)
                 {
