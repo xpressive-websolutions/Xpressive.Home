@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using log4net;
 using RestSharp.Extensions.MonoHttp;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
@@ -12,6 +13,7 @@ namespace Xpressive.Home.Plugins.Sonos
 {
     internal class SonosGateway : GatewayBase, ISonosGateway
     {
+        private static readonly ILog _log = LogManager.GetLogger(typeof(SonosGateway));
         private readonly IMessageQueue _messageQueue;
         private readonly ISonosSoapClient _soapClient;
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0);
@@ -118,6 +120,12 @@ namespace Xpressive.Home.Plugins.Sonos
 
         protected override async Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values)
         {
+            if (device == null)
+            {
+                _log.Warn($"Unable to execute action {action.Name} because the device was not found.");
+                return;
+            }
+
             var d = device as SonosDevice;
             string stream;
             string file;

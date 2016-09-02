@@ -113,6 +113,12 @@ namespace Xpressive.Home.Plugins.MyStrom
 
         protected override async Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values)
         {
+            if (device == null)
+            {
+                _log.Warn($"Unable to execute action {action.Name} because the device was not found.");
+                return;
+            }
+
             var d = (MyStromDevice)device;
             var client = new RestClient($"http://{d.IpAddress}");
             var request = new RestRequest("relay", Method.GET);

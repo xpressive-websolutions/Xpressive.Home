@@ -27,7 +27,7 @@ namespace Xpressive.Home.Plugins.Denon
             var deviceResolver = new Func<string, DenonScriptObject>(id =>
             {
                 var device = _gateway.GetDevices().SingleOrDefault(d => d.Id.Equals(id));
-                return device != null ? new DenonScriptObject(_gateway, device) : null;
+                return new DenonScriptObject(_gateway, device);
             });
 
             yield return new Tuple<string, Delegate>("denon", deviceResolver);

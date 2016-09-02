@@ -27,7 +27,7 @@ namespace Xpressive.Home.Plugins.Sonos
             var deviceResolver = new Func<string, SonosScriptObject>(id =>
             {
                 var device = _gateway.GetDevices().SingleOrDefault(d => d.Id.Equals(id));
-                return device != null ? new SonosScriptObject(_gateway, device) : null;
+                return new SonosScriptObject(_gateway, device);
             });
 
             yield return new Tuple<string, Delegate>("sonos", deviceResolver);

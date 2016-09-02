@@ -170,6 +170,12 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 
         protected override async Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values)
         {
+            if (device == null)
+            {
+                _log.Warn($"Unable to execute action {action.Name} because the device was not found.");
+                return;
+            }
+
             var bulb = (PhilipsHueDevice)device;
             var command = new LightCommand();
 
@@ -233,22 +239,21 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                     var client = GetClient(bulb.Bridge);
                     await client.SendCommandAsync(command, new[] { bulb.Index });
                 });
+
+                if (command.On.HasValue)
+                {
+                    UpdateVariable($"{Name}.{bulb.Id}.IsOn", command.On.Value);
+                }
+
+                if (command.Brightness.HasValue)
+                {
+                    var db = command.Brightness.Value / 255d;
+                    UpdateVariable($"{Name}.{bulb.Id}.Brightness", Math.Round(db, 2));
+                }
             }
             catch (Exception e)
             {
                 _log.Error(e.Message, e);
-            }
-
-
-            if (command.On.HasValue)
-            {
-                UpdateVariable($"{Name}.{bulb.Id}.IsOn", command.On.Value);
-            }
-
-            if (command.Brightness.HasValue)
-            {
-                var db = command.Brightness.Value / 255d;
-                UpdateVariable($"{Name}.{bulb.Id}.Brightness", Math.Round(db, 2));
             }
         }
 

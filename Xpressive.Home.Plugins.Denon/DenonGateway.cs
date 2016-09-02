@@ -93,6 +93,12 @@ namespace Xpressive.Home.Plugins.Denon
 
         protected override async Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values)
         {
+            if (device == null)
+            {
+                _log.Warn($"Unable to execute action {action.Name} because the device was not found.");
+                return;
+            }
+
             string command = null;
 
             switch (action.Name.ToLowerInvariant())
