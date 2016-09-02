@@ -1,0 +1,14 @@
+[
+  {
+    "outputFileName": "app/dashboard.min.js",
+    "inputFiles": [
+      "app/dashboard.js"
+    ]
+  },
+  {
+    "outputFileName": "app/admin.min.js",
+    "inputFiles": [
+      "app/admin.js"
+    ]
+  }
+]

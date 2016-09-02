@@ -141,6 +141,7 @@
     <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
+    <None Include="bundleconfig.json" />
     <None Include="compilerconfig.json" />
     <None Include="compilerconfig.json.defaults">
       <DependentUpon>compilerconfig.json</DependentUpon>
@@ -157,6 +158,9 @@
   <ItemGroup>
     <Content Include="admin.html" />
     <Content Include="app\admin.js" />
+    <Content Include="app\admin.min.js">
+      <DependentUpon>admin.js</DependentUpon>
+    </Content>
     <Content Include="app\admin\room.html" />
     <Content Include="app\admin\rooms.html" />
     <Content Include="app\admin\roomScriptDialog.html" />
@@ -169,6 +173,9 @@
     <Content Include="app\admin\log.html" />
     <Content Include="app\admin\variables.html" />
     <Content Include="app\dashboard.js" />
+    <Content Include="app\dashboard.min.js">
+      <DependentUpon>dashboard.js</DependentUpon>
+    </Content>
     <Content Include="app\musicSelectionController.html" />
     <Content Include="app\rx.all.js" />
     <Content Include="app\rx.angular.min.js" />
