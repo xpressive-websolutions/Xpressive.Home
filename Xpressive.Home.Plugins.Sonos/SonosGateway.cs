@@ -51,17 +51,17 @@ namespace Xpressive.Home.Plugins.Sonos
 
         public async void Play(SonosDevice device)
         {
-            await ExecuteInternal(device, new Action("Play"), null);
+            await ExecuteInternal(device, new Action("Play"), new Dictionary<string, string>(0));
         }
 
         public async void Pause(SonosDevice device)
         {
-            await ExecuteInternal(device, new Action("Pause"), null);
+            await ExecuteInternal(device, new Action("Pause"), new Dictionary<string, string>(0));
         }
 
         public async void Stop(SonosDevice device)
         {
-            await ExecuteInternal(device, new Action("Stop"), null);
+            await ExecuteInternal(device, new Action("Stop"), new Dictionary<string, string>(0));
         }
 
         public async void PlayRadio(SonosDevice device, string stream, string title)

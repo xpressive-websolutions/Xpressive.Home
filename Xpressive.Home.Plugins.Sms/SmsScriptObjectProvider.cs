@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Net;
 using System.Text.RegularExpressions;
 using log4net;
 using RestSharp;
@@ -56,7 +57,7 @@ namespace Xpressive.Home.Plugins.Sms
 
                 var client = new RestClient("https://json.aspsms.com");
                 var request = new RestRequest("SendSimpleTextSMS");
-                request.AddBody(new
+                request.AddJsonBody(new
                 {
                     UserName = _username,
                     Password = _password,
@@ -66,7 +67,18 @@ namespace Xpressive.Home.Plugins.Sms
                 });
 
                 var response = client.Post(request);
-                // validate response
+
+                if (response.StatusCode != HttpStatusCode.OK && response.ErrorMessage != null)
+                {
+                    if (response.ErrorException != null)
+                    {
+                        _log.Error("Error when sending SMS: " + response.ErrorMessage, response.ErrorException);
+                    }
+                    else
+                    {
+                        _log.Error("Error when sending SMS: " + response.ErrorMessage);
+                    }
+                }
             }
         }
     }
