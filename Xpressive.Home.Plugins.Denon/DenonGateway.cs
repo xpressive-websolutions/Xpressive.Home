@@ -20,6 +20,7 @@ namespace Xpressive.Home.Plugins.Denon
         private static readonly ILog _log = LogManager.GetLogger(typeof (DenonGateway));
         private readonly IMessageQueue _messageQueue;
         private readonly IUpnpDeviceDiscoveringService _upnpDeviceDiscoveringService;
+        private readonly object _deviceLock = new object();
         private bool _isRunning;
 
         public DenonGateway(
@@ -217,12 +218,22 @@ namespace Xpressive.Home.Plugins.Denon
                 return null;
             }
 
-            var device = new DenonDevice(sn.InnerText, ipAddress)
+            lock (_deviceLock)
             {
-                Name = fn.InnerText.Replace("Denon", string.Empty).Trim()
-            };
-            _devices.Add(device);
-            return device;
+                if (GetDevices().Any(d => d.IpAddress.Equals(ipAddress, StringComparison.OrdinalIgnoreCase)))
+                {
+                    return null;
+                }
+
+                var device = new DenonDevice(sn.InnerText, ipAddress)
+                {
+                    Name = fn.InnerText.Replace("Denon", string.Empty).Trim()
+                };
+                _devices.Add(device);
+
+                return device;
+            }
+
         }
 
         private async Task UpdateVariablesAsync(DenonDevice device)
