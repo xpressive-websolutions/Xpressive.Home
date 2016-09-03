@@ -19,7 +19,7 @@ Setup(context =>
         ComVisible = false,
         Version = version,
         FileVersion = version,
-        InformationalVersion = versionPrefix + "-beta.2"
+        InformationalVersion = versionPrefix + "-beta.3"
     };
 
     CreateAssemblyInfo("./Xpressive.Home/Properties/AssemblyInfo.shared.cs", assemblyInfo);
