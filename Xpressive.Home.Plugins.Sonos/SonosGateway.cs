@@ -103,12 +103,19 @@ namespace Xpressive.Home.Plugins.Sonos
 
             while (_isRunning)
             {
-                var devices = GetDevices().ToList();
-                var masterDevices = devices.Where(d => d.IsMaster).ToList();
-                var others = devices.Except(masterDevices).ToList();
+                try
+                {
+                    var devices = GetDevices().ToList();
+                    var masterDevices = devices.Where(d => d.IsMaster).ToList();
+                    var others = devices.Except(masterDevices).ToList();
 
-                masterDevices.ForEach(async d => await UpdateDeviceVariablesAsync(d));
-                others.ForEach(async d => await UpdateDeviceVariablesAsync(d));
+                    masterDevices.ForEach(async d => await UpdateDeviceVariablesAsync(d));
+                    others.ForEach(async d => await UpdateDeviceVariablesAsync(d));
+                }
+                catch (Exception e)
+                {
+                    _log.Error(e.Message, e);
+                }
 
                 await TaskHelper.DelayAsync(TimeSpan.FromSeconds(10), () => _isRunning);
             }

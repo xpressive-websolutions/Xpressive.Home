@@ -217,7 +217,10 @@ namespace Xpressive.Home.Plugins.Denon
                 return null;
             }
 
-            var device = new DenonDevice(sn.InnerText, ipAddress);
+            var device = new DenonDevice(sn.InnerText, ipAddress)
+            {
+                Name = fn.InnerText.Replace("Denon", string.Empty).Trim()
+            };
             _devices.Add(device);
             return device;
         }
@@ -228,10 +231,16 @@ namespace Xpressive.Home.Plugins.Denon
             var request = new RestRequest("goform/formMainZone_MainZoneXml.xml", Method.GET);
             var response = await client.ExecuteTaskAsync<DenonDeviceDto>(request);
 
-            var volume = double.Parse(response.Data.MasterVolume.Value);
+            double volume;
             var isMute = response.Data.Mute.Value.Equals("on", StringComparison.OrdinalIgnoreCase);
             var select = response.Data.InputFuncSelect.Value;
-            device.Name = response.Data.FriendlyName.Value;
+
+            if (!double.TryParse(response.Data.MasterVolume.Value, out volume))
+            {
+                volume = 0;
+            }
+
+            device.Name = response.Data.FriendlyName.Value.Replace("Denon", string.Empty).Trim();
             device.Volume = volume;
             device.IsMute = isMute;
             device.Source = select;
@@ -239,7 +248,6 @@ namespace Xpressive.Home.Plugins.Denon
             _messageQueue.Publish(new UpdateVariableMessage($"{Name}.{device.Id}.Volume", volume));
             _messageQueue.Publish(new UpdateVariableMessage($"{Name}.{device.Id}.IsMute", isMute));
             _messageQueue.Publish(new UpdateVariableMessage($"{Name}.{device.Id}.Source", select));
-            _messageQueue.Publish(new UpdateVariableMessage($"{Name}.{device.Id}.Name", device.Name));
         }
     }
 }
