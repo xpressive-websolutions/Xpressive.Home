@@ -5,6 +5,7 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using log4net;
+using Polly;
 using RestSharp;
 using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Gateway;
@@ -152,7 +153,16 @@ namespace Xpressive.Home.Plugins.MyStrom
                 return;
             }
 
-            await RegisterDevice(e.IpAddress);
+            var policy = Policy
+                .Handle<WebException>()
+                .WaitAndRetryAsync(new[]
+                {
+                    TimeSpan.FromSeconds(1),
+                    TimeSpan.FromSeconds(2),
+                    TimeSpan.FromSeconds(5),
+                });
+
+            await policy.ExecuteAsync(async () => await RegisterDevice(e.IpAddress));
         }
 
         private async Task RegisterDevice(string ipAddress)
@@ -160,6 +170,11 @@ namespace Xpressive.Home.Plugins.MyStrom
             var client = new RestClient($"http://{ipAddress}/");
             var request = new RestRequest("info.json", Method.GET);
             var response = await client.ExecuteTaskAsync<MyStromDeviceInfo>(request);
+
+            if (response.ErrorException != null)
+            {
+                throw response.ErrorException;
+            }
 
             if (response.Data == null)
             {

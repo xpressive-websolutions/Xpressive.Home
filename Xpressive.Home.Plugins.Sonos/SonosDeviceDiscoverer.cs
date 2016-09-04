@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Xml;
+using Polly;
 using Xpressive.Home.Contracts.Services;
 
 namespace Xpressive.Home.Plugins.Sonos
@@ -27,7 +29,16 @@ namespace Xpressive.Home.Plugins.Sonos
                 return;
             }
 
-            CreateDevice(e.Location);
+            var policy = Policy
+                .Handle<WebException>()
+                .WaitAndRetry(new[]
+                {
+                    TimeSpan.FromSeconds(1),
+                    TimeSpan.FromSeconds(2),
+                    TimeSpan.FromSeconds(5),
+                });
+
+            policy.Execute(() => CreateDevice(e.Location));
         }
 
         private void CreateDevice(string deviceDescriptionXmlPath)

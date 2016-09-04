@@ -42,9 +42,7 @@ namespace Xpressive.Home.Plugins.Daylight
             {
                 foreach (var device in GetDevices())
                 {
-                    var daylight = IsDaylight(device);
-                    device.IsDaylight = daylight;
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsDaylight", daylight));
+                    UpdateVariables(device);
                 }
 
                 await TaskHelper.DelayAsync(TimeSpan.FromMinutes(1), () => _isRunning);
@@ -70,13 +68,18 @@ namespace Xpressive.Home.Plugins.Daylight
             base.Dispose(disposing);
         }
 
-        private bool IsDaylight(DaylightDevice device)
+        private void UpdateVariables(DaylightDevice device)
         {
             var time = DateTime.UtcNow.AddMinutes(device.OffsetInMinutes).TimeOfDay;
             var sunrise = SunsetCalculator.GetSunrise(device.Latitude, device.Longitude);
             var sunset = SunsetCalculator.GetSunset(device.Latitude, device.Longitude);
 
-            return time >= sunrise && time <= sunset;
+            device.IsDaylight = time >= sunrise && time <= sunset;
+            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsDaylight", device.IsDaylight));
+
+            var offset = DateTime.UtcNow - DateTime.Now;
+            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Sunrise", (sunrise - offset).ToString("hh\\:mm\\:ss")));
+            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Sunset", (sunset - offset).ToString("hh\\:mm\\:ss")));
         }
     }
 }

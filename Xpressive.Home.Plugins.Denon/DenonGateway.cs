@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using log4net;
+using Polly;
 using RestSharp;
 using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Gateway;
@@ -196,15 +198,32 @@ namespace Xpressive.Home.Plugins.Denon
                 return;
             }
 
-            var device = await RegisterDeviceAsync(e.Location, e.IpAddress);
-            await UpdateVariablesAsync(device);
+            var policy = Policy
+                .Handle<WebException>()
+                .WaitAndRetryAsync(new[]
+                {
+                    TimeSpan.FromSeconds(1),
+                    TimeSpan.FromSeconds(2),
+                    TimeSpan.FromSeconds(5)
+                });
+
+            await policy.ExecuteAsync(async () =>
+            {
+                var device = RegisterDevice(e.Location, e.IpAddress);
+
+                if (device == null)
+                {
+                    return;
+                }
+
+                await UpdateVariablesAsync(device);
+            });
         }
 
-        private async Task<DenonDevice> RegisterDeviceAsync(string url, string ipAddress)
+        private DenonDevice RegisterDevice(string url, string ipAddress)
         {
-            var xmlResponse = await new RestClient(url).ExecuteGetTaskAsync<object>(new RestRequest(Method.GET));
             var xml = new XmlDocument();
-            xml.LoadXml(xmlResponse.Content);
+            xml.Load(url);
 
             var ns = new XmlNamespaceManager(xml.NameTable);
             ns.AddNamespace("n", "urn:schemas-upnp-org:device-1-0");

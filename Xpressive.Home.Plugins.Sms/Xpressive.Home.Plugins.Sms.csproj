@@ -62,6 +62,7 @@
     <ProjectReference Include="..\Xpressive.Home.Contracts\Xpressive.Home.Contracts.csproj">
       <Project>{d19262be-03d6-415f-b442-eddf9da2d435}</Project>
       <Name>Xpressive.Home.Contracts</Name>
+      <Private>False</Private>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
