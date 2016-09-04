@@ -10,8 +10,7 @@ namespace Xpressive.Home.Plugins.Forecast
             builder.RegisterType<ForecastGateway>()
                 .As<IGateway>()
                 .PropertiesAutowired()
-                .SingleInstance()
-                .OnActivated(async h => await h.Instance.StartAsync());
+                .SingleInstance();
 
             base.Load(builder);
         }
