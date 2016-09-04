@@ -13,7 +13,7 @@ namespace Xpressive.Home.Messaging
 
         public void Notify(UpdateVariableMessage message)
         {
-            _log.Info($"{message.GetType().Name} for variable {message.Name} received.");
+            _log.Debug($"{message.GetType().Name} for variable {message.Name} received.");
         }
 
         public void Notify(CommandMessage message)
@@ -28,7 +28,7 @@ namespace Xpressive.Home.Messaging
 
         public void Notify(LowBatteryMessage message)
         {
-            _log.Info($"{message.GetType().Namespace} received for {message.GatewayName}.{message.DeviceId}.");
+            _log.Warn($"{message.GetType().Name} received for {message.GatewayName}.{message.DeviceId}.");
         }
     }
 }

@@ -196,7 +196,7 @@ namespace Xpressive.Home.Plugins.MyStrom
                     name = ipAddress;
                 }
 
-                _log.Debug($"Found myStrom device {ipAddress} - {response.Data.Mac}");
+                _log.Info($"Found myStrom device {ipAddress} - {response.Data.Mac}");
                 _devices.Add(new MyStromDevice(name, ipAddress, response.Data.Mac));
             }
         }

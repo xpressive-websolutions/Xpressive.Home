@@ -73,6 +73,10 @@ namespace Xpressive.Home.Plugins.Zwave
                     var device = LoadIntoLibrary(document);
                     devices.Add(device);
                 }
+                catch (XmlException e)
+                {
+                    _log.Error(stream.Item1 + ": " + e.Message);
+                }
                 catch (Exception e)
                 {
                     _log.Error(stream.Item1 + ": " + e.Message, e);
