@@ -48,8 +48,6 @@ namespace Xpressive.Home.Plugins.Forecast
 
             while (_isRunning)
             {
-                var recentUpdate = DateTime.UtcNow;
-
                 try
                 {
                     var devices = _devices.Cast<ForecastDevice>().ToList();
@@ -61,9 +59,7 @@ namespace Xpressive.Home.Plugins.Forecast
                 }
 
                 var minutes = Math.Max(_devices.Count*2.5, 10);
-                var nextUpdate = recentUpdate + TimeSpan.FromMinutes(minutes);
-
-                await TaskHelper.DelayAsync(nextUpdate - DateTime.UtcNow, () => _isRunning);
+                await TaskHelper.DelayAsync(TimeSpan.FromMinutes(minutes), () => _isRunning);
             }
 
             _semaphore.Release();
@@ -103,26 +99,24 @@ namespace Xpressive.Home.Plugins.Forecast
                 return;
             }
 
-            UpdateVariables(device.Id, response.currently);
+            UpdateVariables(device.Id, string.Empty, response.currently);
 
             for (var hour = 0; hour < response.hourly.data.Count; hour++)
             {
-                var deviceId = $"{device.Id}_H+{hour}";
                 var data = response.hourly.data[hour];
-                UpdateVariables(deviceId, data);
+                UpdateVariables(device.Id, $"H+{hour}_", data);
             }
 
             for (var day = 0; day < response.daily.data.Count; day++)
             {
-                var deviceId = $"{device.Id}_D+{day}";
                 var data = response.daily.data[day];
-                UpdateVariables(deviceId, data);
+                UpdateVariables(device.Id, $"D+{day}_", data);
             }
 
             await TaskHelper.DelayAsync(TimeSpan.FromSeconds(10), () => _isRunning);
         }
 
-        private void UpdateVariables(string deviceId, object data)
+        private void UpdateVariables(string deviceId, string prefix, object data)
         {
             var properties = data.GetType().GetProperties();
             var dict = properties.ToDictionary(p => p.Name, p => p.GetValue(data));
@@ -147,11 +141,11 @@ namespace Xpressive.Home.Plugins.Forecast
 
             var stringParameters = new[] { "icon", "summary" };
 
-            UpdateVariables(deviceId, dict, doubleParameters, v => Math.Round((float)v, 2));
-            UpdateVariables(deviceId, dict, stringParameters, v => v);
+            UpdateVariables(deviceId, prefix, dict, doubleParameters, v => Math.Round((float)v, 2));
+            UpdateVariables(deviceId, prefix, dict, stringParameters, v => v);
         }
 
-        private void UpdateVariables(string deviceId, IDictionary<string, object> values, IEnumerable<string> properties, Func<object, object> convert)
+        private void UpdateVariables(string deviceId, string prefix, IDictionary<string, object> values, IEnumerable<string> properties, Func<object, object> convert)
         {
             foreach (var p in properties)
             {
@@ -160,7 +154,7 @@ namespace Xpressive.Home.Plugins.Forecast
                 {
                     continue;
                 }
-                var name = CultureInfo.InvariantCulture.TextInfo.ToUpper(p[0]) + p.Substring(1);
+                var name = prefix + CultureInfo.InvariantCulture.TextInfo.ToUpper(p[0]) + p.Substring(1);
                 var converted = convert(v);
                 _messageQueue.Publish(new UpdateVariableMessage(Name, deviceId, name, converted));
             }

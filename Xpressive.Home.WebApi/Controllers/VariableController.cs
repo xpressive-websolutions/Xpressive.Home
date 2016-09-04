@@ -29,12 +29,12 @@ namespace Xpressive.Home.WebApi.Controllers
                 return Enumerable.Empty<VariableDto>();
             }
 
-            var prefix = $"{gatewayName}.{deviceId}";
+            var prefix = $"{gatewayName}.{deviceId}.";
             var variables = _variableRepository.Get().Where(v => v.Name.StartsWith(prefix, StringComparison.Ordinal));
 
             return variables.Select(v => new VariableDto
             {
-                Name = v.Name.Substring(prefix.Length + 1),
+                Name = v.Name.Substring(prefix.Length),
                 Value = v.Value
             });
         }

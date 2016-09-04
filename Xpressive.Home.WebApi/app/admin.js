@@ -2,7 +2,7 @@
 
     var xha = angular.module("admin", ["ngRoute", "ui.bootstrap", "ui.codemirror", "ui.select", "ngSanitize", "toaster"]);
 
-    xha.config(function($routeProvider) {
+    xha.config(["$routeProvider", function($routeProvider) {
         $routeProvider
             .when("/", {
                 templateUrl: "/app/admin/devices.html",
@@ -36,7 +36,7 @@
                 templateUrl: "/app/admin/log.html",
                 controller: "logController"
             });
-    });
+    }]);
 
     xha.filter("titlecase", function() {
         return function(input) {
@@ -44,7 +44,7 @@
         };
     });
 
-    xha.factory("$storage", function($window) {
+    xha.factory("$storage", ["$window", function($window) {
         return {
             get: function(key) {
                 var value = $window.localStorage[key];
@@ -57,7 +57,7 @@
                 $window.localStorage.removeItem(key);
             }
         }
-    });
+    }]);
 
     xha.controller("installController", ["$http", function($http) {
         var c = this;

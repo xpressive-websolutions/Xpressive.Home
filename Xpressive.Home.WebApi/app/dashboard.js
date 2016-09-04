@@ -153,7 +153,7 @@
                     var device = devices.data[0];
                     c.isEnabled = true;
                     c.forecast[0].name = "Current";
-                    c.forecast[0].prefixes.push("H+0.");
+                    c.forecast[0].prefixes.push("");
 
                     $http.get("/api/v1/variable/Weather?deviceId=" + device.id, { cache: false }).then(function(variables) {
                         var now = new Date();
@@ -172,7 +172,7 @@
                             var start = (i * 6) + hoursUntilNextStep;
                             var stop = start + 6;
                             for (var h = start; h < stop; h++) {
-                                c.forecast[i + 1].prefixes.push("H+" + h + ".");
+                                c.forecast[i + 1].prefixes.push("H+" + h + "_");
                             }
                             c.forecast[i + 1].name = labels[(i + index + 1) % 4];
                         }
