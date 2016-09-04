@@ -41,6 +41,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             }
 
             PhilipsHueBridge bridge;
+            bridgeId = bridgeId.ToLowerInvariant();
 
             lock (_lock)
             {

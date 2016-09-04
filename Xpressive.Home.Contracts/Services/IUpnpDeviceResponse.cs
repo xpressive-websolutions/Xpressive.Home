@@ -7,7 +7,6 @@ namespace Xpressive.Home.Contracts.Services
         string Location { get; }
         string IpAddress { get; }
         string Server { get; }
-        string St { get; }
         string Usn { get; }
         IDictionary<string, string> OtherHeaders { get; }
     }

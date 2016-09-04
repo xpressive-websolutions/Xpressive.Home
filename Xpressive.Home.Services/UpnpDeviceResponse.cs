@@ -10,15 +10,13 @@ namespace Xpressive.Home.Services
         private readonly string _location;
         private readonly string _ipAddress;
         private readonly string _server;
-        private readonly string _st;
         private readonly string _usn;
         private readonly Dictionary<string, string> _otherHeaders;
 
-        public UpnpDeviceResponse(string location, string server, string st, string usn)
+        public UpnpDeviceResponse(string location, string server, string usn)
         {
             _location = location;
             _server = server;
-            _st = st;
             _usn = usn;
             _otherHeaders = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
@@ -29,7 +27,6 @@ namespace Xpressive.Home.Services
         public string Location => _location;
         public string IpAddress => _ipAddress;
         public string Server => _server;
-        public string St => _st;
         public string Usn => _usn;
         public IDictionary<string, string> OtherHeaders => new ReadOnlyDictionary<string, string>(_otherHeaders);
 

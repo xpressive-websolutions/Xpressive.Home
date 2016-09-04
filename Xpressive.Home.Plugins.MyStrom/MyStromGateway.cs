@@ -156,29 +156,25 @@ namespace Xpressive.Home.Plugins.MyStrom
 
             await Policy
                 .Handle<WebException>()
+                .OrResult(false)
                 .WaitAndRetryAsync(new[]
                 {
                     TimeSpan.FromSeconds(1),
                     TimeSpan.FromSeconds(2),
                     TimeSpan.FromSeconds(5),
                 })
-                .ExecuteAndCaptureAsync(async () => await RegisterDevice(e.IpAddress));
+                .ExecuteAsync(async () => await RegisterDevice(e.IpAddress));
         }
 
-        private async Task RegisterDevice(string ipAddress)
+        private async Task<bool> RegisterDevice(string ipAddress)
         {
             var client = new RestClient($"http://{ipAddress}/");
             var request = new RestRequest("info.json", Method.GET);
             var response = await client.ExecuteTaskAsync<MyStromDeviceInfo>(request);
 
-            if (response.ErrorException != null)
-            {
-                throw response.ErrorException;
-            }
-
             if (response.Data == null)
             {
-                return;
+                return false;
             }
 
             var namesByMacAddress = await _myStromDeviceNameService.GetDeviceNamesByMacAsync();
@@ -187,7 +183,7 @@ namespace Xpressive.Home.Plugins.MyStrom
             {
                 if (_devices.Cast<MyStromDevice>().Any(d => d.MacAddress.Equals(response.Data.Mac)))
                 {
-                    return;
+                    return true;
                 }
 
                 string name;
@@ -199,6 +195,8 @@ namespace Xpressive.Home.Plugins.MyStrom
                 _log.Info($"Found myStrom device {ipAddress} - {response.Data.Mac}");
                 _devices.Add(new MyStromDevice(name, ipAddress, response.Data.Mac));
             }
+
+            return true;
         }
 
         private async Task<Dto> GetReport(string ipAddress)
