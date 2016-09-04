@@ -1,4 +1,6 @@
 ﻿using System.Diagnostics;
+using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Web.Http;
 using Xpressive.Home.Contracts.Services;
@@ -30,7 +32,9 @@ namespace Xpressive.Home.WebApi.Controllers
                 return;
             }
 
-            Process.Start("Xpressive.Home.Deployment.Updater.exe", "\"" + file.FullName + "\"");
+            var location = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+            var updater = Path.Combine(location, "Xpressive.Home.Deployment.Updater.exe");
+            Process.Start(updater, "\"" + file.FullName + "\"");
         }
     }
 }
