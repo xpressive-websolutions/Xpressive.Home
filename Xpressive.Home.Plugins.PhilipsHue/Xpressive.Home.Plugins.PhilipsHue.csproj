@@ -46,7 +46,7 @@
     </Reference>
     <Reference Include="Polly, Version=4.3.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Polly.4.3.0\lib\net45\Polly.dll</HintPath>
-      <Private>True</Private>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Q42.HueApi, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Q42.HueApi.3.0.0\lib\portable-net45+win+wpa81+wp80+MonoAndroid10+MonoTouch10\Q42.HueApi.dll</HintPath>

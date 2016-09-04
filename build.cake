@@ -83,6 +83,7 @@ Task("Copy").IsDependentOn("Build").Does(() =>
 
     CopyFiles(GetFiles("Xpressive.Home.ConsoleHost/bin/" + configuration + "/*.*"), "./Build");
     CopyFiles(GetFiles("Xpressive.Home.Service/bin/" + configuration + "/*.*"), "./Build");
+    CopyFiles(GetFiles("Xpressive.Home.Services/bin/" + configuration + "/*.*"), "./Build");
     CopyFiles(GetFiles("Xpressive.Home.WebApi/bin/" + configuration + "/*.*"), "./Build");
     CopyFiles(GetFiles("Xpressive.Home.Deployment.Updater/bin/" + configuration + "/*.*"), "./Build");
 

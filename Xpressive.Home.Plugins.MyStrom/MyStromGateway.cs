@@ -153,16 +153,15 @@ namespace Xpressive.Home.Plugins.MyStrom
                 return;
             }
 
-            var policy = Policy
+            await Policy
                 .Handle<WebException>()
                 .WaitAndRetryAsync(new[]
                 {
                     TimeSpan.FromSeconds(1),
                     TimeSpan.FromSeconds(2),
                     TimeSpan.FromSeconds(5),
-                });
-
-            await policy.ExecuteAsync(async () => await RegisterDevice(e.IpAddress));
+                })
+                .ExecuteAndCaptureAsync(async () => await RegisterDevice(e.IpAddress));
         }
 
         private async Task RegisterDevice(string ipAddress)
