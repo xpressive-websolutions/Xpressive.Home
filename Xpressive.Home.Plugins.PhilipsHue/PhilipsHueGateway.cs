@@ -50,6 +50,10 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             {
                 Fields = { "Brightness", "Transition time in seconds" }
             });
+            _actions.Add(new Action("Change Temperature")
+            {
+                Fields = { "Temperature" }
+            });
             _actions.Add(new Action("Alarm Once"));
             _actions.Add(new Action("Alarm Multiple"));
 
@@ -107,6 +111,17 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             await ExecuteInternal(device, action, parameters);
         }
 
+        public async void ChangeTemperature(PhilipsHueDevice device, int temperature)
+        {
+            var parameters = new Dictionary<string, string>
+            {
+                {"Temperature", temperature.ToString("D")}
+            };
+
+            var action = _actions.Single(a => a.Name.Equals("Change Temperature", StringComparison.Ordinal));
+            await ExecuteInternal(device, action, parameters);
+        }
+
         public override IDevice CreateEmptyDevice()
         {
             throw new NotSupportedException();
@@ -141,11 +156,18 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                             var light = tuple.Item2;
                             var state = light.State;
                             var brightness = state.Brightness / 255d;
+                            var temperature = state.ColorTemperature ?? 0;
+
+                            if (temperature != 0)
+                            {
+                                temperature = MirekToKelvin(temperature);
+                            }
 
                             UpdateVariable($"{Name}.{bulb.Id}.Brightness", Math.Round(brightness, 2));
                             UpdateVariable($"{Name}.{bulb.Id}.IsOn", state.On);
                             UpdateVariable($"{Name}.{bulb.Id}.IsReachable", state.IsReachable);
                             UpdateVariable($"{Name}.{bulb.Id}.Name", light.Name);
+                            UpdateVariable($"{Name}.{bulb.Id}.ColorTemperature", temperature);
                         }
                     }
                     catch (Exception e)
@@ -197,6 +219,16 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                 command.Brightness = Convert.ToByte(bd * 255);
             }
 
+            string temperature;
+            int t;
+            if (action.Fields.Contains("Temperature") &&
+                values.TryGetValue("Temperature", out temperature) &&
+                int.TryParse(temperature, out t) &&
+                t >= 2000 && t <= 6500)
+            {
+                command.ColorTemperature = KelvinToMirek(t);
+            }
+
             switch (action.Name.ToLowerInvariant())
             {
                 case "switch on":
@@ -210,6 +242,9 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                     command.SetColor(new RGBColor(values["Color"]));
                     break;
                 case "change brightness":
+                    command.On = true;
+                    break;
+                case "change temperature":
                     break;
                 case "alarm once":
                     command.Alert = Alert.Once;
@@ -287,6 +322,16 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             var apiKey = _variableRepository.Get<StringVariable>(variableName).Value;
 
             return new LocalHueClient(bridge.IpAddress, apiKey);
+        }
+
+        private int MirekToKelvin(int mirek)
+        {
+            return 1000000/mirek;
+        }
+
+        private int KelvinToMirek(int kelvin)
+        {
+            return 1000000/kelvin;
         }
     }
 }

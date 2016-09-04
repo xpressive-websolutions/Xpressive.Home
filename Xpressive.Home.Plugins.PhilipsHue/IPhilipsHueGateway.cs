@@ -10,5 +10,6 @@ namespace Xpressive.Home.Plugins.PhilipsHue
         void SwitchOff(PhilipsHueDevice device, int transitionTimeInSeconds);
         void ChangeColor(PhilipsHueDevice device, string hexColor, int transitionTimeInSeconds);
         void ChangeBrightness(PhilipsHueDevice device, double brightness, int transitionTimeInSeconds);
+        void ChangeTemperature(PhilipsHueDevice device, int temperature);
     }
 }

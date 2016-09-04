@@ -83,6 +83,11 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             {
                 _gateway.ChangeColor(_device, hexColor, transitionTimeInSeconds);
             }
+
+            public void temperature(int temperature)
+            {
+                _gateway.ChangeTemperature(_device, temperature);
+            }
         }
     }
 }
