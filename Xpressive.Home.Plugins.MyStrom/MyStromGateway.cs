@@ -91,6 +91,7 @@ namespace Xpressive.Home.Plugins.MyStrom
                     }
                     else
                     {
+                        _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Power", dto.Power));
                         previousPowers[device.Id] = dto.Power;
                     }
                 }

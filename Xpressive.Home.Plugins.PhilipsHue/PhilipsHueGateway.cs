@@ -167,7 +167,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                             UpdateVariable($"{Name}.{bulb.Id}.IsOn", state.On);
                             UpdateVariable($"{Name}.{bulb.Id}.IsReachable", state.IsReachable);
                             UpdateVariable($"{Name}.{bulb.Id}.Name", light.Name);
-                            UpdateVariable($"{Name}.{bulb.Id}.ColorTemperature", temperature);
+                            UpdateVariable($"{Name}.{bulb.Id}.ColorTemperature", (double)temperature);
                         }
                     }
                     catch (Exception e)
