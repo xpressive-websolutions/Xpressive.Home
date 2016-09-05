@@ -163,8 +163,7 @@ namespace Xpressive.Home.Plugins.Lifx
                 LastSeen = DateTime.UtcNow,
                 Id = string.Join("", msg.Header.TargetMacAddress.Select(b => b.ToString("x2")))
             };
-
-            Console.WriteLine(device.Id);
+            
             _discoveredBulbs[remoteAddress.ToString()] = device;
 
             DeviceDiscovered?.Invoke(this, device);

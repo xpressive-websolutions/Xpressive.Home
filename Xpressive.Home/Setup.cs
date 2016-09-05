@@ -53,7 +53,6 @@ namespace Xpressive.Home
                 foreach (var gateway in _gateways)
                 {
                     gateway.Stop();
-                    gateway.Dispose();
                 }
 
                 IocContainer.Dispose();
