@@ -30,7 +30,7 @@ namespace Xpressive.Home.Services
 
                     try
                     {
-                        searchTask = deviceLocator.SearchAsync(TimeSpan.FromSeconds(10));
+                        searchTask = deviceLocator.SearchAsync("upnp:rootdevice", TimeSpan.FromSeconds(10));
                         await Task.WhenAny(runningTask, searchTask);
                     }
                     catch (Exception e)
@@ -52,7 +52,7 @@ namespace Xpressive.Home.Services
                         try
                         {
                             var response = await CreateUpnpDeviceAsync(device);
-                            var key = $"{response.Location}/{response.Usn}";
+                            var key = $"{device.DescriptionLocation.Host}/{response.Usn}";
                             responses[key] = response;
                         }
                         catch (Exception e)
