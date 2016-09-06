@@ -5,6 +5,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using log4net;
+using Polly;
+using Polly.Retry;
 using RestSharp;
 using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Gateway;
@@ -14,7 +16,7 @@ namespace Xpressive.Home.Plugins.Netatmo
 {
     internal class NetatmoGateway : GatewayBase
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof (NetatmoGateway));
+        private static readonly ILog _log = LogManager.GetLogger(typeof(NetatmoGateway));
         private readonly IMessageQueue _messageQueue;
         private readonly object _deviceLock = new object();
         private readonly string _clientId;
@@ -69,7 +71,11 @@ namespace Xpressive.Home.Plugins.Netatmo
             {
                 try
                 {
-                    if (token.Expiration - DateTime.UtcNow < TimeSpan.FromSeconds(60))
+                    if (token.Expiration <= DateTime.UtcNow)
+                    {
+                        token = await GetTokenAsync();
+                    }
+                    else if (token.Expiration - DateTime.UtcNow < TimeSpan.FromMinutes(10))
                     {
                         token = await RefreshTokenAsync(token);
                     }
@@ -180,33 +186,71 @@ namespace Xpressive.Home.Plugins.Netatmo
 
         private async Task<TokenResponseDto> GetTokenAsync()
         {
-            var client = new RestClient("https://api.netatmo.com");
-            var request = new RestRequest("/oauth2/token");
-            request.AddHeader("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
-            request.AddParameter("grant_type", "password");
-            request.AddParameter("client_id", _clientId);
-            request.AddParameter("client_secret", _clientSecret);
-            request.AddParameter("username", _username);
-            request.AddParameter("password", _password);
-            request.AddParameter("scope", "read_station read_thermostat");
+            var policy = GetRetryPolicy();
 
-            var token = await client.PostTaskAsync<TokenResponseDto>(request);
-            token.Expiration = DateTime.UtcNow.AddSeconds(token.ExpiresIn);
-            return token;
+            return await policy.ExecuteAsync(async () =>
+            {
+                var client = new RestClient("https://api.netatmo.com");
+                var request = new RestRequest("/oauth2/token");
+                request.AddHeader("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
+                request.AddParameter("grant_type", "password");
+                request.AddParameter("client_id", _clientId);
+                request.AddParameter("client_secret", _clientSecret);
+                request.AddParameter("username", _username);
+                request.AddParameter("password", _password);
+                request.AddParameter("scope", "read_station read_thermostat");
+
+                var token = await client.PostTaskAsync<TokenResponseDto>(request);
+
+                if (token?.AccessToken == null)
+                {
+                    return null;
+                }
+
+                token.Expiration = DateTime.UtcNow.AddSeconds(token.ExpiresIn);
+                return token;
+            });
         }
 
         private async Task<TokenResponseDto> RefreshTokenAsync(TokenResponseDto dto)
         {
-            var client = new RestClient("https://api.netatmo.com");
-            var request = new RestRequest("/oauth2/token");
-            request.AddHeader("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
-            request.AddParameter("grant_type", dto.RefreshToken);
-            request.AddParameter("client_id", _clientId);
-            request.AddParameter("client_secret", _clientSecret);
+            var policy = GetRetryPolicy();
 
-            var token = await client.PostTaskAsync<TokenResponseDto>(request);
-            token.Expiration = DateTime.UtcNow.AddSeconds(token.ExpiresIn);
-            return token;
+            return await policy.ExecuteAsync(async () =>
+            {
+                var client = new RestClient("https://api.netatmo.com");
+                var request = new RestRequest("/oauth2/token");
+                request.AddHeader("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
+                request.AddParameter("grant_type", dto.RefreshToken);
+                request.AddParameter("client_id", _clientId);
+                request.AddParameter("client_secret", _clientSecret);
+
+                var token = await client.PostTaskAsync<TokenResponseDto>(request);
+
+                if (token?.AccessToken == null)
+                {
+                    return null;
+                }
+
+                token.Expiration = DateTime.UtcNow.AddSeconds(token.ExpiresIn);
+                return token;
+            });
+        }
+
+        private RetryPolicy<TokenResponseDto> GetRetryPolicy()
+        {
+            return Policy
+                .Handle<Exception>()
+                .OrResult((TokenResponseDto)null)
+                .WaitAndRetryAsync(new[]
+                {
+                    TimeSpan.FromSeconds(1),
+                    TimeSpan.FromSeconds(2),
+                    TimeSpan.FromSeconds(5),
+                    TimeSpan.FromSeconds(10),
+                    TimeSpan.FromSeconds(15),
+                    TimeSpan.FromSeconds(20)
+                });
         }
 
         public class StationModuleDto : IStationModule
