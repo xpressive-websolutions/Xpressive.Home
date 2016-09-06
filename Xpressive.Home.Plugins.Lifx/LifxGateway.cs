@@ -20,7 +20,7 @@ namespace Xpressive.Home.Plugins.Lifx
         private readonly string _token;
         private readonly object _deviceLock = new object();
         private readonly LifxLocalClient _localClient = new LifxLocalClient();
-        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0);
+        private readonly AutoResetEvent _taskWaitHandle = new AutoResetEvent(false);
         private bool _isRunning = true;
 
         public LifxGateway(IMessageQueue messageQueue) : base("Lifx")
@@ -143,8 +143,16 @@ namespace Xpressive.Home.Plugins.Lifx
         public override void Stop()
         {
             _isRunning = false;
-            _localClient.Stop();
-            _semaphore.Wait(TimeSpan.FromSeconds(5));
+
+            if (!_localClient.Stop())
+            {
+                _log.Error("Unable to shutdown local client.");
+            }
+
+            if (!_taskWaitHandle.WaitOne(TimeSpan.FromSeconds(5)))
+            {
+                _log.Error("Unable to shutdown cloud client.");
+            }
         }
 
         private async Task FindCloudBulbsAsync()
@@ -152,7 +160,7 @@ namespace Xpressive.Home.Plugins.Lifx
             if (string.IsNullOrEmpty(_token))
             {
                 _messageQueue.Publish(new NotifyUserMessage("Add LIFX cloud token to config file."));
-                _semaphore.Release();
+                _taskWaitHandle.Set();
                 return;
             }
 
@@ -179,7 +187,7 @@ namespace Xpressive.Home.Plugins.Lifx
                 await TaskHelper.DelayAsync(TimeSpan.FromMinutes(1), () => _isRunning);
             }
 
-            _semaphore.Release();
+            _taskWaitHandle.Set();
         }
 
         private async Task FindLocalBulbsAsync()
@@ -394,6 +402,7 @@ namespace Xpressive.Home.Plugins.Lifx
             {
                 _isRunning = false;
                 _localClient.Dispose();
+                _taskWaitHandle.Dispose();
             }
         }
     }

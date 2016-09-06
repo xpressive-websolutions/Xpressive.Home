@@ -15,7 +15,8 @@ namespace Xpressive.Home.Plugins.Lifx
     internal class LifxLocalClient : IDisposable
     {
         private UdpClient _listeningClient;
-        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0);
+        private readonly AutoResetEvent _receiveWaitHandle = new AutoResetEvent(false);
+        private readonly AutoResetEvent _discoverWaitHandle = new AutoResetEvent(false);
         private bool _isRunning = true;
         private readonly Dictionary<string, LifxLocalLight> _discoveredBulbs = new Dictionary<string, LifxLocalLight>();
         private static readonly Random _randomizer = new Random();
@@ -39,7 +40,7 @@ namespace Xpressive.Home.Plugins.Lifx
                 }
             }
 
-            _semaphore.Release();
+            _receiveWaitHandle.Set();
         }
 
         public async Task StartDeviceDiscoveryAsync()
@@ -48,7 +49,7 @@ namespace Xpressive.Home.Plugins.Lifx
             _listeningClient.Client.Blocking = false;
             _listeningClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
 
-            Receive().ConfigureAwait(false);
+            var _ = Task.Factory.StartNew(Receive);
 
             var source = (uint) _randomizer.Next(int.MaxValue);
             var header = new FrameHeader
@@ -66,18 +67,19 @@ namespace Xpressive.Home.Plugins.Lifx
                 {
                 }
 
-                await TaskHelper.DelayAsync(TimeSpan.FromSeconds(5), () => _isRunning);
+                await TaskHelper.DelayAsync(TimeSpan.FromMinutes(5), () => _isRunning);
             }
 
-            _semaphore.Release();
+            _discoverWaitHandle.Set();
         }
 
-        public void Stop()
+        public bool Stop()
         {
             _isRunning = false;
             _listeningClient.Dispose();
-            _semaphore.Wait(TimeSpan.FromSeconds(5));
-            _semaphore.Wait(TimeSpan.FromSeconds(3));
+
+            return _receiveWaitHandle.WaitOne(TimeSpan.FromSeconds(2)) &&
+                _discoverWaitHandle.WaitOne(TimeSpan.FromSeconds(2));
         }
 
         private void HandleIncomingMessages(byte[] data, IPEndPoint remoteEndPoint)

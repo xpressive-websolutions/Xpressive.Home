@@ -22,7 +22,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
         private readonly IVariableRepository _variableRepository;
         private readonly IMessageQueue _messageQueue;
         private readonly object _devicesLock = new object();
-        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0);
+        private readonly AutoResetEvent _taskWaitHandle = new AutoResetEvent(false);
         private bool _isRunning = true;
 
         public PhilipsHueGateway(
@@ -129,7 +129,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 
         public override async Task StartAsync()
         {
-            await Task.Delay(TimeSpan.FromSeconds(1));
+            await TaskHelper.DelayAsync(TimeSpan.FromSeconds(1), () => _isRunning);
 
             while (_isRunning)
             {
@@ -179,13 +179,25 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                 await TaskHelper.DelayAsync(TimeSpan.FromSeconds(30), () => _isRunning);
             }
 
-            _semaphore.Release();
+            _taskWaitHandle.Set();
         }
 
         public override void Stop()
         {
             _isRunning = false;
-            _semaphore.Wait(TimeSpan.FromSeconds(5));
+            if (!_taskWaitHandle.WaitOne(TimeSpan.FromSeconds(5)))
+            {
+                _log.Error("Unable to shutdown.");
+            }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _taskWaitHandle.Dispose();
+            }
+            base.Dispose(disposing);
         }
 
         protected override async Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values)

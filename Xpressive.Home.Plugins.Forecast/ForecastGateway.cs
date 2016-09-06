@@ -18,7 +18,7 @@ namespace Xpressive.Home.Plugins.Forecast
         private static readonly ILog _log = LogManager.GetLogger(typeof(ForecastGateway));
         private readonly string _apiKey;
         private readonly IMessageQueue _messageQueue;
-        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0);
+        private readonly AutoResetEvent _taskWaitHandle = new AutoResetEvent(false);
         private bool _isRunning = true;
 
         public ForecastGateway(IMessageQueue messageQueue) : base("Weather")
@@ -42,7 +42,7 @@ namespace Xpressive.Home.Plugins.Forecast
             if (string.IsNullOrEmpty(_apiKey))
             {
                 _messageQueue.Publish(new NotifyUserMessage("Add forecast.io configuration to config file."));
-                _semaphore.Release();
+                _taskWaitHandle.Set();
                 return;
             }
 
@@ -62,13 +62,16 @@ namespace Xpressive.Home.Plugins.Forecast
                 await TaskHelper.DelayAsync(TimeSpan.FromMinutes(minutes), () => _isRunning);
             }
 
-            _semaphore.Release();
+            _taskWaitHandle.Set();
         }
 
         public override void Stop()
         {
             _isRunning = false;
-            _semaphore.Wait(TimeSpan.FromSeconds(5));
+            if (!_taskWaitHandle.WaitOne(TimeSpan.FromSeconds(5)))
+            {
+                _log.Error("Unable to shutdown.");
+            }
         }
 
         protected override Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values)
@@ -79,6 +82,10 @@ namespace Xpressive.Home.Plugins.Forecast
         protected override void Dispose(bool disposing)
         {
             _isRunning = false;
+            if (disposing)
+            {
+                _taskWaitHandle.Dispose();
+            }
             base.Dispose(disposing);
         }
 

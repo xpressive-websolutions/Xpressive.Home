@@ -22,7 +22,7 @@ namespace Xpressive.Home.Plugins.MyStrom
         private readonly IMyStromDeviceNameService _myStromDeviceNameService;
         private readonly IUpnpDeviceDiscoveringService _upnpDeviceDiscoveringService;
         private readonly object _deviceListLock = new object();
-        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0);
+        private readonly AutoResetEvent _taskWaitHandle = new AutoResetEvent(false);
         private bool _isRunning = true;
 
         public MyStromGateway(
@@ -99,7 +99,7 @@ namespace Xpressive.Home.Plugins.MyStrom
                 await TaskHelper.DelayAsync(TimeSpan.FromSeconds(10), () => _isRunning);
             }
 
-            _semaphore.Release();
+            _taskWaitHandle.Set();
         }
 
         public override IDevice CreateEmptyDevice()
@@ -110,7 +110,10 @@ namespace Xpressive.Home.Plugins.MyStrom
         public override void Stop()
         {
             _isRunning = false;
-            _semaphore.Wait(TimeSpan.FromSeconds(5));
+            if (!_taskWaitHandle.WaitOne(TimeSpan.FromSeconds(5)))
+            {
+                _log.Error("Unable to shutdown.");
+            }
         }
 
         protected override async Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values)
@@ -143,7 +146,11 @@ namespace Xpressive.Home.Plugins.MyStrom
         protected override void Dispose(bool disposing)
         {
             _isRunning = false;
-            _upnpDeviceDiscoveringService.DeviceFound -= OnUpnpDeviceFound;
+            if (disposing)
+            {
+                _upnpDeviceDiscoveringService.DeviceFound -= OnUpnpDeviceFound;
+                _taskWaitHandle.Dispose();
+            }
             base.Dispose(disposing);
         }
 

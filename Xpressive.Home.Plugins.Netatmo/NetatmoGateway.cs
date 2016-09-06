@@ -22,7 +22,7 @@ namespace Xpressive.Home.Plugins.Netatmo
         private readonly string _username;
         private readonly string _password;
         private readonly bool _isValidConfiguration;
-        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0);
+        private readonly AutoResetEvent _taskWaitHandle = new AutoResetEvent(false);
         private bool _isRunning = true;
 
         public NetatmoGateway(IMessageQueue messageQueue) : base("Netatmo")
@@ -59,7 +59,7 @@ namespace Xpressive.Home.Plugins.Netatmo
             if (!_isValidConfiguration)
             {
                 _messageQueue.Publish(new NotifyUserMessage("Add netatmo configuration to config file."));
-                _semaphore.Release();
+                _taskWaitHandle.Set();
                 return;
             }
 
@@ -84,13 +84,25 @@ namespace Xpressive.Home.Plugins.Netatmo
                 await TaskHelper.DelayAsync(TimeSpan.FromMinutes(1), () => _isRunning);
             }
 
-            _semaphore.Release();
+            _taskWaitHandle.Set();
         }
 
         public override void Stop()
         {
             _isRunning = false;
-            _semaphore.Wait(TimeSpan.FromSeconds(5));
+            if (!_taskWaitHandle.WaitOne(TimeSpan.FromSeconds(5)))
+            {
+                _log.Error("Unable to shutdown.");
+            }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _taskWaitHandle.Dispose();
+            }
+            base.Dispose(disposing);
         }
 
         private async Task GetDeviceData(TokenResponseDto token)

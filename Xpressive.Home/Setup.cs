@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 using Xpressive.Home.DatabaseMigrator;
@@ -19,7 +20,7 @@ namespace Xpressive.Home
 
             foreach (var gateway in gateways)
             {
-                gateway.StartAsync();
+                Task.Factory.StartNew(() => gateway.StartAsync(), TaskCreationOptions.LongRunning);
             }
 
             return new Disposer(gateways);

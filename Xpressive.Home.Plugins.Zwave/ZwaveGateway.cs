@@ -23,7 +23,7 @@ namespace Xpressive.Home.Plugins.Zwave
         private readonly string _comPortName;
         private readonly ZwaveDeviceLibrary _library;
         private readonly Dictionary<byte, ZwaveCommandQueue> _nodeCommandQueues;
-        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0);
+        private readonly AutoResetEvent _taskWaitHandle = new AutoResetEvent(false);
         private ZWaveController _controller;
         private bool _isRunning;
 
@@ -57,7 +57,7 @@ namespace Xpressive.Home.Plugins.Zwave
             if (string.IsNullOrEmpty(_comPortName))
             {
                 _messageQueue.Publish(new NotifyUserMessage("Add z-wave configuration (port) to config file."));
-                _semaphore.Release();
+                _taskWaitHandle.Set();
                 return;
             }
 
@@ -65,7 +65,7 @@ namespace Xpressive.Home.Plugins.Zwave
             if (!validComPorts.Contains(_comPortName))
             {
                 _messageQueue.Publish(new NotifyUserMessage("COM Port for z-wave configuration is invalid."));
-                _semaphore.Release();
+                _taskWaitHandle.Set();
                 return;
             }
 
@@ -90,13 +90,16 @@ namespace Xpressive.Home.Plugins.Zwave
                 _log.Error(e.Message, e);
             }
 
-            _semaphore.Release();
+            _taskWaitHandle.Set();
         }
 
         public override void Stop()
         {
             _isRunning = false;
-            _semaphore.Wait(TimeSpan.FromSeconds(5));
+            if (!_taskWaitHandle.WaitOne(TimeSpan.FromSeconds(5)))
+            {
+                _log.Error("Unable to shutdown.");
+            }
         }
 
         private async Task DiscoverNodes()
@@ -220,6 +223,7 @@ namespace Xpressive.Home.Plugins.Zwave
                 }
 
                 _controller?.Close();
+                _taskWaitHandle.Dispose();
             }
 
             base.Dispose(disposing);

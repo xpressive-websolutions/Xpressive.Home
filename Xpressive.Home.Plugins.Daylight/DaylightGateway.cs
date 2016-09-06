@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using log4net;
 using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
@@ -11,8 +12,9 @@ namespace Xpressive.Home.Plugins.Daylight
 {
     internal class DaylightGateway : GatewayBase, IDaylightGateway
     {
+        private static readonly ILog _log = LogManager.GetLogger(typeof(DaylightGateway));
         private readonly IMessageQueue _messageQueue;
-        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0);
+        private readonly AutoResetEvent _taskWaitHandle = new AutoResetEvent(false);
         private bool _isRunning = true;
 
         public DaylightGateway(IMessageQueue messageQueue) : base("Daylight")
@@ -48,13 +50,16 @@ namespace Xpressive.Home.Plugins.Daylight
                 await TaskHelper.DelayAsync(TimeSpan.FromMinutes(1), () => _isRunning);
             }
 
-            _semaphore.Release();
+            _taskWaitHandle.Set();
         }
 
         public override void Stop()
         {
             _isRunning = false;
-            _semaphore.Wait(TimeSpan.FromSeconds(5));
+            if (!_taskWaitHandle.WaitOne(TimeSpan.FromSeconds(5)))
+            {
+                _log.Error("Unable to shutdown.");
+            }
         }
 
         protected override Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values)
@@ -65,6 +70,10 @@ namespace Xpressive.Home.Plugins.Daylight
         protected override void Dispose(bool disposing)
         {
             _isRunning = false;
+            if (disposing)
+            {
+                _taskWaitHandle.Dispose();
+            }
             base.Dispose(disposing);
         }
 

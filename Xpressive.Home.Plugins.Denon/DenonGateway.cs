@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using log4net;
@@ -23,6 +24,7 @@ namespace Xpressive.Home.Plugins.Denon
         private readonly IMessageQueue _messageQueue;
         private readonly IUpnpDeviceDiscoveringService _upnpDeviceDiscoveringService;
         private readonly object _deviceLock = new object();
+        private readonly AutoResetEvent _taskWaitHandle = new AutoResetEvent(false);
         private bool _isRunning;
 
         public DenonGateway(
@@ -170,10 +172,10 @@ namespace Xpressive.Home.Plugins.Denon
         {
             _isRunning = true;
 
+            await TaskHelper.DelayAsync(TimeSpan.FromSeconds(1), () => _isRunning);
+
             while (_isRunning)
             {
-                await TaskHelper.DelayAsync(TimeSpan.FromMinutes(1), () => _isRunning);
-
                 foreach (var device in GetDevices())
                 {
                     if (_isRunning)
@@ -181,13 +183,30 @@ namespace Xpressive.Home.Plugins.Denon
                         await UpdateVariablesAsync(device);
                     }
                 }
+
+                await TaskHelper.DelayAsync(TimeSpan.FromMinutes(1), () => _isRunning);
             }
+
+            _taskWaitHandle.Set();
         }
 
         public override void Stop()
         {
             _isRunning = false;
             _upnpDeviceDiscoveringService.DeviceFound -= OnUpnpDeviceFound;
+            if (!_taskWaitHandle.WaitOne(TimeSpan.FromSeconds(5)))
+            {
+                _log.Error("Unable to shutdown.");
+            }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _taskWaitHandle.Dispose();
+            }
+            base.Dispose(disposing);
         }
 
         private async void OnUpnpDeviceFound(object sender, IUpnpDeviceResponse e)

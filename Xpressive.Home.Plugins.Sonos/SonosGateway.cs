@@ -17,7 +17,7 @@ namespace Xpressive.Home.Plugins.Sonos
         private static readonly ILog _log = LogManager.GetLogger(typeof(SonosGateway));
         private readonly IMessageQueue _messageQueue;
         private readonly ISonosSoapClient _soapClient;
-        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0);
+        private readonly AutoResetEvent _taskWaitHandle = new AutoResetEvent(false);
         private bool _isRunning = true;
 
         public SonosGateway(IMessageQueue messageQueue, ISonosDeviceDiscoverer deviceDiscoverer, ISonosSoapClient soapClient) : base("Sonos")
@@ -120,13 +120,25 @@ namespace Xpressive.Home.Plugins.Sonos
                 await TaskHelper.DelayAsync(TimeSpan.FromSeconds(10), () => _isRunning);
             }
 
-            _semaphore.Release();
+            _taskWaitHandle.Set();
         }
 
         public override void Stop()
         {
             _isRunning = false;
-            _semaphore.Wait(TimeSpan.FromSeconds(5));
+            if (!_taskWaitHandle.WaitOne(TimeSpan.FromSeconds(5)))
+            {
+                _log.Error("Unable to shutdown.");
+            }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _taskWaitHandle.Dispose();
+            }
+            base.Dispose(disposing);
         }
 
         protected override async Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values)
