@@ -325,7 +325,7 @@
 
         c.selectStation = function() {
             var modalInstance = $uibModal.open({
-                templateUrl: "/app/musicSelectionController.html",
+                templateUrl: "/app/musicSelectionController.min.html",
                 controller: "musicSelectionController"
             });
 

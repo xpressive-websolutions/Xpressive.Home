@@ -5,35 +5,35 @@
     xha.config(["$routeProvider", function($routeProvider) {
         $routeProvider
             .when("/", {
-                templateUrl: "/app/admin/devices.html",
+                templateUrl: "/app/admin/devices.min.html",
                 controller: "deviceController"
             })
             .when("/variables/:gateway/:device", {
-                templateUrl: "/app/admin/variables.html",
+                templateUrl: "/app/admin/variables.min.html",
                 controller: "variableController"
             })
             .when("/scripts", {
-                templateUrl: "/app/admin/scripts.html",
+                templateUrl: "/app/admin/scripts.min.html",
                 controller: "scriptController"
             })
             .when("/scripts/:id", {
-                templateUrl: "/app/admin/script.html",
+                templateUrl: "/app/admin/script.min.html",
                 controller: "scriptDetailController"
             })
             .when("/rooms", {
-                templateUrl: "/app/admin/rooms.html",
+                templateUrl: "/app/admin/rooms.min.html",
                 controller: "roomController"
             })
             .when("/rooms/:id", {
-                templateUrl: "/app/admin/room.html",
+                templateUrl: "/app/admin/room.min.html",
                 controller: "roomDetailController"
             })
             .when("/group/:id", {
-                templateUrl: "/app/admin/scriptgroup.html",
+                templateUrl: "/app/admin/scriptgroup.min.html",
                 controller: "scriptGroupController"
             })
             .when("/log", {
-                templateUrl: "/app/admin/log.html",
+                templateUrl: "/app/admin/log.min.html",
                 controller: "logController"
             });
     }]);
@@ -145,7 +145,7 @@
             $http.get("/api/v1/gateway/" + gatewayName + "/empty").then(function(result) {
                 var modal = $uibModal.open({
                     animation: false,
-                    templateUrl: "/app/admin/createDeviceDialog.html",
+                    templateUrl: "/app/admin/createDeviceDialog.min.html",
                     controller: "createDeviceController",
                     resolve: {
                         device: function() {
@@ -239,7 +239,7 @@
         $scope.createScript = function() {
             var modal = $uibModal.open({
                 animation: false,
-                templateUrl: "/app/admin/singleInputDialog.html",
+                templateUrl: "/app/admin/singleInputDialog.min.html",
                 controller: "singleInputController",
                 resolve: {
                     caption: function() {
@@ -335,7 +335,7 @@
         $scope.addTrigger = function() {
             var modal = $uibModal.open({
                 animation: false,
-                templateUrl: "/app/admin/singleInputDialog.html",
+                templateUrl: "/app/admin/singleInputDialog.min.html",
                 controller: "singleInputController",
                 resolve: {
                     caption: function() {
@@ -362,7 +362,7 @@
         $scope.addSchedule = function() {
             var modal = $uibModal.open({
                 animation: false,
-                templateUrl: "/app/admin/singleInputDialog.html",
+                templateUrl: "/app/admin/singleInputDialog.min.html",
                 controller: "singleInputController",
                 resolve: {
                     caption: function() {
@@ -424,7 +424,7 @@
         $scope.addRoom = function() {
             var modal = $uibModal.open({
                 animation: false,
-                templateUrl: "/app/admin/singleInputDialog.html",
+                templateUrl: "/app/admin/singleInputDialog.min.html",
                 controller: "singleInputController",
                 resolve: {
                     caption: function() {
@@ -474,7 +474,7 @@
         $scope.addScriptGroup = function() {
             var modal = $uibModal.open({
                 animation: false,
-                templateUrl: "/app/admin/singleInputDialog.html",
+                templateUrl: "/app/admin/singleInputDialog.min.html",
                 controller: "singleInputController",
                 resolve: {
                     caption: function() {
@@ -534,7 +534,7 @@
         $scope.addScript = function() {
             var modal = $uibModal.open({
                 animation: false,
-                templateUrl: "/app/admin/roomScriptDialog.html",
+                templateUrl: "/app/admin/roomScriptDialog.min.html",
                 controller: "roomScriptController",
                 resolve: {
                     caption: function() {
@@ -559,7 +559,7 @@
         $scope.updateScript = function(script) {
             var modal = $uibModal.open({
                 animation: false,
-                templateUrl: "/app/admin/roomScriptDialog.html",
+                templateUrl: "/app/admin/roomScriptDialog.min.html",
                 controller: "roomScriptController",
                 resolve: {
                     caption: function() {
@@ -666,7 +666,7 @@
         });
 
         var showToast = function() {
-            toaster.pop("info", "Update available", "softwareUpdateTemplate.html", null, "template");
+            toaster.pop("info", "Update available", "softwareUpdateTemplate.min.html", null, "template");
         };
 
         var checkForUpdate = function() {

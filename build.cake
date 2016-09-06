@@ -3,12 +3,13 @@ var configuration = Argument("Configuration", "Release");
 
 Information(configuration);
 
+var build = (int)(DateTime.Now - new DateTime(2015, 1, 1)).TotalHours;
+var versionPrefix = "1.0.0";
+var version = string.Format("{0}.{1}", versionPrefix, build);
+var informationalVersion = versionPrefix + "-beta.4";
+
 Setup(context =>
 {
-    var build = (int)(DateTime.Now - new DateTime(2015, 1, 1)).TotalHours;
-    var versionPrefix = "1.0.0";
-    var version = string.Format("{0}.{1}", versionPrefix, build);
-
     var assemblyInfo = new AssemblyInfoSettings
     {
         Configuration = "",
@@ -19,7 +20,7 @@ Setup(context =>
         ComVisible = false,
         Version = version,
         FileVersion = version,
-        InformationalVersion = versionPrefix + "-beta.4"
+        InformationalVersion = informationalVersion
     };
 
     CreateAssemblyInfo("./Xpressive.Home/Properties/AssemblyInfo.shared.cs", assemblyInfo);
@@ -94,14 +95,24 @@ Task("Copy Web").IsDependentOn("Copy").Does(() =>
 {
     CreateDirectory("Build/Web");
     CreateDirectory("Build/Web/app");
+    CreateDirectory("Build/Web/app/admin");
     CreateDirectory("Build/Web/Scripts");
     CreateDirectory("Build/Web/Styles");
 
     CopyFiles(GetFiles("Xpressive.Home.WebApi/*.html"), "./Build/Web");
-    CopyDirectory("Xpressive.Home.WebApi/app", "./Build/Web/app");
+    CopyFiles(GetFiles("Xpressive.Home.WebApi/app/admin/*.min.html"), "./Build/Web/app/admin");
+    CopyFiles(GetFiles("Xpressive.Home.WebApi/app/*.min.html"), "./Build/Web/app");
+    CopyFiles(GetFiles("Xpressive.Home.WebApi/app/*.min.js"), "./Build/Web/app");
     CopyFiles(GetFiles("Xpressive.Home.WebApi/Scripts/*.js"), "./Build/Web/Scripts");
     CopyFiles(GetFiles("Xpressive.Home.WebApi/Styles/*.min.css"), "./Build/Web/Styles");
     CopyFiles(GetFiles("Xpressive.Home.WebApi/Styles/*.jpg"), "./Build/Web/Styles");
+
+    var adminHtml = System.IO.File.ReadAllText(File("./Build/Web/admin.html"));
+    var indexHtml = System.IO.File.ReadAllText(File("./Build/Web/index.html"));
+    adminHtml = adminHtml.Replace("?v=app_ver", "?v=" + informationalVersion);
+    indexHtml = indexHtml.Replace("?v=app_ver", "?v=" + informationalVersion);
+    System.IO.File.WriteAllText(File("./Build/Web/admin.html"), adminHtml);
+    System.IO.File.WriteAllText(File("./Build/Web/index.html"), indexHtml);
 });
 
 Task("Zip").IsDependentOn("Copy Web").Does(() =>

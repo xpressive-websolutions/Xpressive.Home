@@ -161,22 +161,58 @@
     <Content Include="app\admin.min.js">
       <DependentUpon>admin.js</DependentUpon>
     </Content>
+    <Content Include="app\admin\createDeviceDialog.min.html">
+      <DependentUpon>createDeviceDialog.html</DependentUpon>
+    </Content>
+    <Content Include="app\admin\devices.min.html">
+      <DependentUpon>devices.html</DependentUpon>
+    </Content>
+    <Content Include="app\admin\log.min.html">
+      <DependentUpon>log.html</DependentUpon>
+    </Content>
     <Content Include="app\admin\room.html" />
+    <Content Include="app\admin\room.min.html">
+      <DependentUpon>room.html</DependentUpon>
+    </Content>
     <Content Include="app\admin\rooms.html" />
+    <Content Include="app\admin\rooms.min.html">
+      <DependentUpon>rooms.html</DependentUpon>
+    </Content>
     <Content Include="app\admin\roomScriptDialog.html" />
+    <Content Include="app\admin\roomScriptDialog.min.html">
+      <DependentUpon>roomScriptDialog.html</DependentUpon>
+    </Content>
     <Content Include="app\admin\script.html" />
+    <Content Include="app\admin\script.min.html">
+      <DependentUpon>script.html</DependentUpon>
+    </Content>
     <Content Include="app\admin\scriptGroup.html" />
+    <Content Include="app\admin\scriptGroup.min.html">
+      <DependentUpon>scriptGroup.html</DependentUpon>
+    </Content>
+    <Content Include="app\admin\scripts.min.html">
+      <DependentUpon>scripts.html</DependentUpon>
+    </Content>
     <Content Include="app\admin\singleInputDialog.html" />
     <Content Include="app\admin\createDeviceDialog.html" />
     <Content Include="app\admin\devices.html" />
     <Content Include="app\admin\scripts.html" />
     <Content Include="app\admin\log.html" />
+    <Content Include="app\admin\singleInputDialog.min.html">
+      <DependentUpon>singleInputDialog.html</DependentUpon>
+    </Content>
     <Content Include="app\admin\variables.html" />
+    <Content Include="app\admin\variables.min.html">
+      <DependentUpon>variables.html</DependentUpon>
+    </Content>
     <Content Include="app\dashboard.js" />
     <Content Include="app\dashboard.min.js">
       <DependentUpon>dashboard.js</DependentUpon>
     </Content>
     <Content Include="app\musicSelectionController.html" />
+    <Content Include="app\musicSelectionController.min.html">
+      <DependentUpon>musicSelectionController.html</DependentUpon>
+    </Content>
     <Content Include="app\rx.all.min.js" />
     <Content Include="app\rx.angular.min.js" />
     <Content Include="Scripts\jquery.signalR-2.2.1.min.js" />
