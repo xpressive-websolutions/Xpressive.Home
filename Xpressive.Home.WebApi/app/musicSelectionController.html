@@ -33,7 +33,7 @@
                     <img class="media-object" ng-src="{{fav.imageUrl}}" height="50" width="50" alt="" />
                 </div>
                 <div class="media-body" style="vertical-align: middle; text-align: left;">
-                    {{ fav.name }} <button class="btn btn-default btn-xs" style="width: 20px; padding: 1px 4px;" ng-click="unstar(fav)"><span class="glyphicon glyphicon-star-empty"></span></button>
+                    {{ fav.name }} <button class="btn btn-default" ng-click="unstar(fav)"><span class="glyphicon glyphicon-star-empty"></span></button>
                 </div>
             </div>
         </div>
@@ -43,7 +43,7 @@
                     <img class="media-object" ng-src="{{station.imageUrl}}" height="50" width="50" alt=""/>
                 </div>
                 <div class="media-body" style="vertical-align: middle; text-align: left;">
-                    {{ station.name }} <button class="btn btn-default btn-xs" style="width: 20px; padding: 1px 4px;" ng-click="star(station)"><span class="glyphicon glyphicon-star"></span></button>
+                    {{ station.name }} <button class="btn btn-default" ng-click="star(station)"><span class="glyphicon glyphicon-star"></span></button>
                 </div>
             </div>
         </div>

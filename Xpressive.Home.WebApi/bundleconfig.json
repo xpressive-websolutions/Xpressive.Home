@@ -82,5 +82,11 @@
     "inputFiles": [
       "app/musicSelectionController.html"
     ]
+  },
+  {
+    "outputFileName": "app/shortcut.min.js",
+    "inputFiles": [
+      "app/shortcut.js"
+    ]
   }
 ]

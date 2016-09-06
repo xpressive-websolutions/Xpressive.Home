@@ -281,6 +281,8 @@
 
         $scope.triggers = [];
         $scope.schedules = [];
+        $scope.isSaving = false;
+        $scope.isExecuting = false;
 
         var getTriggers = function() {
             $http.get("/api/v1/trigger/" + id, { cache: false }).then(function(result) {
@@ -313,11 +315,27 @@
         getSchedules();
 
         $scope.save = function() {
-            $http.post("/api/v1/script/" + id, $scope.script);
+            if ($scope.isSaving) {
+                return;
+            }
+            $scope.isSaving = true;
+            $http.post("/api/v1/script/" + id, $scope.script).then(function() {
+                $scope.isSaving = false;
+            }, function() {
+                $scope.isSaving = false;
+            });
         };
 
         $scope.execute = function() {
-            $http.post("/api/v1/script/execute/" + id);
+            if ($scope.isExecuting) {
+                return;
+            }
+            $scope.isExecuting = true;
+            $http.post("/api/v1/script/execute/" + id).then(function() {
+                $scope.isExecuting = false;
+            }, function() {
+                $scope.isExecuting = false;
+            });
         };
 
         $scope.enable = function() {
@@ -386,6 +404,10 @@
             $http.delete("/api/v1/schedule/" + schedule.id).then(getSchedules);
         };
 
+        shortcut.add("Ctrl+S", function() {
+            $scope.save();
+        });
+
         var interval = $interval(function() {
             _.each($scope.triggers, function(t) {
                 $http.get("/api/v1/variable/" + t.variable, { cache: false }).then(function(result) {
@@ -396,6 +418,7 @@
 
         $scope.$on("$destroy", function() {
             $interval.cancel(interval);
+            shortcut.remove("Ctrl+S");
         });
     }]);
 
@@ -648,7 +671,7 @@
             });
         });
 
-        connection.start().done(function () {
+        connection.start().done(function() {
             var id = $storage.get("signalr.notificationhub.id");
 
             if (!id) {

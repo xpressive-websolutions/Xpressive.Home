@@ -5,12 +5,14 @@
 </section>
 
 <section class="content" style="min-height: 20px;">
-    <button class="btn btn-default" type="button" ng-click="save()">
-        <span class="glyphicon glyphicon-floppy-disk" aria-hidden="true"></span> Save
+    <button class="btn btn-default" type="button" style="width: 80px;" ng-click="save()" ng-disabled="isSaving">
+        <span class="fa" ng-class="{'fa-spinner fa-spin fa-fw': isSaving, 'fa-floppy-o': !isSaving}" aria-hidden="true"></span>
+        <span ng-show="!isSaving">&nbsp;Save</span>
     </button>
 
-    <button class="btn btn-default" type="button" ng-click="execute()">
-        <span class="glyphicon glyphicon-play" aria-hidden="true"></span> Execute
+    <button class="btn btn-default" type="button" style="width: 100px;" ng-click="execute()" ng-disabled="isExecuting">
+        <span class="fa" ng-class="{'fa-spinner fa-spin fa-fw': isExecuting, 'fa-play': !isExecuting}" aria-hidden="true"></span>
+        <span ng-show="!isExecuting">&nbsp;Execute</span>
     </button>
 
     <button class="btn btn-success" type="button" ng-click="enable()" ng-if="!script.isEnabled">
