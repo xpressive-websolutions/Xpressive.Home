@@ -17,7 +17,7 @@ namespace Xpressive.Home.Plugins.Zwave
 {
     public class ZwaveGateway : GatewayBase
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof (ZwaveGateway));
+        private static readonly ILog _log = LogManager.GetLogger(typeof(ZwaveGateway));
         private readonly IMessageQueue _messageQueue;
         private readonly IList<ICommandClassHandler> _commandClassHandlers;
         private readonly string _comPortName;

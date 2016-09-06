@@ -17,7 +17,7 @@ namespace Xpressive.Home.Plugins.MyStrom
 {
     internal class MyStromGateway : GatewayBase, IMyStromGateway
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof (MyStromGateway));
+        private static readonly ILog _log = LogManager.GetLogger(typeof(MyStromGateway));
         private readonly IMessageQueue _messageQueue;
         private readonly IMyStromDeviceNameService _myStromDeviceNameService;
         private readonly IUpnpDeviceDiscoveringService _upnpDeviceDiscoveringService;

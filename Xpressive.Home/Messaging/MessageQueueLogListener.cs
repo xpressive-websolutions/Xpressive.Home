@@ -9,7 +9,7 @@ namespace Xpressive.Home.Messaging
         IMessageQueueListener<NotifyUserMessage>,
         IMessageQueueListener<LowBatteryMessage>
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof (MessageQueueLogListener));
+        private static readonly ILog _log = LogManager.GetLogger(typeof(MessageQueueLogListener));
 
         public void Notify(UpdateVariableMessage message)
         {

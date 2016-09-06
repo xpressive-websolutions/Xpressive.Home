@@ -20,7 +20,7 @@ namespace Xpressive.Home.Plugins.Denon
 {
     internal class DenonGateway : GatewayBase, IDenonGateway
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof (DenonGateway));
+        private static readonly ILog _log = LogManager.GetLogger(typeof(DenonGateway));
         private readonly IMessageQueue _messageQueue;
         private readonly IUpnpDeviceDiscoveringService _upnpDeviceDiscoveringService;
         private readonly object _deviceLock = new object();

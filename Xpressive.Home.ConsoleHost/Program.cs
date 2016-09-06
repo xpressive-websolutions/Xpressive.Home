@@ -7,7 +7,7 @@ namespace Xpressive.Home.ConsoleHost
     {
         public static void Main(string[] args)
         {
-            var log = LogManager.GetLogger(typeof (Program));
+            var log = LogManager.GetLogger(typeof(Program));
             log.Info("Start Xpressive.Home");
 
             using (Setup.Run())

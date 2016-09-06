@@ -10,7 +10,7 @@ namespace Xpressive.Home.Automation
 {
     internal class ScriptExecutionContext
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof (ScriptExecutionContext));
+        private static readonly ILog _log = LogManager.GetLogger(typeof(ScriptExecutionContext));
         private readonly Script _script;
         private readonly IEnumerable<IScriptObjectProvider> _objectProviders;
 
@@ -37,22 +37,11 @@ namespace Xpressive.Home.Automation
 
         private void ExecuteAsTask()
         {
-            _log.Debug($"Execute script {_script.Name} ({_script.Id.ToString("n")})");
+            _log.Info($"Execute script {_script.Name} ({_script.Id.ToString("n")})");
 
             var engine = new Engine(cfg => cfg.TimeoutInterval(TimeSpan.FromSeconds(30)));
 
-            foreach (var objectProvider in _objectProviders)
-            {
-                foreach (var tuple in objectProvider.GetObjects())
-                {
-                    engine.SetValue(tuple.Item1, tuple.Item2);
-                }
-
-                foreach (var tuple in objectProvider.GetDelegates())
-                {
-                    engine.SetValue(tuple.Item1, tuple.Item2);
-                }
-            }
+            SetupScriptEngine(engine);
 
             try
             {
@@ -65,6 +54,22 @@ namespace Xpressive.Home.Automation
             catch (Exception e)
             {
                 _log.Error($"Error when executing script {_script.Name} ({_script.Id.ToString("n")})", e);
+            }
+        }
+
+        private void SetupScriptEngine(Engine engine)
+        {
+            foreach (var objectProvider in _objectProviders)
+            {
+                foreach (var tuple in objectProvider.GetObjects())
+                {
+                    engine.SetValue(tuple.Item1, tuple.Item2);
+                }
+
+                foreach (var tuple in objectProvider.GetDelegates())
+                {
+                    engine.SetValue(tuple.Item1, tuple.Item2);
+                }
             }
         }
     }

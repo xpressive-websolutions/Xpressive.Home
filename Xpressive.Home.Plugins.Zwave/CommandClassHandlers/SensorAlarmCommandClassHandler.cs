@@ -23,7 +23,7 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
 
         protected override void Execute(ZwaveDevice device, Node node, ZwaveCommandQueue queue)
         {
-            foreach (AlarmType alarmType in Enum.GetValues(typeof (AlarmType)))
+            foreach (AlarmType alarmType in Enum.GetValues(typeof(AlarmType)))
             {
                 queue.AddDistinct("Get SensorAlarm " + alarmType, async () =>
                 {
