@@ -1,8 +1,9 @@
 using System.Collections.Generic;
+using Xpressive.Home.Contracts.Gateway;
 
 namespace Xpressive.Home.Plugins.PhilipsHue
 {
-    internal interface IPhilipsHueGateway
+    internal interface IPhilipsHueGateway : IGateway
     {
         IEnumerable<PhilipsHueDevice> GetDevices();
 

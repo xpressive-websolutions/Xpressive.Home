@@ -1,22 +1,28 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Xpressive.Home.Contracts.Automation;
+using Xpressive.Home.Contracts.Rooms;
 
 namespace Xpressive.Home.Plugins.PhilipsHue
 {
     internal sealed class PhilipsHueScriptObjectProvider : IScriptObjectProvider
     {
         private readonly IPhilipsHueGateway _gateway;
+        private readonly IRoomRepository _roomRepository;
+        private readonly IRoomDeviceService _roomDeviceService;
 
-        public PhilipsHueScriptObjectProvider(IPhilipsHueGateway gateway)
+        public PhilipsHueScriptObjectProvider(IPhilipsHueGateway gateway, IRoomRepository roomRepository, IRoomDeviceService roomDeviceService)
         {
             _gateway = gateway;
+            _roomRepository = roomRepository;
+            _roomDeviceService = roomDeviceService;
         }
 
         public IEnumerable<Tuple<string, object>> GetObjects()
         {
-            yield break;
+            yield return new Tuple<string, object>("philipshues", new PhilipsHueScriptObjectFactory(_gateway, _roomRepository, _roomDeviceService));
         }
 
         public IEnumerable<Tuple<string, Delegate>> GetDelegates()
@@ -31,6 +37,43 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             });
 
             yield return new Tuple<string, Delegate>("philipshue", deviceResolver);
+        }
+
+        public class PhilipsHueScriptObjectFactory
+        {
+            private readonly IPhilipsHueGateway _gateway;
+            private readonly IRoomRepository _roomRepository;
+            private readonly IRoomDeviceService _roomDeviceService;
+
+            public PhilipsHueScriptObjectFactory(IPhilipsHueGateway gateway, IRoomRepository roomRepository, IRoomDeviceService roomDeviceService)
+            {
+                _gateway = gateway;
+                _roomRepository = roomRepository;
+                _roomDeviceService = roomDeviceService;
+            }
+
+            public PhilipsHueScriptObject[] byRoom(string roomName)
+            {
+                var devices = _gateway.GetDevices();
+                var roomTask = _roomRepository.GetAsync();
+                var deviceTask = _roomDeviceService.GetRoomDevicesAsync(_gateway.Name);
+
+                Task.WaitAll(roomTask, deviceTask);
+
+                var room = roomTask.Result.SingleOrDefault(r => r.Name.Equals(roomName, StringComparison.OrdinalIgnoreCase));
+
+                if (room == null)
+                {
+                    return new PhilipsHueScriptObject[0];
+                }
+
+                var roomDevices = deviceTask.Result.Where(r => r.RoomId.Equals(room.Id)).Select(r => r.Id).ToList();
+
+                return devices
+                    .Where(d => roomDevices.Contains(d.Id, StringComparer.Ordinal))
+                    .Select(d => new PhilipsHueScriptObject(_gateway, d))
+                    .ToArray();
+            }
         }
 
         public class PhilipsHueScriptObject
