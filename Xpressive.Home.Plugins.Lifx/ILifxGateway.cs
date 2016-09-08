@@ -1,8 +1,9 @@
 using System.Collections.Generic;
+using Xpressive.Home.Contracts.Gateway;
 
 namespace Xpressive.Home.Plugins.Lifx
 {
-    internal interface ILifxGateway
+    internal interface ILifxGateway : IGateway
     {
         IEnumerable<LifxDevice> GetDevices();
 

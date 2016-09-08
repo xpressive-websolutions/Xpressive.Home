@@ -1,4 +1,3 @@
-using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Gateway;
 
 namespace Xpressive.Home.Plugins.Daylight

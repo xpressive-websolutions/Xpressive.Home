@@ -22,7 +22,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 
         public IEnumerable<Tuple<string, object>> GetObjects()
         {
-            yield return new Tuple<string, object>("philipshues", new PhilipsHueScriptObjectFactory(_gateway, _roomRepository, _roomDeviceService));
+            yield return new Tuple<string, object>("philipshue_list", new PhilipsHueScriptObjectFactory(_gateway, _roomRepository, _roomDeviceService));
         }
 
         public IEnumerable<Tuple<string, Delegate>> GetDelegates()
@@ -52,6 +52,15 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                 _roomDeviceService = roomDeviceService;
             }
 
+            public PhilipsHueScriptObject[] all()
+            {
+                var devices = _gateway.GetDevices();
+
+                return devices
+                    .Select(d => new PhilipsHueScriptObject(_gateway, d))
+                    .ToArray();
+            }
+
             public PhilipsHueScriptObject[] byRoom(string roomName)
             {
                 var devices = _gateway.GetDevices();
@@ -67,7 +76,10 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                     return new PhilipsHueScriptObject[0];
                 }
 
-                var roomDevices = deviceTask.Result.Where(r => r.RoomId.Equals(room.Id)).Select(r => r.Id).ToList();
+                var roomDevices = deviceTask.Result
+                    .Where(r => r.RoomId.Equals(room.Id))
+                    .Select(r => r.Id)
+                    .ToList();
 
                 return devices
                     .Where(d => roomDevices.Contains(d.Id, StringComparer.Ordinal))

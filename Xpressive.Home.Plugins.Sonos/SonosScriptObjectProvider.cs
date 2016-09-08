@@ -1,23 +1,29 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using log4net;
 using Xpressive.Home.Contracts.Automation;
+using Xpressive.Home.Contracts.Rooms;
 
 namespace Xpressive.Home.Plugins.Sonos
 {
     internal sealed class SonosScriptObjectProvider : IScriptObjectProvider
     {
         private readonly ISonosGateway _gateway;
+        private readonly IRoomRepository _roomRepository;
+        private readonly IRoomDeviceService _roomDeviceService;
 
-        public SonosScriptObjectProvider(ISonosGateway gateway)
+        public SonosScriptObjectProvider(ISonosGateway gateway, IRoomRepository roomRepository, IRoomDeviceService roomDeviceService)
         {
             _gateway = gateway;
+            _roomRepository = roomRepository;
+            _roomDeviceService = roomDeviceService;
         }
 
         public IEnumerable<Tuple<string, object>> GetObjects()
         {
-            yield break;
+            yield return new Tuple<string, object>("sonos_list", new SonosScriptObjectFactory(_gateway, _roomRepository, _roomDeviceService));
         }
 
         public IEnumerable<Tuple<string, Delegate>> GetDelegates()
@@ -32,6 +38,55 @@ namespace Xpressive.Home.Plugins.Sonos
             });
 
             yield return new Tuple<string, Delegate>("sonos", deviceResolver);
+        }
+
+        public class SonosScriptObjectFactory
+        {
+            private readonly ISonosGateway _gateway;
+            private readonly IRoomRepository _roomRepository;
+            private readonly IRoomDeviceService _roomDeviceService;
+
+            public SonosScriptObjectFactory(ISonosGateway gateway, IRoomRepository roomRepository, IRoomDeviceService roomDeviceService)
+            {
+                _gateway = gateway;
+                _roomRepository = roomRepository;
+                _roomDeviceService = roomDeviceService;
+            }
+
+            public SonosScriptObject[] all()
+            {
+                var devices = _gateway.GetDevices();
+
+                return devices
+                    .Select(d => new SonosScriptObject(_gateway, d))
+                    .ToArray();
+            }
+
+            public SonosScriptObject[] byRoom(string roomName)
+            {
+                var devices = _gateway.GetDevices();
+                var roomTask = _roomRepository.GetAsync();
+                var deviceTask = _roomDeviceService.GetRoomDevicesAsync(_gateway.Name);
+
+                Task.WaitAll(roomTask, deviceTask);
+
+                var room = roomTask.Result.SingleOrDefault(r => r.Name.Equals(roomName, StringComparison.OrdinalIgnoreCase));
+
+                if (room == null)
+                {
+                    return new SonosScriptObject[0];
+                }
+
+                var roomDevices = deviceTask.Result
+                    .Where(r => r.RoomId.Equals(room.Id))
+                    .Select(r => r.Id)
+                    .ToList();
+
+                return devices
+                    .Where(d => roomDevices.Contains(d.Id, StringComparer.Ordinal))
+                    .Select(d => new SonosScriptObject(_gateway, d))
+                    .ToArray();
+            }
         }
 
         public class SonosScriptObject

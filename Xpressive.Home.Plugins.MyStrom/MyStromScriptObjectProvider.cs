@@ -1,23 +1,29 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using log4net;
 using Xpressive.Home.Contracts.Automation;
+using Xpressive.Home.Contracts.Rooms;
 
 namespace Xpressive.Home.Plugins.MyStrom
 {
     internal sealed class MyStromScriptObjectProvider : IScriptObjectProvider
     {
         private readonly IMyStromGateway _gateway;
+        private readonly IRoomRepository _roomRepository;
+        private readonly IRoomDeviceService _roomDeviceService;
 
-        public MyStromScriptObjectProvider(IMyStromGateway gateway)
+        public MyStromScriptObjectProvider(IMyStromGateway gateway, IRoomRepository roomRepository, IRoomDeviceService roomDeviceService)
         {
             _gateway = gateway;
+            _roomRepository = roomRepository;
+            _roomDeviceService = roomDeviceService;
         }
 
         public IEnumerable<Tuple<string, object>> GetObjects()
         {
-            yield break;
+            yield return new Tuple<string, object>("mystrom_list", new MyStromScriptObjectFactory(_gateway, _roomRepository, _roomDeviceService));
         }
 
         public IEnumerable<Tuple<string, Delegate>> GetDelegates()
@@ -32,6 +38,55 @@ namespace Xpressive.Home.Plugins.MyStrom
             });
 
             yield return new Tuple<string, Delegate>("mystrom", deviceResolver);
+        }
+
+        public class MyStromScriptObjectFactory
+        {
+            private readonly IMyStromGateway _gateway;
+            private readonly IRoomRepository _roomRepository;
+            private readonly IRoomDeviceService _roomDeviceService;
+
+            public MyStromScriptObjectFactory(IMyStromGateway gateway, IRoomRepository roomRepository, IRoomDeviceService roomDeviceService)
+            {
+                _gateway = gateway;
+                _roomRepository = roomRepository;
+                _roomDeviceService = roomDeviceService;
+            }
+
+            public MyStromScriptObject[] all()
+            {
+                var devices = _gateway.GetDevices();
+
+                return devices
+                    .Select(d => new MyStromScriptObject(d, _gateway))
+                    .ToArray();
+            }
+
+            public MyStromScriptObject[] byRoom(string roomName)
+            {
+                var devices = _gateway.GetDevices();
+                var roomTask = _roomRepository.GetAsync();
+                var deviceTask = _roomDeviceService.GetRoomDevicesAsync(_gateway.Name);
+
+                Task.WaitAll(roomTask, deviceTask);
+
+                var room = roomTask.Result.SingleOrDefault(r => r.Name.Equals(roomName, StringComparison.OrdinalIgnoreCase));
+
+                if (room == null)
+                {
+                    return new MyStromScriptObject[0];
+                }
+
+                var roomDevices = deviceTask.Result
+                    .Where(r => r.RoomId.Equals(room.Id))
+                    .Select(r => r.Id)
+                    .ToList();
+
+                return devices
+                    .Where(d => roomDevices.Contains(d.Id, StringComparer.Ordinal))
+                    .Select(d => new MyStromScriptObject(d, _gateway))
+                    .ToArray();
+            }
         }
 
         public class MyStromScriptObject

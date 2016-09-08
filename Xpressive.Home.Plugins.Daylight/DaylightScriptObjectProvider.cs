@@ -22,7 +22,7 @@ namespace Xpressive.Home.Plugins.Daylight
 
         public IEnumerable<Tuple<string, Delegate>> GetDelegates()
         {
-            // daylight("id").isDaylight
+            // daylight("id").isDaylight()
 
             var deviceResolver = new Func<string, DaylightScriptObject>(id =>
             {
@@ -30,7 +30,7 @@ namespace Xpressive.Home.Plugins.Daylight
                 return new DaylightScriptObject(device);
             });
 
-            yield return new Tuple<string, Delegate>("denon", deviceResolver);
+            yield return new Tuple<string, Delegate>("daylight", deviceResolver);
         }
 
         public class DaylightScriptObject

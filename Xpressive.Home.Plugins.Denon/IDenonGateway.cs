@@ -1,8 +1,9 @@
 using System.Collections.Generic;
+using Xpressive.Home.Contracts.Gateway;
 
 namespace Xpressive.Home.Plugins.Denon
 {
-    internal interface IDenonGateway
+    internal interface IDenonGateway : IGateway
     {
         IEnumerable<DenonDevice> GetDevices();
 

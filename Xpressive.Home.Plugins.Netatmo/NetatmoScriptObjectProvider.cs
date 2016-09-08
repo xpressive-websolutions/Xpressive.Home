@@ -6,15 +6,15 @@ using log4net;
 using Xpressive.Home.Contracts.Automation;
 using Xpressive.Home.Contracts.Rooms;
 
-namespace Xpressive.Home.Plugins.Denon
+namespace Xpressive.Home.Plugins.Netatmo
 {
-    internal sealed class DenonScriptObjectProvider : IScriptObjectProvider
+    internal class NetatmoScriptObjectProvider : IScriptObjectProvider
     {
-        private readonly IDenonGateway _gateway;
+        private readonly INetatmoGateway _gateway;
         private readonly IRoomRepository _roomRepository;
         private readonly IRoomDeviceService _roomDeviceService;
 
-        public DenonScriptObjectProvider(IDenonGateway gateway, IRoomRepository roomRepository, IRoomDeviceService roomDeviceService)
+        public NetatmoScriptObjectProvider(INetatmoGateway gateway, IRoomRepository roomRepository, IRoomDeviceService roomDeviceService)
         {
             _gateway = gateway;
             _roomRepository = roomRepository;
@@ -23,46 +23,46 @@ namespace Xpressive.Home.Plugins.Denon
 
         public IEnumerable<Tuple<string, object>> GetObjects()
         {
-            yield return new Tuple<string, object>("denon_list", new DenonScriptObjectFactory(_gateway, _roomRepository, _roomDeviceService));
+            yield return new Tuple<string, object>("netatmo_list", new NetatmoScriptObjectFactory(_gateway, _roomRepository, _roomDeviceService));
         }
 
         public IEnumerable<Tuple<string, Delegate>> GetDelegates()
         {
-            // denon("id")
-            // denon("id").on();
+            // netatmo("id")
+            // netatmo("id").co2();
 
-            var deviceResolver = new Func<string, DenonScriptObject>(id =>
+            var deviceResolver = new Func<string, NetatmoScriptObject>(id =>
             {
                 var device = _gateway.GetDevices().SingleOrDefault(d => d.Id.Equals(id));
-                return new DenonScriptObject(_gateway, device);
+                return new NetatmoScriptObject(device);
             });
 
-            yield return new Tuple<string, Delegate>("denon", deviceResolver);
+            yield return new Tuple<string, Delegate>("netatmo", deviceResolver);
         }
 
-        public class DenonScriptObjectFactory
+        public class NetatmoScriptObjectFactory
         {
-            private readonly IDenonGateway _gateway;
+            private readonly INetatmoGateway _gateway;
             private readonly IRoomRepository _roomRepository;
             private readonly IRoomDeviceService _roomDeviceService;
 
-            public DenonScriptObjectFactory(IDenonGateway gateway, IRoomRepository roomRepository, IRoomDeviceService roomDeviceService)
+            public NetatmoScriptObjectFactory(INetatmoGateway gateway, IRoomRepository roomRepository, IRoomDeviceService roomDeviceService)
             {
                 _gateway = gateway;
                 _roomRepository = roomRepository;
                 _roomDeviceService = roomDeviceService;
             }
 
-            public DenonScriptObject[] all()
+            public NetatmoScriptObject[] all()
             {
                 var devices = _gateway.GetDevices();
 
                 return devices
-                    .Select(d => new DenonScriptObject(_gateway, d))
+                    .Select(d => new NetatmoScriptObject(d))
                     .ToArray();
             }
 
-            public DenonScriptObject[] byRoom(string roomName)
+            public NetatmoScriptObject[] byRoom(string roomName)
             {
                 var devices = _gateway.GetDevices();
                 var roomTask = _roomRepository.GetAsync();
@@ -74,7 +74,7 @@ namespace Xpressive.Home.Plugins.Denon
 
                 if (room == null)
                 {
-                    return new DenonScriptObject[0];
+                    return new NetatmoScriptObject[0];
                 }
 
                 var roomDevices = deviceTask.Result
@@ -84,34 +84,22 @@ namespace Xpressive.Home.Plugins.Denon
 
                 return devices
                     .Where(d => roomDevices.Contains(d.Id, StringComparer.Ordinal))
-                    .Select(d => new DenonScriptObject(_gateway, d))
+                    .Select(d => new NetatmoScriptObject(d))
                     .ToArray();
             }
         }
 
-        public class DenonScriptObject
+        public class NetatmoScriptObject
         {
-            private static readonly ILog _log = LogManager.GetLogger(typeof(DenonScriptObject));
-            private readonly IDenonGateway _gateway;
-            private readonly DenonDevice _device;
+            private static readonly ILog _log = LogManager.GetLogger(typeof(NetatmoScriptObject));
+            private readonly NetatmoDevice _device;
 
-            public DenonScriptObject(IDenonGateway gateway, DenonDevice device)
+            public NetatmoScriptObject(NetatmoDevice device)
             {
-                _gateway = gateway;
                 _device = device;
             }
 
-            public void on()
-            {
-                _gateway.PowerOn(_device);
-            }
-
-            public void off()
-            {
-                _gateway.PowerOff(_device);
-            }
-
-            public object mute()
+            public object co2()
             {
                 if (_device == null)
                 {
@@ -119,22 +107,10 @@ namespace Xpressive.Home.Plugins.Denon
                     return null;
                 }
 
-                return _device.IsMute;
+                return _device.Co2.HasValue ? (object)_device.Co2.Value : null;
             }
 
-            public void mute(bool isMute)
-            {
-                if (isMute)
-                {
-                    _gateway.Mute(_device);
-                }
-                else
-                {
-                    _gateway.Unmute(_device);
-                }
-            }
-
-            public string source()
+            public object humidity()
             {
                 if (_device == null)
                 {
@@ -142,15 +118,10 @@ namespace Xpressive.Home.Plugins.Denon
                     return null;
                 }
 
-                return _device.Source;
+                return _device.Humidity.HasValue ? (object)_device.Humidity.Value : null;
             }
 
-            public void source(string s)
-            {
-                _gateway.ChangeInput(_device, s);
-            }
-
-            public object volume()
+            public object noise()
             {
                 if (_device == null)
                 {
@@ -158,12 +129,29 @@ namespace Xpressive.Home.Plugins.Denon
                     return null;
                 }
 
-                return (int) (_device.Volume*100);
+                return _device.Noise.HasValue ? (object)_device.Noise.Value : null;
             }
 
-            public void volume(int v)
+            public object pressure()
             {
-                _gateway.ChangeVolumne(_device, v);
+                if (_device == null)
+                {
+                    _log.Warn("Unable to get variable value because the device was not found.");
+                    return null;
+                }
+
+                return _device.Pressure.HasValue ? (object)_device.Pressure.Value : null;
+            }
+
+            public object temperature()
+            {
+                if (_device == null)
+                {
+                    _log.Warn("Unable to get variable value because the device was not found.");
+                    return null;
+                }
+
+                return _device.Temperature.HasValue ? (object)_device.Temperature.Value : null;
             }
         }
     }

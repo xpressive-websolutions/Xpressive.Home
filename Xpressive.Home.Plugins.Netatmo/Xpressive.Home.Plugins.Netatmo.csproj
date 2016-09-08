@@ -54,9 +54,11 @@
     <Compile Include="..\Xpressive.Home\Properties\AssemblyInfo.shared.cs">
       <Link>Properties\AssemblyInfo.shared.cs</Link>
     </Compile>
+    <Compile Include="INetatmoGateway.cs" />
     <Compile Include="NetatmoModule.cs" />
     <Compile Include="NetatmoDevice.cs" />
     <Compile Include="NetatmoGateway.cs" />
+    <Compile Include="NetatmoScriptObjectProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

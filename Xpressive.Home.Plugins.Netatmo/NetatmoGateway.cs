@@ -14,7 +14,7 @@ using Xpressive.Home.Contracts.Messaging;
 
 namespace Xpressive.Home.Plugins.Netatmo
 {
-    internal class NetatmoGateway : GatewayBase
+    internal class NetatmoGateway : GatewayBase, INetatmoGateway
     {
         private static readonly ILog _log = LogManager.GetLogger(typeof(NetatmoGateway));
         private readonly IMessageQueue _messageQueue;
@@ -47,6 +47,11 @@ namespace Xpressive.Home.Plugins.Netatmo
         public override IDevice CreateEmptyDevice()
         {
             throw new NotSupportedException();
+        }
+
+        public IEnumerable<NetatmoDevice> GetDevices()
+        {
+            return Devices.Cast<NetatmoDevice>();
         }
 
         protected override Task ExecuteInternalAsync(IDevice device, IAction action, IDictionary<string, string> values)
@@ -153,7 +158,7 @@ namespace Xpressive.Home.Plugins.Netatmo
         {
             var id = $"{station}-{module.ModuleName}";
 
-            var device = _devices.SingleOrDefault(d => d.Id.Equals(id));
+            var device = GetDevices().SingleOrDefault(d => d.Id.Equals(id));
 
             if (device == null)
             {
@@ -177,7 +182,7 @@ namespace Xpressive.Home.Plugins.Netatmo
             }
         }
 
-        private void PublishVariables(IDevice device, IStationModule module)
+        private void PublishVariables(NetatmoDevice device, IStationModule module)
         {
             var properties = module.DashboardData.GetType().GetProperties();
 
@@ -188,6 +193,25 @@ namespace Xpressive.Home.Plugins.Netatmo
                     var name = property.Name[0] + property.Name.ToLowerInvariant().Substring(1);
                     var value = (double) property.GetValue(module.DashboardData);
                     _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, name, value));
+
+                    switch (name)
+                    {
+                        case "Co2":
+                            device.Co2 = module.DashboardData.CO2;
+                            break;
+                        case "Humidity":
+                            device.Humidity = module.DashboardData.Humidity;
+                            break;
+                        case "Noise":
+                            device.Noise = module.DashboardData.Noise;
+                            break;
+                        case "Pressure":
+                            device.Pressure = module.DashboardData.Pressure;
+                            break;
+                        case "Temperature":
+                            device.Temperature = module.DashboardData.Temperature;
+                            break;
+                    }
                 }
             }
         }

@@ -1,22 +1,28 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Xpressive.Home.Contracts.Automation;
+using Xpressive.Home.Contracts.Rooms;
 
 namespace Xpressive.Home.Plugins.Lifx
 {
     internal sealed class LifxScriptObjectProvider : IScriptObjectProvider
     {
         private readonly ILifxGateway _gateway;
+        private readonly IRoomRepository _roomRepository;
+        private readonly IRoomDeviceService _roomDeviceService;
 
-        public LifxScriptObjectProvider(ILifxGateway gateway)
+        public LifxScriptObjectProvider(ILifxGateway gateway, IRoomRepository roomRepository, IRoomDeviceService roomDeviceService)
         {
             _gateway = gateway;
+            _roomRepository = roomRepository;
+            _roomDeviceService = roomDeviceService;
         }
 
         public IEnumerable<Tuple<string, object>> GetObjects()
         {
-            yield break;
+            yield return new Tuple<string, object>("lifx_list", new LifxScriptObjectFactory(_gateway, _roomRepository, _roomDeviceService));
         }
 
         public IEnumerable<Tuple<string, Delegate>> GetDelegates()
@@ -31,6 +37,55 @@ namespace Xpressive.Home.Plugins.Lifx
             });
 
             yield return new Tuple<string, Delegate>("lifx", deviceResolver);
+        }
+
+        public class LifxScriptObjectFactory
+        {
+            private readonly ILifxGateway _gateway;
+            private readonly IRoomRepository _roomRepository;
+            private readonly IRoomDeviceService _roomDeviceService;
+
+            public LifxScriptObjectFactory(ILifxGateway gateway, IRoomRepository roomRepository, IRoomDeviceService roomDeviceService)
+            {
+                _gateway = gateway;
+                _roomRepository = roomRepository;
+                _roomDeviceService = roomDeviceService;
+            }
+
+            public LifxScriptObject[] all()
+            {
+                var devices = _gateway.GetDevices();
+
+                return devices
+                    .Select(d => new LifxScriptObject(_gateway, d))
+                    .ToArray();
+            }
+
+            public LifxScriptObject[] byRoom(string roomName)
+            {
+                var devices = _gateway.GetDevices();
+                var roomTask = _roomRepository.GetAsync();
+                var deviceTask = _roomDeviceService.GetRoomDevicesAsync(_gateway.Name);
+
+                Task.WaitAll(roomTask, deviceTask);
+
+                var room = roomTask.Result.SingleOrDefault(r => r.Name.Equals(roomName, StringComparison.OrdinalIgnoreCase));
+
+                if (room == null)
+                {
+                    return new LifxScriptObject[0];
+                }
+
+                var roomDevices = deviceTask.Result
+                    .Where(r => r.RoomId.Equals(room.Id))
+                    .Select(r => r.Id)
+                    .ToList();
+
+                return devices
+                    .Where(d => roomDevices.Contains(d.Id, StringComparer.Ordinal))
+                    .Select(d => new LifxScriptObject(_gateway, d))
+                    .ToArray();
+            }
         }
 
         public class LifxScriptObject

@@ -1,8 +1,9 @@
 using System.Collections.Generic;
+using Xpressive.Home.Contracts.Gateway;
 
 namespace Xpressive.Home.Plugins.Sonos
 {
-    internal interface ISonosGateway
+    internal interface ISonosGateway : IGateway
     {
         IEnumerable<SonosDevice> GetDevices();
 
