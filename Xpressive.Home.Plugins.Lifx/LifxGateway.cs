@@ -133,12 +133,14 @@ namespace Xpressive.Home.Plugins.Lifx
             StartActionInNewTask(device, action, parameters);
         }
 
-        public override async Task StartAsync()
+        public override Task StartAsync()
         {
-            await Task.Delay(TimeSpan.FromSeconds(1));
+            Task.WaitAll(Task.Delay(TimeSpan.FromSeconds(1)));
 
             FindLocalBulbsAsync().ConfigureAwait(false);
             FindCloudBulbsAsync().ConfigureAwait(false);
+
+            return Task.CompletedTask;
         }
 
         public override void Stop()

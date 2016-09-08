@@ -40,7 +40,7 @@ namespace Xpressive.Home.Contracts.Gateway
         public abstract void Stop();
         public abstract IDevice CreateEmptyDevice();
 
-        public async void Notify(CommandMessage message)
+        public void Notify(CommandMessage message)
         {
             if (!message.ActionId.StartsWith(_name, StringComparison.Ordinal))
             {
