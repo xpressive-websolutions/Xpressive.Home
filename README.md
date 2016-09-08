@@ -129,3 +129,112 @@ var sonosDevices = sonos_list.byRoom("Living room");
 pushalot.send("Hi!") // via pushalot.com
 sms.send("+41790000000", "Hi!"); // via aspsms.com
 ```
+
+## Gateways
+
+Currently implemented gateways
+
+### Daylight
+
+Add locations manually by submitting Latitude and Longitude as well as an offset in minutes. Daylight gateway will compute the specific sunrise and sunset time as well as the current status (isDaylight).
+
+No global configuration needed.
+
+### Denon
+
+The denon gateway search autonomously for denon devices. It's possible to switch the source or change the volume. You can switch it on or off or you can mute and unmute it.
+
+No global configuration needed.
+
+### Email
+
+Not implemented yet.
+
+### Forecast
+
+Uses the `forecast.io` api to get the current weather forecast for a given location. Locations are created manually by providing Longitude and Latitude.
+
+You have to add your forecast ApiKey to the config file:
+
+```xml
+<appSettings>
+    <add key="forecast.apikey" value="YOUR API KEY HERE" />
+</appSettings>
+```
+
+### LIFX
+
+Scans your local network for LIFX bulbs. You can provide your cloud credentials too:
+
+```xml
+<appSettings>
+    <add key="lifx.token" value="YOUR TOKEN HERE" />
+</appSettings>
+```
+
+### myStrom
+
+Scans your local network for myStrom devices. If you named your devices with the website, you can add your website credentials to show the correct name.
+
+```xml
+<appSettings>
+    <add key="mystrom.username" value="YOUR USERNAME HERE" />
+    <add key="mystrom.password" value="YOUR PASSWORD HERE" />
+</appSettings>
+```
+
+### Netatmo
+
+This gateway grabs the device information from the cloud. 
+
+```xml
+<appSettings>
+    <add key="netatmo.clientid" value="YOUR NETATMO CLIENTID HERE" />
+    <add key="netatmo.clientsecret" value="YOUR NETATMO CLIENTSECRET HERE" />
+    <add key="netatmo.username" value="YOUR NETATMO USERNAME HERE" />
+    <add key="netatmo.password" value="YOUR NETATMO PASSWORD HERE" />
+</appSettings>
+```
+
+### Philips Hue
+
+If the gateway founds a new bridge, you are asked (only shown in the admin panel) to push the button.
+
+No global configuration needed.
+
+### Pushalot
+
+Create a `pushalot.com` account to send push notification to your smartphone. This gateway does not create any device. You can send push notifications with scripts.
+
+```xml
+<appSettings>
+    <add key="pushalot.token" value="YOUR PUSHALOT TOKEN HERE" />
+</appSettings>
+```
+
+### SMS
+
+Create a `aspsms.com` account to send SMS notifications. Like the pushalot gateway, this gateway doesn't create any device. Use scripts to send notifications.
+
+```xml
+<appSettings>
+    <add key="sms.username" value="YOUR ASPSMS.COM USERNAME HERE" />
+    <add key="sms.password" value="YOUR ASPSMS.COM PASSWORD HERE" />
+</appSettings>
+```
+
+### Sonos
+
+Scans your local network for sonos devices.
+
+No global configuration needed.
+
+### Z-Wave
+
+Uses a Z-Wave USB Dongle you can add your Z-Wave devices. Provide the COM-Port settings to the config file:
+
+```xml
+<appSettings>
+    <add key="zwave.port" value="Z-WAVE PORT GOES HERE (i.e. COM3)" />
+</appSettings>
+```
