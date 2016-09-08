@@ -49,22 +49,22 @@ namespace Xpressive.Home.Plugins.Sonos
             return Devices.OfType<SonosDevice>();
         }
 
-        public async void Play(SonosDevice device)
+        public void Play(SonosDevice device)
         {
-            await ExecuteInternal(device, new Action("Play"), new Dictionary<string, string>(0));
+            StartActionInNewTask(device, new Action("Play"), new Dictionary<string, string>(0));
         }
 
-        public async void Pause(SonosDevice device)
+        public void Pause(SonosDevice device)
         {
-            await ExecuteInternal(device, new Action("Pause"), new Dictionary<string, string>(0));
+            StartActionInNewTask(device, new Action("Pause"), new Dictionary<string, string>(0));
         }
 
-        public async void Stop(SonosDevice device)
+        public void Stop(SonosDevice device)
         {
-            await ExecuteInternal(device, new Action("Stop"), new Dictionary<string, string>(0));
+            StartActionInNewTask(device, new Action("Stop"), new Dictionary<string, string>(0));
         }
 
-        public async void PlayRadio(SonosDevice device, string stream, string title)
+        public void PlayRadio(SonosDevice device, string stream, string title)
         {
             var parameters = new Dictionary<string, string>
             {
@@ -72,10 +72,10 @@ namespace Xpressive.Home.Plugins.Sonos
                 {"Title", title}
             };
 
-            await ExecuteInternal(device, new Action("Play Radio"), parameters);
+            StartActionInNewTask(device, new Action("Play Radio"), parameters);
         }
 
-        public async void PlayFile(SonosDevice device, string file, string title, string album)
+        public void PlayFile(SonosDevice device, string file, string title, string album)
         {
             var parameters = new Dictionary<string, string>
             {
@@ -84,17 +84,17 @@ namespace Xpressive.Home.Plugins.Sonos
                 {"Album", album}
             };
 
-            await ExecuteInternal(device, new Action("Play File"), parameters);
+            StartActionInNewTask(device, new Action("Play File"), parameters);
         }
 
-        public async void ChangeVolume(SonosDevice device, double volume)
+        public void ChangeVolume(SonosDevice device, double volume)
         {
             var parameters = new Dictionary<string, string>
             {
                 {"Volume", volume.ToString("F2")}
             };
 
-            await ExecuteInternal(device, new Action("Change Volume"), parameters);
+            StartActionInNewTask(device, new Action("Change Volume"), parameters);
         }
 
         public override async Task StartAsync()
@@ -141,7 +141,7 @@ namespace Xpressive.Home.Plugins.Sonos
             base.Dispose(disposing);
         }
 
-        protected override async Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values)
+        protected override async Task ExecuteInternalAsync(IDevice device, IAction action, IDictionary<string, string> values)
         {
             if (device == null)
             {

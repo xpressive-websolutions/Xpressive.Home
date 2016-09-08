@@ -74,7 +74,7 @@ namespace Xpressive.Home.Plugins.Forecast
             }
         }
 
-        protected override Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values)
+        protected override Task ExecuteInternalAsync(IDevice device, IAction action, IDictionary<string, string> values)
         {
             throw new NotSupportedException();
         }

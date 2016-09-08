@@ -62,7 +62,7 @@ namespace Xpressive.Home.Plugins.Daylight
             }
         }
 
-        protected override Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values)
+        protected override Task ExecuteInternalAsync(IDevice device, IAction action, IDictionary<string, string> values)
         {
             throw new NotImplementedException();
         }

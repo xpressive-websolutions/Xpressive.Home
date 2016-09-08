@@ -20,8 +20,13 @@ namespace Xpressive.Home.Plugins.Lifx
             var request = new RestRequest("v1/lights/all");
             request.AddHeader("Authorization", $"Bearer {_token}");
 
-            var result = await client.GetTaskAsync<List<LifxHttpLight>>(request);
-            return result;
+            var response = await client.ExecuteGetTaskAsync<List<LifxHttpLight>>(request);
+            if (response?.ErrorException != null)
+            {
+                throw response.ErrorException;
+            }
+
+            return response?.Data;
         }
 
         public async Task SwitchOn(LifxHttpLight light, int durationInSeconds = 0)

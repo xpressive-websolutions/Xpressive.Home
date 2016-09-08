@@ -6,24 +6,14 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
+using log4net;
 using Polly;
 
 namespace Xpressive.Home.Plugins.Sonos
 {
     internal class SonosSoapClient : ISonosSoapClient
     {
-        public async Task<XmlDocument> PostRequestAsync(Uri uri, string action, string body)
-        {
-            try
-            {
-                return await PostRequestInternal(uri, action, body);
-            }
-            catch (Exception ex)
-            {
-                ex.ToString();
-                throw;
-            }
-        }
+        private static readonly ILog _log = LogManager.GetLogger(typeof(SonosSoapClient));
 
         public async Task<Dictionary<string, string>> ExecuteAsync(SonosDevice device, UpnpService service, UpnpAction action, Dictionary<string, string> values)
         {
@@ -43,19 +33,31 @@ namespace Xpressive.Home.Plugins.Sonos
             }
             body.Append($"</u:{action.Name}>");
 
-            var document = await PostRequestInternal(uri, soapAction, body.ToString());
             var result = new Dictionary<string, string>();
 
-            foreach (var argument in action.OutputArguments)
+            try
             {
-                var value = document.SelectSingleNode("//" + argument)?.InnerText;
-                result.Add(argument, value);
+                var document = await PostRequestInternalAsync(uri, soapAction, body.ToString());
+
+                foreach (var argument in action.OutputArguments)
+                {
+                    var value = document.SelectSingleNode("//" + argument)?.InnerText;
+                    result.Add(argument, value);
+                }
+            }
+            catch (WebException e)
+            {
+                _log.Error(e.Message);
+            }
+            catch (Exception e)
+            {
+                _log.Error(e.Message, e);
             }
 
             return result;
         }
 
-        private async Task<XmlDocument> PostRequestInternal(Uri uri, string action, string body)
+        private static async Task<XmlDocument> PostRequestInternalAsync(Uri uri, string action, string body)
         {
             var request = WebRequest.CreateHttp(uri);
             request.Method = "POST";
@@ -92,14 +94,17 @@ namespace Xpressive.Home.Plugins.Sonos
                 {
                     using (var stream = response.GetResponseStream())
                     {
-                        using (var reader = new StreamReader(stream))
+                        var document = new XmlDocument();
+                        if (stream != null)
                         {
-                            await stream.FlushAsync();
-                            var xml = await reader.ReadToEndAsync();
-                            var document = new XmlDocument();
-                            document.LoadXml(SanitizeXmlString(xml));
-                            return document;
+                            using (var reader = new StreamReader(stream))
+                            {
+                                await stream.FlushAsync();
+                                var xml = await reader.ReadToEndAsync();
+                                document.LoadXml(SanitizeXmlString(xml));
+                            }
                         }
+                        return document;
                     }
                 }
             });

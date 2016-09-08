@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using log4net;
@@ -65,7 +66,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             return Devices.OfType<PhilipsHueDevice>();
         }
 
-        public async void SwitchOn(PhilipsHueDevice device, int transitionTimeInSeconds)
+        public void SwitchOn(PhilipsHueDevice device, int transitionTimeInSeconds)
         {
             var parameters = new Dictionary<string, string>
             {
@@ -73,10 +74,10 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             };
 
             var action = _actions.Single(a => a.Name.Equals("Switch On", StringComparison.Ordinal));
-            await ExecuteInternal(device, action, parameters);
+            StartActionInNewTask(device, action, parameters);
         }
 
-        public async void SwitchOff(PhilipsHueDevice device, int transitionTimeInSeconds)
+        public void SwitchOff(PhilipsHueDevice device, int transitionTimeInSeconds)
         {
             var parameters = new Dictionary<string, string>
             {
@@ -84,10 +85,10 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             };
 
             var action = _actions.Single(a => a.Name.Equals("Switch Off", StringComparison.Ordinal));
-            await ExecuteInternal(device, action, parameters);
+            StartActionInNewTask(device, action, parameters);
         }
 
-        public async void ChangeColor(PhilipsHueDevice device, string hexColor, int transitionTimeInSeconds)
+        public void ChangeColor(PhilipsHueDevice device, string hexColor, int transitionTimeInSeconds)
         {
             var parameters = new Dictionary<string, string>
             {
@@ -96,10 +97,10 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             };
 
             var action = _actions.Single(a => a.Name.Equals("Change Color", StringComparison.Ordinal));
-            await ExecuteInternal(device, action, parameters);
+            StartActionInNewTask(device, action, parameters);
         }
 
-        public async void ChangeBrightness(PhilipsHueDevice device, double brightness, int transitionTimeInSeconds)
+        public void ChangeBrightness(PhilipsHueDevice device, double brightness, int transitionTimeInSeconds)
         {
             var parameters = new Dictionary<string, string>
             {
@@ -108,10 +109,10 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             };
 
             var action = _actions.Single(a => a.Name.Equals("Change Brightness", StringComparison.Ordinal));
-            await ExecuteInternal(device, action, parameters);
+            StartActionInNewTask(device, action, parameters);
         }
 
-        public async void ChangeTemperature(PhilipsHueDevice device, int temperature)
+        public void ChangeTemperature(PhilipsHueDevice device, int temperature)
         {
             var parameters = new Dictionary<string, string>
             {
@@ -119,7 +120,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             };
 
             var action = _actions.Single(a => a.Name.Equals("Change Temperature", StringComparison.Ordinal));
-            await ExecuteInternal(device, action, parameters);
+            StartActionInNewTask(device, action, parameters);
         }
 
         public override IDevice CreateEmptyDevice()
@@ -170,6 +171,10 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                             UpdateVariable($"{Name}.{bulb.Id}.ColorTemperature", (double)temperature);
                         }
                     }
+                    catch (WebException)
+                    {
+                        continue;
+                    }
                     catch (Exception e)
                     {
                         _log.Error(e.Message, e);
@@ -200,7 +205,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             base.Dispose(disposing);
         }
 
-        protected override async Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values)
+        protected override async Task ExecuteInternalAsync(IDevice device, IAction action, IDictionary<string, string> values)
         {
             if (device == null)
             {

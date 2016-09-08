@@ -58,47 +58,47 @@ namespace Xpressive.Home.Plugins.Denon
             return Devices.OfType<DenonDevice>();
         }
 
-        public async void PowerOn(DenonDevice device)
+        public void PowerOn(DenonDevice device)
         {
-            await ExecuteInternal(device, new Action("Power On"), null);
+            StartActionInNewTask(device, new Action("Power On"), null);
         }
 
-        public async void PowerOff(DenonDevice device)
+        public void PowerOff(DenonDevice device)
         {
-            await ExecuteInternal(device, new Action("Power Off"), null);
+            StartActionInNewTask(device, new Action("Power Off"), null);
         }
 
-        public async void ChangeVolumne(DenonDevice device, int volume)
+        public void ChangeVolumne(DenonDevice device, int volume)
         {
             var parameters = new Dictionary<string, string>
             {
                 {"Volume", volume.ToString()}
             };
 
-            await ExecuteInternal(device, new Action("Change Volume"), parameters);
+            StartActionInNewTask(device, new Action("Change Volume"), parameters);
         }
 
-        public async void Mute(DenonDevice device)
+        public void Mute(DenonDevice device)
         {
-            await ExecuteInternal(device, new Action("Mute On"), null);
+            StartActionInNewTask(device, new Action("Mute On"), null);
         }
 
-        public async void Unmute(DenonDevice device)
+        public void Unmute(DenonDevice device)
         {
-            await ExecuteInternal(device, new Action("Mute Off"), null);
+            StartActionInNewTask(device, new Action("Mute Off"), null);
         }
 
-        public async void ChangeInput(DenonDevice device, string source)
+        public void ChangeInput(DenonDevice device, string source)
         {
             var parameters = new Dictionary<string, string>
             {
                 {"Source", source}
             };
 
-            await ExecuteInternal(device, new Action("Change Input Source"), parameters);
+            StartActionInNewTask(device, new Action("Change Input Source"), parameters);
         }
 
-        protected override async Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values)
+        protected override async Task ExecuteInternalAsync(IDevice device, IAction action, IDictionary<string, string> values)
         {
             if (device == null)
             {

@@ -64,7 +64,7 @@ namespace Xpressive.Home.Contracts.Gateway
                 return;
             }
 
-            await ExecuteInternal(device, action, message.Parameters);
+            StartActionInNewTask(device, action, message.Parameters);
         }
 
         protected async Task LoadDevicesAsync(Func<string, string, DeviceBase> emptyDevice)
@@ -84,6 +84,11 @@ namespace Xpressive.Home.Contracts.Gateway
             }
         }
 
+        protected void StartActionInNewTask(IDevice device, IAction action, IDictionary<string, string> values)
+        {
+            Task.Factory.StartNew(async () => await ExecuteInternalAsync(device, action, values));
+        }
+
         private bool AddDeviceInternal(DeviceBase device)
         {
             if (!_canCreateDevices || device == null || !device.IsConfigurationValid())
@@ -96,7 +101,7 @@ namespace Xpressive.Home.Contracts.Gateway
             return true;
         }
 
-        protected abstract Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values);
+        protected abstract Task ExecuteInternalAsync(IDevice device, IAction action, IDictionary<string, string> values);
 
         public void Dispose()
         {

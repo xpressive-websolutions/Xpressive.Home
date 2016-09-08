@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using log4net;
@@ -86,7 +87,7 @@ namespace Xpressive.Home.Plugins.Lifx
             return Devices.OfType<LifxDevice>();
         }
 
-        public async void SwitchOn(LifxDevice device, int transitionTimeInSeconds)
+        public void SwitchOn(LifxDevice device, int transitionTimeInSeconds)
         {
             var parameters = new Dictionary<string, string>
             {
@@ -94,10 +95,10 @@ namespace Xpressive.Home.Plugins.Lifx
             };
 
             var action = _actions.Single(a => a.Name.Equals("Switch On", StringComparison.Ordinal));
-            await ExecuteInternal(device, action, parameters);
+            StartActionInNewTask(device, action, parameters);
         }
 
-        public async void SwitchOff(LifxDevice device, int transitionTimeInSeconds)
+        public void SwitchOff(LifxDevice device, int transitionTimeInSeconds)
         {
             var parameters = new Dictionary<string, string>
             {
@@ -105,10 +106,10 @@ namespace Xpressive.Home.Plugins.Lifx
             };
 
             var action = _actions.Single(a => a.Name.Equals("Switch Off", StringComparison.Ordinal));
-            await ExecuteInternal(device, action, parameters);
+            StartActionInNewTask(device, action, parameters);
         }
 
-        public async void ChangeColor(LifxDevice device, string hexColor, int transitionTimeInSeconds)
+        public void ChangeColor(LifxDevice device, string hexColor, int transitionTimeInSeconds)
         {
             var parameters = new Dictionary<string, string>
             {
@@ -117,10 +118,10 @@ namespace Xpressive.Home.Plugins.Lifx
             };
 
             var action = _actions.Single(a => a.Name.Equals("Change Color", StringComparison.Ordinal));
-            await ExecuteInternal(device, action, parameters);
+            StartActionInNewTask(device, action, parameters);
         }
 
-        public async void ChangeBrightness(LifxDevice device, double brightness, int transitionTimeInSeconds)
+        public void ChangeBrightness(LifxDevice device, double brightness, int transitionTimeInSeconds)
         {
             var parameters = new Dictionary<string, string>
             {
@@ -129,7 +130,7 @@ namespace Xpressive.Home.Plugins.Lifx
             };
 
             var action = _actions.Single(a => a.Name.Equals("Change Brightness", StringComparison.Ordinal));
-            await ExecuteInternal(device, action, parameters);
+            StartActionInNewTask(device, action, parameters);
         }
 
         public override async Task StartAsync()
@@ -166,23 +167,7 @@ namespace Xpressive.Home.Plugins.Lifx
 
             while (_isRunning)
             {
-                try
-                {
-                    var policy = Policy
-                        .Handle<Exception>()
-                        .WaitAndRetryAsync(new[]
-                        {
-                            TimeSpan.FromSeconds(1),
-                            TimeSpan.FromSeconds(2),
-                            TimeSpan.FromSeconds(5)
-                        });
-
-                    await policy.ExecuteAsync(async () => await GetHttpLights());
-                }
-                catch (Exception e)
-                {
-                    _log.Error(e.Message, e);
-                }
+                await ExecuteWithRetriesAsync(GetHttpLights, "get cloud bulbs");
 
                 await TaskHelper.DelayAsync(TimeSpan.FromMinutes(1), () => _isRunning);
             }
@@ -202,7 +187,7 @@ namespace Xpressive.Home.Plugins.Lifx
             }
         }
 
-        protected override async Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values)
+        protected override async Task ExecuteInternalAsync(IDevice device, IAction action, IDictionary<string, string> values)
         {
             if (string.IsNullOrEmpty(_token))
             {
@@ -243,11 +228,38 @@ namespace Xpressive.Home.Plugins.Lifx
 
             if (bulb.Source == LifxSource.Cloud)
             {
-                await ExecuteCloudAction(bulb, action.Name, seconds, brightness, color);
+                var description = $"action {action.Name} for cloud bulb {bulb.Name}";
+                await ExecuteWithRetriesAsync(() => ExecuteCloudAction(bulb, action.Name, seconds, brightness, color), description);
             }
             else
             {
-                await ExecuteLocalAction(bulb, action.Name, seconds, brightness, color);
+                var description = $"action {action.Name} for local bulb {bulb.Name}";
+                await ExecuteWithRetriesAsync(() => ExecuteLocalAction(bulb, action.Name, seconds, brightness, color), description);
+            }
+        }
+
+        private async Task ExecuteWithRetriesAsync(Func<Task> func, string description)
+        {
+            try
+            {
+                var policy = Policy
+                    .Handle<Exception>()
+                    .WaitAndRetryAsync(new[]
+                    {
+                        TimeSpan.FromSeconds(1),
+                        TimeSpan.FromSeconds(2),
+                        TimeSpan.FromSeconds(5)
+                    });
+
+                await policy.ExecuteAsync(async () => await func());
+            }
+            catch (WebException e)
+            {
+                _log.Error($"Error while executing {description}: {e.Message}");
+            }
+            catch (Exception e)
+            {
+                _log.Error(e.Message, e);
             }
         }
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using log4net;
 using Rssdp;
@@ -47,6 +48,11 @@ namespace Xpressive.Home.Services
                     var devices = searchTask.Result;
                     var responses = new Dictionary<string, UpnpDeviceResponse>(StringComparer.OrdinalIgnoreCase);
 
+                    if (devices == null)
+                    {
+                        continue;
+                    }
+
                     foreach (var device in devices)
                     {
                         try
@@ -54,6 +60,10 @@ namespace Xpressive.Home.Services
                             var response = await CreateUpnpDeviceAsync(device);
                             var key = $"{device.DescriptionLocation.Host}/{response.Usn}";
                             responses[key] = response;
+                        }
+                        catch (WebException)
+                        {
+                            continue;
                         }
                         catch (Exception e)
                         {

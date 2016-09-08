@@ -45,9 +45,9 @@ namespace Xpressive.Home.Plugins.Zwave
             throw new NotSupportedException();
         }
 
-        protected override Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values)
+        protected override Task ExecuteInternalAsync(IDevice device, IAction action, IDictionary<string, string> values)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public override async Task StartAsync()

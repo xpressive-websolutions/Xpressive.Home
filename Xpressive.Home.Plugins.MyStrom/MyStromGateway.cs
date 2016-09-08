@@ -47,14 +47,14 @@ namespace Xpressive.Home.Plugins.MyStrom
             return _devices.Cast<MyStromDevice>();
         }
 
-        public async void SwitchOn(MyStromDevice device)
+        public void SwitchOn(MyStromDevice device)
         {
-            await ExecuteInternal(device, new Action("Switch On"), null);
+            StartActionInNewTask(device, new Action("Switch On"), null);
         }
 
-        public async void SwitchOff(MyStromDevice device)
+        public void SwitchOff(MyStromDevice device)
         {
-            await ExecuteInternal(device, new Action("Switch Off"), null);
+            StartActionInNewTask(device, new Action("Switch Off"), null);
         }
 
         public override async Task StartAsync()
@@ -116,7 +116,7 @@ namespace Xpressive.Home.Plugins.MyStrom
             }
         }
 
-        protected override async Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values)
+        protected override async Task ExecuteInternalAsync(IDevice device, IAction action, IDictionary<string, string> values)
         {
             if (device == null)
             {

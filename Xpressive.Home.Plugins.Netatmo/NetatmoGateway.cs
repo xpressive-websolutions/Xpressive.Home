@@ -49,7 +49,7 @@ namespace Xpressive.Home.Plugins.Netatmo
             throw new NotSupportedException();
         }
 
-        protected override Task ExecuteInternal(IDevice device, IAction action, IDictionary<string, string> values)
+        protected override Task ExecuteInternalAsync(IDevice device, IAction action, IDictionary<string, string> values)
         {
             throw new NotSupportedException();
         }
@@ -71,7 +71,7 @@ namespace Xpressive.Home.Plugins.Netatmo
             {
                 try
                 {
-                    if (token.Expiration <= DateTime.UtcNow)
+                    if (token == null || token.Expiration <= DateTime.UtcNow)
                     {
                         token = await GetTokenAsync();
                     }
@@ -80,7 +80,10 @@ namespace Xpressive.Home.Plugins.Netatmo
                         token = await RefreshTokenAsync(token);
                     }
 
-                    await GetDeviceData(token);
+                    if (token != null)
+                    {
+                        await GetDeviceData(token);
+                    }
                 }
                 catch (Exception e)
                 {
@@ -132,6 +135,11 @@ namespace Xpressive.Home.Plugins.Netatmo
                     dataDevice.BatteryPercent = 100;
 
                     UpdateDevice(station, dataDevice);
+
+                    if (dataDevice.Modules == null)
+                    {
+                        continue;
+                    }
 
                     foreach (var module in dataDevice.Modules)
                     {
