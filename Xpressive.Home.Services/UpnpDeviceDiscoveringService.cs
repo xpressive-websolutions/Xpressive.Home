@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using log4net;
 using Rssdp;
@@ -60,6 +61,10 @@ namespace Xpressive.Home.Services
                             var response = await CreateUpnpDeviceAsync(device);
                             var key = $"{device.DescriptionLocation.Host}/{response.Usn}";
                             responses[key] = response;
+                        }
+                        catch (HttpRequestException)
+                        {
+                            continue;
                         }
                         catch (WebException)
                         {
