@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -6,13 +7,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using log4net;
 using Polly;
+using Polly.Retry;
 using Q42.HueApi;
-using Q42.HueApi.ColorConverters;
-using Q42.HueApi.ColorConverters.HSB;
 using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 using Xpressive.Home.Contracts.Variables;
+using Xpressive.Home.Plugins.PhilipsHue.LightCommandStrategies;
 using Action = Xpressive.Home.Contracts.Gateway.Action;
 
 namespace Xpressive.Home.Plugins.PhilipsHue
@@ -23,7 +24,10 @@ namespace Xpressive.Home.Plugins.PhilipsHue
         private readonly IVariableRepository _variableRepository;
         private readonly IMessageQueue _messageQueue;
         private readonly object _devicesLock = new object();
-        private readonly AutoResetEvent _taskWaitHandle = new AutoResetEvent(false);
+        private readonly AutoResetEvent _queryWaitHandle = new AutoResetEvent(false);
+        private readonly AutoResetEvent _commandWaitHandle = new AutoResetEvent(false);
+        private readonly RetryPolicy _executeCommandPolicy;
+        private readonly ConcurrentQueue<Tuple<PhilipsHueDevice, LightCommand>> _commandQueue = new ConcurrentQueue<Tuple<PhilipsHueDevice, LightCommand>>();
         private bool _isRunning = true;
 
         public PhilipsHueGateway(
@@ -59,6 +63,15 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             _actions.Add(new Action("Alarm Multiple"));
 
             deviceDiscoveringService.BulbFound += OnBulbFound;
+
+            _executeCommandPolicy = Policy
+                .Handle<Exception>()
+                .WaitAndRetryAsync(new[]
+                {
+                    TimeSpan.FromSeconds(1),
+                    TimeSpan.FromSeconds(2),
+                    TimeSpan.FromSeconds(5)
+                });
         }
 
         public IEnumerable<PhilipsHueDevice> GetDevices()
@@ -132,6 +145,8 @@ namespace Xpressive.Home.Plugins.PhilipsHue
         {
             await TaskHelper.DelayAsync(TimeSpan.FromSeconds(1), () => _isRunning);
 
+            var _ = Task.Factory.StartNew(StartCommandQueueWorker, TaskCreationOptions.LongRunning);
+
             while (_isRunning)
             {
                 List<PhilipsHueDevice> bulbs;
@@ -164,6 +179,8 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                                 temperature = MirekToKelvin(temperature);
                             }
 
+                            bulb.IsOn = state.On;
+
                             UpdateVariable($"{Name}.{bulb.Id}.Brightness", Math.Round(brightness, 2));
                             UpdateVariable($"{Name}.{bulb.Id}.IsOn", state.On);
                             UpdateVariable($"{Name}.{bulb.Id}.IsReachable", state.IsReachable);
@@ -184,15 +201,21 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                 await TaskHelper.DelayAsync(TimeSpan.FromSeconds(30), () => _isRunning);
             }
 
-            _taskWaitHandle.Set();
+            _queryWaitHandle.Set();
         }
 
         public override void Stop()
         {
             _isRunning = false;
-            if (!_taskWaitHandle.WaitOne(TimeSpan.FromSeconds(5)))
+
+            if (!_queryWaitHandle.WaitOne(TimeSpan.FromSeconds(5)))
             {
-                _log.Error("Unable to shutdown.");
+                _log.Error("Unable to shutdown query loop.");
+            }
+
+            if (!_commandWaitHandle.WaitOne(TimeSpan.FromSeconds(5)))
+            {
+                _log.Error("Unable to shutdown command loop.");
             }
         }
 
@@ -200,91 +223,70 @@ namespace Xpressive.Home.Plugins.PhilipsHue
         {
             if (disposing)
             {
-                _taskWaitHandle.Dispose();
+                _queryWaitHandle.Dispose();
+                _commandWaitHandle.Dispose();
             }
             base.Dispose(disposing);
         }
 
-        protected override async Task ExecuteInternalAsync(IDevice device, IAction action, IDictionary<string, string> values)
+        protected override Task ExecuteInternalAsync(IDevice device, IAction action, IDictionary<string, string> values)
         {
             if (device == null)
             {
                 _log.Warn($"Unable to execute action {action.Name} because the device was not found.");
-                return;
+                return Task.CompletedTask;
             }
 
             var bulb = (PhilipsHueDevice)device;
-            var command = new LightCommand();
+            var strategy = LightCommandStrategyBase.Get(action);
+            var command = strategy.GetLightCommand(values, bulb);
+            _commandQueue.Enqueue(Tuple.Create(bulb, command));
 
-            string seconds;
-            int s;
-            if (action.Fields.Contains("Transition time in seconds") &&
-                values.TryGetValue("Transition time in seconds", out seconds) &&
-                int.TryParse(seconds, out s) &&
-                s > 0)
+            return Task.CompletedTask;
+        }
+
+        private async void StartCommandQueueWorker()
+        {
+            while (_isRunning)
             {
-                command.TransitionTime = TimeSpan.FromSeconds(s);
-            }
-
-            string brightness;
-            double bd;
-            if (action.Fields.Contains("Brightness") &&
-                values.TryGetValue("Brightness", out brightness) &&
-                double.TryParse(brightness, out bd) &&
-                bd >= 0d && bd <= 1d)
-            {
-                command.Brightness = Convert.ToByte(bd * 255);
-            }
-
-            string temperature;
-            int t;
-            if (action.Fields.Contains("Temperature") &&
-                values.TryGetValue("Temperature", out temperature) &&
-                int.TryParse(temperature, out t) &&
-                t >= 2000 && t <= 6500)
-            {
-                command.ColorTemperature = KelvinToMirek(t);
-            }
-
-            switch (action.Name.ToLowerInvariant())
-            {
-                case "switch on":
-                    command.On = true;
-                    break;
-                case "switch off":
-                    command.On = false;
-                    break;
-                case "change color":
-                    command.On = true;
-                    command.SetColor(new RGBColor(values["Color"]));
-                    break;
-                case "change brightness":
-                    command.On = true;
-                    break;
-                case "change temperature":
-                    break;
-                case "alarm once":
-                    command.Alert = Alert.Once;
-                    break;
-                case "alarm multiple":
-                    command.Alert = Alert.Multiple;
-                    break;
-                default:
-                    return;
-            }
-
-            var policy = Policy
-                .Handle<Exception>()
-                .WaitAndRetryAsync(new []
+                Tuple<PhilipsHueDevice, LightCommand> tuple;
+                if (_commandQueue.TryDequeue(out tuple))
                 {
-                    TimeSpan.FromSeconds(1),
-                    TimeSpan.FromSeconds(2),
-                    TimeSpan.FromSeconds(5)
-                });
+                    var waitTime = GetWaitTimeAfterCommandExecution(tuple.Item2);
+                    await ExecuteCommand(tuple.Item1, tuple.Item2);
+                    await TaskHelper.DelayAsync(waitTime, () => _isRunning);
+                }
+                else
+                {
+                    await TaskHelper.DelayAsync(TimeSpan.FromMilliseconds(5), () => _isRunning);
+                }
+            }
 
+            _commandWaitHandle.Set();
+        }
+
+        private TimeSpan GetWaitTimeAfterCommandExecution(LightCommand command)
+        {
+            // according to http://www.developers.meethue.com/documentation/hue-system-performance
+            var numberOfCommands = 0;
+
+            if (command.Alert.HasValue) { numberOfCommands++; }
+            if (command.Brightness.HasValue) { numberOfCommands++; }
+            if (command.BrightnessIncrement.HasValue) { numberOfCommands++; }
+            if (command.Hue.HasValue) { numberOfCommands++; }
+            if (command.Saturation.HasValue) { numberOfCommands++; }
+            if (command.ColorCoordinates != null) { numberOfCommands++; }
+            if (command.ColorTemperature.HasValue) { numberOfCommands++; }
+            if (command.On.HasValue) { numberOfCommands++; }
+
+            return TimeSpan.FromMilliseconds(numberOfCommands * 50);
+        }
+
+        private async Task ExecuteCommand(PhilipsHueDevice bulb, LightCommand command)
+        {
             try
             {
-                await policy.ExecuteAsync(async () =>
+                await _executeCommandPolicy.ExecuteAsync(async () =>
                 {
                     var client = GetClient(bulb.Bridge);
                     await client.SendCommandAsync(command, new[] { bulb.Index });
@@ -344,11 +346,6 @@ namespace Xpressive.Home.Plugins.PhilipsHue
         private int MirekToKelvin(int mirek)
         {
             return 1000000/mirek;
-        }
-
-        private int KelvinToMirek(int kelvin)
-        {
-            return 1000000/kelvin;
         }
     }
 }

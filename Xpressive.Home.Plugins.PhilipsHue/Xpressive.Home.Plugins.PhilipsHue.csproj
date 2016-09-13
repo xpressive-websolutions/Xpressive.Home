@@ -68,6 +68,14 @@
       <Link>Properties\AssemblyInfo.shared.cs</Link>
     </Compile>
     <Compile Include="IPhilipsHueGateway.cs" />
+    <Compile Include="LightCommandStrategies\AlarmMultipleLightCommandStrategy.cs" />
+    <Compile Include="LightCommandStrategies\AlarmOnceLightCommandStrategy.cs" />
+    <Compile Include="LightCommandStrategies\ChangeBrightnessLightCommandStrategy.cs" />
+    <Compile Include="LightCommandStrategies\ChangeColorLightCommandStrategy.cs" />
+    <Compile Include="LightCommandStrategies\ChangeTemperatureLightCommandStrategy.cs" />
+    <Compile Include="LightCommandStrategies\LightCommandStrategyBase.cs" />
+    <Compile Include="LightCommandStrategies\SwitchOffLightCommandStrategy.cs" />
+    <Compile Include="LightCommandStrategies\SwitchOnLightCommandStrategy.cs" />
     <Compile Include="PhilipsHueModule.cs" />
     <Compile Include="IPhilipsHueBridgeDiscoveringService.cs" />
     <Compile Include="IPhilipsHueDeviceDiscoveringService.cs" />
