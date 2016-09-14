@@ -252,8 +252,26 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                 Tuple<PhilipsHueDevice, LightCommand> tuple;
                 if (_commandQueue.TryDequeue(out tuple))
                 {
-                    var waitTime = GetWaitTimeAfterCommandExecution(tuple.Item2);
-                    await ExecuteCommand(tuple.Item1, tuple.Item2);
+                    var bulb = tuple.Item1;
+                    var command = tuple.Item2;
+
+                    if (command.On.HasValue)
+                    {
+                        if (command.On.Value == bulb.IsOn)
+                        {
+                            command.On = null;
+                        }
+                    }
+
+                    var waitTime = GetWaitTimeAfterCommandExecution(command);
+
+                    if (waitTime == TimeSpan.Zero)
+                    {
+                        // in this case, the command has no effect
+                        continue;
+                    }
+
+                    await ExecuteCommand(bulb, command);
                     await TaskHelper.DelayAsync(waitTime, () => _isRunning);
                 }
                 else

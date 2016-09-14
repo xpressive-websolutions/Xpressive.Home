@@ -8,17 +8,15 @@ namespace Xpressive.Home.Plugins.PhilipsHue.LightCommandStrategies
     {
         public override LightCommand GetLightCommand(IDictionary<string, string> values, PhilipsHueDevice bulb)
         {
-            var command = new LightCommand();
-
-            if (!bulb.IsOn)
+            var command = new LightCommand
             {
-                command.On = true;
+                On = true
+            };
 
-                TimeSpan transitionTime;
-                if (TryGetTransitionTime(values, out transitionTime))
-                {
-                    command.TransitionTime = transitionTime;
-                }
+            TimeSpan transitionTime;
+            if (TryGetTransitionTime(values, out transitionTime))
+            {
+                command.TransitionTime = transitionTime;
             }
 
             return command;

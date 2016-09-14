@@ -18,13 +18,11 @@ namespace Xpressive.Home.Plugins.PhilipsHue.LightCommandStrategies
 
             // TODO: http://www.developers.meethue.com/documentation/color-conversions-rgb-xy
 
-            var command = new LightCommand();
-            command.SetColor(new RGBColor(hexColor));
-
-            if (!bulb.IsOn)
+            var command = new LightCommand
             {
-                command.On = true;
-            }
+                On = true
+            };
+            command.SetColor(new RGBColor(hexColor));
 
             TimeSpan transitionTime;
             if (TryGetTransitionTime(values, out transitionTime))

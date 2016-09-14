@@ -34,10 +34,11 @@ namespace Xpressive.Home.Plugins.PhilipsHue.LightCommandStrategies
         protected bool TryGetTransitionTime(IDictionary<string, string> values, out TimeSpan transitionTime)
         {
             string seconds;
-            int s;
+            double s;
             transitionTime = default(TimeSpan);
 
-            if (values.TryGetValue("Transition time in seconds", out seconds) && int.TryParse(seconds, out s) && s > 0)
+            // 0.4 seconds is the default value
+            if (values.TryGetValue("Transition time in seconds", out seconds) && double.TryParse(seconds, out s) && Math.Abs(s - 0.4) > 0.001)
             {
                 transitionTime = TimeSpan.FromSeconds(s);
                 return true;
