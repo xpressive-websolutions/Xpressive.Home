@@ -91,7 +91,14 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             {
                 try
                 {
-                    var appKey = await client.RegisterAsync("Xpressive.Home", Environment.MachineName);
+                    var machineName = Environment.MachineName.Replace(' ', '_');
+
+                    if (machineName.Length > 19)
+                    {
+                        machineName = machineName.Substring(0, 19);
+                    }
+
+                    var appKey = await client.RegisterAsync("Xpressive.Home", machineName);
                     return appKey;
                 }
                 catch { }

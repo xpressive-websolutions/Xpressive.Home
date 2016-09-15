@@ -30,7 +30,10 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                 foreach (var light in bulbs)
                 {
                     var id = light.UniqueId.Replace(":", string.Empty).Replace("-", string.Empty);
-                    var bulb = new PhilipsHueDevice(light.Id, id, light.Name, bridge);
+                    var bulb = new PhilipsHueDevice(light.Id, id, light.Name, bridge)
+                    {
+                        Icon = "PhilipsHueIcon PhilipsHueIcon_" + light.ModelId
+                    };
 
                     OnBulbFound(bulb);
                 }

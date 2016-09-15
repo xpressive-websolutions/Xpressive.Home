@@ -230,6 +230,65 @@
     <Content Include="Styles\Custom.min.css">
       <DependentUpon>Custom.css</DependentUpon>
     </Content>
+    <Content Include="Styles\Icons\PhilipsHue\aura.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\bathroom.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\bedroom.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\beyond_ceiling_pendant_table.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\bloom.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\br30.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\br30_slim.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\bridge_v1.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\bridge_v2.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\carport.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\ceiling_round.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\ceiling_square.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\dining.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\driveway.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\entity.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\floor.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\frontdoor.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\garage.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\garden.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\go.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\gu10.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\gu10_perfectfit.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\gym.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\hallway.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\hds.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\house.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\impulse.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\iris.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\kids_bedroom.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\kitchen.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\lightstrip.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\living.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\motion_sensor.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\nursery.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\office.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\other.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\par16.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\pendant_oval.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\pendant_round.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\pendant_square.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\phoenix_ceiling.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\phoenix_ceiling_2.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\phoenix_down.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\phoenix_pendant.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\phoenix_table.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\phoenix_wall.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\recessed.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\recreation.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\storylight.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\table.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\tap.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\terrace.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\toilet.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\white_and_color_e27.svg" />
+    <Content Include="Styles\Icons\PhilipsHue\white_e27.svg" />
+    <Content Include="Styles\philipshue_icons.css" />
+    <Content Include="Styles\philipshue_icons.min.css">
+      <DependentUpon>philipshue_icons.css</DependentUpon>
+    </Content>
     <Content Include="Styles\select.min.css" />
     <Content Include="Styles\skin-black-light.min.css" />
   </ItemGroup>

@@ -19,6 +19,8 @@ namespace Xpressive.Home.Contracts.Gateway
         [DeviceProperty(2)]
         public string Name { get; set; }
 
+        public virtual string Icon { get; set; }
+
         public DeviceBatteryStatus BatteryStatus { get; set; }
         public DeviceWriteStatus WriteStatus { get; set; }
         public DeviceReadStatus ReadStatus { get; set; }

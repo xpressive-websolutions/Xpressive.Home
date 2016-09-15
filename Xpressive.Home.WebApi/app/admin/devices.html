@@ -26,7 +26,7 @@
         <div class="col-md-3 col-sm-6 col-xs-12" ng-repeat="device in gateway.devices">
             <div class="info-box">
                 <span class="info-box-icon bg-aqua" ng-click="showVariables(gateway.name, device.id)" style="cursor: pointer;">
-                    <i class="fa fa-envelope-o"></i>
+                    <i ng-class="device.icon"></i>
                 </span>
 
                 <div class="info-box-content">

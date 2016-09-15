@@ -83,6 +83,13 @@
         var getDevices = function(gateway) {
             $http.get("/api/v1/gateway/" + gateway.name, { cache: false }).then(function(deviceResult) {
                 var devices = _.sortBy(deviceResult.data, function(d) { return d.name; });
+
+                _.each(devices, function(d) {
+                    if (!d.icon) {
+                        d.icon = "fa fa-envelope-o";
+                    }
+                });
+
                 gateway.devices = devices;
 
                 $http.get("/api/v1/roomdevice/" + gateway.name, { cache: false }).then(function(result) {
