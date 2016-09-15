@@ -11,6 +11,8 @@ namespace Xpressive.Home.Automation
     internal class ScriptExecutionContext
     {
         private static readonly ILog _log = LogManager.GetLogger(typeof(ScriptExecutionContext));
+        private static readonly HashSet<Guid> _currentlyExecuting = new HashSet<Guid>();
+        private static readonly object _lock = new object();
         private readonly Script _script;
         private readonly IEnumerable<IScriptObjectProvider> _objectProviders;
 
@@ -37,14 +39,20 @@ namespace Xpressive.Home.Automation
 
         private void ExecuteAsTask()
         {
+            lock (_lock)
+            {
+                if (_currentlyExecuting.Contains(_script.Id))
+                {
+                    return;
+                }
+                _currentlyExecuting.Add(_script.Id);
+            }
+
             _log.Info($"Execute script {_script.Name} ({_script.Id.ToString("n")})");
-
-            var engine = new Engine(cfg => cfg.TimeoutInterval(TimeSpan.FromSeconds(30)));
-
-            SetupScriptEngine(engine);
 
             try
             {
+                var engine = SetupScriptEngine();
                 engine.Execute(_script.JavaScript);
             }
             catch (JavaScriptException e)
@@ -55,10 +63,17 @@ namespace Xpressive.Home.Automation
             {
                 _log.Error($"Error when executing script {_script.Name} ({_script.Id.ToString("n")})", e);
             }
+
+            lock (_lock)
+            {
+                _currentlyExecuting.Remove(_script.Id);
+            }
         }
 
-        private void SetupScriptEngine(Engine engine)
+        private Engine SetupScriptEngine()
         {
+            var engine = new Engine(cfg => cfg.TimeoutInterval(TimeSpan.FromSeconds(30)));
+
             foreach (var objectProvider in _objectProviders)
             {
                 foreach (var tuple in objectProvider.GetObjects())
@@ -71,6 +86,8 @@ namespace Xpressive.Home.Automation
                     engine.SetValue(tuple.Item1, tuple.Item2);
                 }
             }
+
+            return engine;
         }
     }
 }
