@@ -98,6 +98,7 @@ Task("Copy Web").IsDependentOn("Copy").Does(() =>
     CreateDirectory("Build/Web/app/admin");
     CreateDirectory("Build/Web/Scripts");
     CreateDirectory("Build/Web/Styles");
+    CreateDirectory("Build/Web/Icons");
 
     CopyFiles(GetFiles("Xpressive.Home.WebApi/*.html"), "./Build/Web");
     CopyFiles(GetFiles("Xpressive.Home.WebApi/app/admin/*.min.html"), "./Build/Web/app/admin");
@@ -106,6 +107,8 @@ Task("Copy Web").IsDependentOn("Copy").Does(() =>
     CopyFiles(GetFiles("Xpressive.Home.WebApi/Scripts/*.js"), "./Build/Web/Scripts");
     CopyFiles(GetFiles("Xpressive.Home.WebApi/Styles/*.min.css"), "./Build/Web/Styles");
     CopyFiles(GetFiles("Xpressive.Home.WebApi/Styles/*.jpg"), "./Build/Web/Styles");
+    CopyFiles(GetFiles("Xpressive.Home.WebApi/Styles/Icons" + configuration + "/*.*"), "./Build");
+    CopyDirectory("Xpressive.Home.WebApi/Styles/Icons", "Build/Web/Icons");
 
     var adminHtml = System.IO.File.ReadAllText(File("./Build/Web/admin.html"));
     var indexHtml = System.IO.File.ReadAllText(File("./Build/Web/index.html"));
