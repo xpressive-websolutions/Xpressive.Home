@@ -90,15 +90,9 @@
     ]
   },
   {
-    "outputFileName": "Styles/philipshue_icons.min.css",
+    "outputFileName": "Styles/Icons/icons.min.css",
     "inputFiles": [
-      "Styles/philipshue_icons.css"
-    ]
-  },
-  {
-    "outputFileName": "Styles/sonos_icons.min.css",
-    "inputFiles": [
-      "Styles/sonos_icons.css"
+      "Styles/Icons/icons.css"
     ]
   }
 ]

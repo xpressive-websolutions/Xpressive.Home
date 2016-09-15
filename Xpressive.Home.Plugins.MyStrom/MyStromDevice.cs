@@ -9,6 +9,7 @@ namespace Xpressive.Home.Plugins.MyStrom
             Name = name;
             Id = macAddress;
             IpAddress = ipAddress;
+            Icon = "mystrom_icon";
         }
 
         public string IpAddress { get; set; }

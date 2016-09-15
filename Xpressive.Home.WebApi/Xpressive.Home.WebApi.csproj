@@ -230,6 +230,11 @@
     <Content Include="Styles\Custom.min.css">
       <DependentUpon>Custom.css</DependentUpon>
     </Content>
+    <Content Include="Styles\Icons\icons.css" />
+    <Content Include="Styles\Icons\icons.min.css">
+      <DependentUpon>icons.css</DependentUpon>
+    </Content>
+    <Content Include="Styles\Icons\mystrom.png" />
     <Content Include="Styles\Icons\PhilipsHue\aura.svg" />
     <Content Include="Styles\Icons\PhilipsHue\bathroom.svg" />
     <Content Include="Styles\Icons\PhilipsHue\bedroom.svg" />
@@ -288,16 +293,8 @@
     <Content Include="Styles\Icons\Sonos\S1.png" />
     <Content Include="Styles\Icons\Sonos\S3.png" />
     <Content Include="Styles\Icons\Sonos\ZP90.png" />
-    <Content Include="Styles\philipshue_icons.css" />
-    <Content Include="Styles\philipshue_icons.min.css">
-      <DependentUpon>philipshue_icons.css</DependentUpon>
-    </Content>
     <Content Include="Styles\select.min.css" />
     <Content Include="Styles\skin-black-light.min.css" />
-    <Content Include="Styles\sonos_icons.css" />
-    <Content Include="Styles\sonos_icons.min.css">
-      <DependentUpon>sonos_icons.css</DependentUpon>
-    </Content>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
