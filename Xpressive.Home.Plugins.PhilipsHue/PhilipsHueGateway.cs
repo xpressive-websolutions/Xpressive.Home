@@ -317,6 +317,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 
                 if (command.On.HasValue)
                 {
+                    bulb.IsOn = command.On.Value;
                     UpdateVariable($"{Name}.{bulb.Id}.IsOn", command.On.Value);
                 }
 

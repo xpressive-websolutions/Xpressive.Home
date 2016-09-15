@@ -16,7 +16,8 @@ namespace Xpressive.Home.Plugins.PhilipsHue.LightCommandStrategies
 
             var command = new LightCommand
             {
-                Brightness = brightness
+                Brightness = brightness,
+                On = true
             };
 
             TimeSpan transitionTime;

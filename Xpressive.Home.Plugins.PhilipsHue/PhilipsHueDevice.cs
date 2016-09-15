@@ -19,5 +19,6 @@ namespace Xpressive.Home.Plugins.PhilipsHue
         public string Index => _index;
 
         public bool IsOn { get; set; }
+        public string Model { get; set; }
     }
 }

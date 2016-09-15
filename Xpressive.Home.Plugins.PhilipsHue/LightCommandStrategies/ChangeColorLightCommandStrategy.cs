@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using Q42.HueApi;
 using Q42.HueApi.ColorConverters;
-using Q42.HueApi.ColorConverters.HSB;
 
 namespace Xpressive.Home.Plugins.PhilipsHue.LightCommandStrategies
 {
@@ -17,12 +16,19 @@ namespace Xpressive.Home.Plugins.PhilipsHue.LightCommandStrategies
             }
 
             // TODO: http://www.developers.meethue.com/documentation/color-conversions-rgb-xy
+            var rgb = new RGBColor(hexColor);
+            var xy = RgbToCieConverter.Convert(bulb.Model, rgb.R, rgb.G, rgb.B);
+
+            if (Equals(xy, default(RgbToCieConverter.CieResult)))
+            {
+                return new LightCommand();
+            }
 
             var command = new LightCommand
             {
-                On = true
+                On = true,
+                ColorCoordinates = new[] {xy.X, xy.Y}
             };
-            command.SetColor(new RGBColor(hexColor));
 
             TimeSpan transitionTime;
             if (TryGetTransitionTime(values, out transitionTime))
