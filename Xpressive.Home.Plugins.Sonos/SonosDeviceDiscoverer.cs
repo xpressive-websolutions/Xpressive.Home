@@ -53,6 +53,7 @@ namespace Xpressive.Home.Plugins.Sonos
             namespaceManager.AddNamespace("upnp", "urn:schemas-upnp-org:device-1-0");
             var id = document.SelectSingleNode("//upnp:UDN", namespaceManager)?.InnerText;
             var name = document.SelectSingleNode("//upnp:modelName", namespaceManager)?.InnerText;
+            var model = document.SelectSingleNode("//upnp:modelNumber", namespaceManager)?.InnerText;
 
             lock (_lock)
             {
@@ -75,6 +76,7 @@ namespace Xpressive.Home.Plugins.Sonos
 
             var device = new SonosDevice(id, ip, name);
             device.Services.AddRange(upnpServices);
+            device.Type = model;
 
             OnDeviceFound(device);
         }

@@ -285,12 +285,19 @@
     <Content Include="Styles\Icons\PhilipsHue\toilet.svg" />
     <Content Include="Styles\Icons\PhilipsHue\white_and_color_e27.svg" />
     <Content Include="Styles\Icons\PhilipsHue\white_e27.svg" />
+    <Content Include="Styles\Icons\Sonos\S1.png" />
+    <Content Include="Styles\Icons\Sonos\S3.png" />
+    <Content Include="Styles\Icons\Sonos\ZP90.png" />
     <Content Include="Styles\philipshue_icons.css" />
     <Content Include="Styles\philipshue_icons.min.css">
       <DependentUpon>philipshue_icons.css</DependentUpon>
     </Content>
     <Content Include="Styles\select.min.css" />
     <Content Include="Styles\skin-black-light.min.css" />
+    <Content Include="Styles\sonos_icons.css" />
+    <Content Include="Styles\sonos_icons.min.css">
+      <DependentUpon>sonos_icons.css</DependentUpon>
+    </Content>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

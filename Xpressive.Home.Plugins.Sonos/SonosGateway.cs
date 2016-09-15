@@ -35,6 +35,12 @@ namespace Xpressive.Home.Plugins.Sonos
             deviceDiscoverer.DeviceFound += (s, e) =>
             {
                 e.Id = e.Id.Replace("uuid:", string.Empty);
+
+                if (!string.IsNullOrEmpty(e.Type))
+                {
+                    e.Icon = "SonosIcon SonosIcon_" + e.Type;
+                }
+
                 _devices.Add(e);
             };
         }
