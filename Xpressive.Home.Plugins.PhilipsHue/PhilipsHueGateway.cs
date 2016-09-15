@@ -174,6 +174,11 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                             var brightness = state.Brightness / 255d;
                             var temperature = state.ColorTemperature ?? 0;
 
+                            if (bulb == null)
+                            {
+                                continue;
+                            }
+
                             if (temperature != 0)
                             {
                                 temperature = MirekToKelvin(temperature);

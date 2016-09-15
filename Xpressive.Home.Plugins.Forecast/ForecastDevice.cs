@@ -4,6 +4,11 @@ namespace Xpressive.Home.Plugins.Forecast
 {
     public class ForecastDevice : DeviceBase
     {
+        public ForecastDevice()
+        {
+            Icon = "fa fa-sun-o";
+        }
+
         [DeviceProperty(3)]
         public double Latitude { get; set; }
 

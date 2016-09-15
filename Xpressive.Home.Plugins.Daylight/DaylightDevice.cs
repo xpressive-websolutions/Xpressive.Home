@@ -4,6 +4,11 @@ namespace Xpressive.Home.Plugins.Daylight
 {
     internal class DaylightDevice : DeviceBase
     {
+        public DaylightDevice()
+        {
+            Icon = "glyphicon glyphicon-time";
+        }
+
         [DeviceProperty(3)]
         public double Latitude { get; set; }
 
