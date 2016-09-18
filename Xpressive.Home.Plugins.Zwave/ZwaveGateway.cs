@@ -171,9 +171,9 @@ namespace Xpressive.Home.Plugins.Zwave
 
             ZwaveDeviceLibraryResolver.Resolve(_library, device);
 
-            _log.Debug($"Node {device.Id} Manufacturer: {device.Manufacturer}");
-            _log.Debug($"Node {device.Id} Product Name: {device.ProductName}");
-            _log.Debug($"Node {device.Id} Description: {device.ProductDescription}");
+            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Manufacturer", device.Manufacturer));
+            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "ProductName", device.ProductName));
+            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Description", device.ProductDescription));
         }
 
         private async Task GetSupportedCommandClasses(ZwaveDevice device, Node node)

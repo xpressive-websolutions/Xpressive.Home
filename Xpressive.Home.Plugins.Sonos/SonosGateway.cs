@@ -245,10 +245,17 @@ namespace Xpressive.Home.Plugins.Sonos
             values.Clear();
             var zoneAttributes = await _soapClient.ExecuteAsync(device, deviceProperties, getZoneAttributes, values);
 
-            var currentUri = mediaInfo["CurrentURI"];
-            var metadata = mediaInfo["CurrentURIMetaData"];
-            var transportState = transportInfo["CurrentTransportState"];
-            var currentVolume = volume["CurrentVolume"];
+            string currentUri;
+            string metadata;
+            string transportState;
+            string currentVolume;
+            if (!mediaInfo.TryGetValue("CurrentURI", out currentUri) ||
+                !mediaInfo.TryGetValue("CurrentURIMetaData", out metadata) ||
+                !transportInfo.TryGetValue("CurrentTransportState", out transportState) ||
+                !volume.TryGetValue("CurrentVolume", out currentVolume))
+            {
+                return;
+            }
 
             transportState = transportState[0] + transportState.Substring(1).ToLowerInvariant();
 
