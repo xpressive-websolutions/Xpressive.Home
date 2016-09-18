@@ -72,7 +72,7 @@ namespace Xpressive.Home.Automation
 
         private Engine SetupScriptEngine()
         {
-            var engine = new Engine(cfg => cfg.TimeoutInterval(TimeSpan.FromSeconds(30)));
+            var engine = new Engine(cfg => cfg.TimeoutInterval(TimeSpan.FromMinutes(1)));
 
             foreach (var objectProvider in _objectProviders)
             {

@@ -17,6 +17,20 @@ Xpressive.Home consists of these main concepts
 
 ## Scripts
 
+### Helpers
+
+```javascript
+// wait some milliseconds
+var durationInMilliseconds = 200;
+sleep(durationInMilliseconds);
+
+// write to the logfile
+log.debug("this is a debug message");
+log.info("this is an info message");
+log.warning("this is a warning message");
+log.error("this is an error message");
+```
+
 ### Variables
 ```javascript
 variable.set("xpressive.home is cool", true);

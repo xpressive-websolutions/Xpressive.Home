@@ -20,6 +20,7 @@ namespace Xpressive.Home
             builder.RegisterType<ScriptRepository>().As<IScriptRepository>();
             builder.RegisterType<ScriptEngine>().As<IScriptEngine>();
             builder.RegisterType<VariableScriptObjectProvider>().As<IScriptObjectProvider>();
+            builder.RegisterType<DefaultScriptObjectProvider>().As<IScriptObjectProvider>();
             builder.RegisterType<ScriptTriggerService>().As<IScriptTriggerService>();
 
             builder.RegisterType<MessageQueueScriptTriggerListener>()
