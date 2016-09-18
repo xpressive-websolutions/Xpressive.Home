@@ -107,8 +107,7 @@ Task("Copy Web").IsDependentOn("Copy").Does(() =>
     CopyFiles(GetFiles("Xpressive.Home.WebApi/Scripts/*.js"), "./Build/Web/Scripts");
     CopyFiles(GetFiles("Xpressive.Home.WebApi/Styles/*.min.css"), "./Build/Web/Styles");
     CopyFiles(GetFiles("Xpressive.Home.WebApi/Styles/*.jpg"), "./Build/Web/Styles");
-    CopyFiles(GetFiles("Xpressive.Home.WebApi/Styles/Icons" + configuration + "/*.*"), "./Build");
-    CopyDirectory("Xpressive.Home.WebApi/Styles/Icons", "Build/Web/Icons");
+    CopyDirectory("Xpressive.Home.WebApi/Styles/Icons", "Build/Web/Styles/Icons");
 
     var adminHtml = System.IO.File.ReadAllText(File("./Build/Web/admin.html"));
     var indexHtml = System.IO.File.ReadAllText(File("./Build/Web/index.html"));
