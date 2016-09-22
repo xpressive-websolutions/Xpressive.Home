@@ -130,6 +130,14 @@
             _.each($scope.gateways, getDevices);
         });
 
+        $scope.execute = function(gateway, device, action, parameters) {
+            if (!parameters) {
+                parameters = {};
+            }
+
+            $http.post("/api/v1/action/" + gateway + "/" + device + "/" + action, parameters);
+        };
+
         $scope.showVariables = function(gatewayName, deviceId) {
             $location.path("/variables/" + gatewayName + "/" + deviceId);
         };

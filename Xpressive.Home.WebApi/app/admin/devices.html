@@ -23,7 +23,7 @@
     </h4>
 
     <div class="row">
-        <div class="col-md-3 col-sm-6 col-xs-12" ng-repeat="device in gateway.devices">
+        <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12" ng-repeat="device in gateway.devices">
             <div class="info-box">
                 <span class="info-box-icon bg-aqua" ng-click="showVariables(gateway.name, device.id)" style="cursor: pointer;">
                     <i ng-class="device.icon"></i>
@@ -44,6 +44,21 @@
                                 <button type="button" ng-click="roomSelected(gateway, device, $item)" class="btn btn-default">
                                     <span class="glyphicon glyphicon-trash"></span>
                                 </button>
+                            </span>
+                            <span class="input-group-btn" uib-dropdown is-open="status.isopen" style="padding-left: 10px;">
+                                <button type="button" class="btn btn-default" uib-dropdown-toggle style="border-bottom-left-radius: 4px; border-top-left-radius: 4px;">
+                                    <span class="glyphicon glyphicon-cog"></span>&nbsp;<span class="caret"></span>
+                                </button>
+                                <ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="single-button">
+                                    <li ng-if="gateway.name === 'Lifx' || gateway.name === 'myStrom' || gateway.name === 'PhilipsHue'" role="menuitem"><a ng-click="execute(gateway.name, device.id, 'Switch On')">Switch on</a></li>
+                                    <li ng-if="gateway.name === 'Lifx' || gateway.name === 'myStrom' || gateway.name === 'PhilipsHue'" role="menuitem"><a ng-click="execute(gateway.name, device.id, 'Switch Off')">Switch off</a></li>
+                                    <li ng-if="gateway.name === 'PhilipsHue'" role="menuitem"><a ng-click="execute(gateway.name, device.id, 'Change Temperature', { Temperature: 2000 })">Warm</a></li>
+                                    <li ng-if="gateway.name === 'PhilipsHue'" role="menuitem"><a ng-click="execute(gateway.name, device.id, 'Change Temperature', { Temperature: 6500 })">Cold</a></li>
+                                    <li ng-if="gateway.name === 'Lifx' || gateway.name === 'PhilipsHue'" role="menuitem"><a ng-click="execute(gateway.name, device.id, 'Change Brightness', { Brightness: 0.1 })">10%</a></li>
+                                    <li ng-if="gateway.name === 'Lifx' || gateway.name === 'PhilipsHue'" role="menuitem"><a ng-click="execute(gateway.name, device.id, 'Change Brightness', { Brightness: 0.2 })">20%</a></li>
+                                    <li ng-if="gateway.name === 'Lifx' || gateway.name === 'PhilipsHue'" role="menuitem"><a ng-click="execute(gateway.name, device.id, 'Change Brightness', { Brightness: 0.5 })">50%</a></li>
+                                    <li ng-if="gateway.name === 'Lifx' || gateway.name === 'PhilipsHue'" role="menuitem"><a ng-click="execute(gateway.name, device.id, 'Change Brightness', { Brightness: 1.0 })">100%</a></li>
+                                </ul>
                             </span>
                         </div>
                     </div>

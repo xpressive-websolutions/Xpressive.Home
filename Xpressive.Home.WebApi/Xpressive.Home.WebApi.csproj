@@ -119,6 +119,7 @@
     <Compile Include="..\Xpressive.Home\Properties\AssemblyInfo.shared.cs">
       <Link>Properties\AssemblyInfo.shared.cs</Link>
     </Compile>
+    <Compile Include="Controllers\DeviceActionController.cs" />
     <Compile Include="Controllers\RadioStationController.cs" />
     <Compile Include="Controllers\RoomController.cs" />
     <Compile Include="Controllers\RoomDeviceController.cs" />
