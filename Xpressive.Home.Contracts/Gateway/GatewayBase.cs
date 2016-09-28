@@ -12,7 +12,6 @@ namespace Xpressive.Home.Contracts.Gateway
         private readonly ILog _log;
         private readonly string _name;
         protected readonly IList<DeviceBase> _devices;
-        protected readonly IList<IAction> _actions;
         protected bool _canCreateDevices;
 
         protected GatewayBase(string name)
@@ -20,12 +19,10 @@ namespace Xpressive.Home.Contracts.Gateway
             _log = LogManager.GetLogger(GetType());
             _name = name;
             _devices = new List<DeviceBase>();
-            _actions = new List<IAction>();
         }
 
         public string Name => _name;
         public IEnumerable<IDevice> Devices => _devices.ToList();
-        public IEnumerable<IAction> Actions => _actions.ToList();
         public bool CanCreateDevices => _canCreateDevices;
         
         public IDevicePersistingService PersistingService { get; set; }
@@ -35,6 +32,8 @@ namespace Xpressive.Home.Contracts.Gateway
             var d = device as DeviceBase;
             return AddDeviceInternal(d);
         }
+
+        public abstract IEnumerable<IAction> GetActions(IDevice device);
 
         public abstract Task StartAsync();
         public abstract void Stop();
@@ -57,9 +56,15 @@ namespace Xpressive.Home.Contracts.Gateway
             var deviceId = parts[1];
             var actionName = parts[2];
             var device = Devices.SingleOrDefault(d => d.Id.Equals(deviceId, StringComparison.Ordinal));
-            var action = Actions.SingleOrDefault(a => a.Name.Equals(actionName, StringComparison.Ordinal));
 
-            if (device == null || action == null)
+            if (device == null)
+            {
+                return;
+            }
+
+            var action = GetActions(device).SingleOrDefault(a => a.Name.Equals(actionName, StringComparison.Ordinal));
+
+            if (action == null)
             {
                 return;
             }

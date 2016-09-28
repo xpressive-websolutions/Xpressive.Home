@@ -30,23 +30,6 @@ namespace Xpressive.Home.Plugins.Lifx
             _canCreateDevices = false;
             _token = ConfigurationManager.AppSettings["lifx.token"];
 
-            _actions.Add(new Action("Switch On")
-            {
-                Fields = {"Transition time in seconds"}
-            });
-            _actions.Add(new Action("Switch Off")
-            {
-                Fields = {"Transition time in seconds"}
-            });
-            _actions.Add(new Action("Change Color")
-            {
-                Fields = {"Color", "Transition time in seconds"}
-            });
-            _actions.Add(new Action("Change Brightness")
-            {
-                Fields = {"Brightness", "Transition time in seconds"}
-            });
-
             _localClient.DeviceDiscovered += async (s, e) =>
             {
                 lock (_deviceLock)
@@ -87,6 +70,17 @@ namespace Xpressive.Home.Plugins.Lifx
             return Devices.OfType<LifxDevice>();
         }
 
+        public override IEnumerable<IAction> GetActions(IDevice device)
+        {
+            if (device is LifxDevice)
+            {
+                yield return new Action("Switch On") { Fields = { "Transition time in seconds" } };
+                yield return new Action("Switch Off") { Fields = { "Transition time in seconds" } };
+                yield return new Action("Change Color") { Fields = { "Color", "Transition time in seconds" } };
+                yield return new Action("Change Brightness") { Fields = { "Brightness", "Transition time in seconds" } };
+            }
+        }
+
         public void SwitchOn(LifxDevice device, int transitionTimeInSeconds)
         {
             var parameters = new Dictionary<string, string>
@@ -94,7 +88,7 @@ namespace Xpressive.Home.Plugins.Lifx
                 {"Transition time in seconds", transitionTimeInSeconds.ToString()}
             };
 
-            var action = _actions.Single(a => a.Name.Equals("Switch On", StringComparison.Ordinal));
+            var action = GetActions(device).Single(a => a.Name.Equals("Switch On", StringComparison.Ordinal));
             StartActionInNewTask(device, action, parameters);
         }
 
@@ -105,7 +99,7 @@ namespace Xpressive.Home.Plugins.Lifx
                 {"Transition time in seconds", transitionTimeInSeconds.ToString()}
             };
 
-            var action = _actions.Single(a => a.Name.Equals("Switch Off", StringComparison.Ordinal));
+            var action = GetActions(device).Single(a => a.Name.Equals("Switch Off", StringComparison.Ordinal));
             StartActionInNewTask(device, action, parameters);
         }
 
@@ -117,7 +111,7 @@ namespace Xpressive.Home.Plugins.Lifx
                 {"Transition time in seconds", transitionTimeInSeconds.ToString()}
             };
 
-            var action = _actions.Single(a => a.Name.Equals("Change Color", StringComparison.Ordinal));
+            var action = GetActions(device).Single(a => a.Name.Equals("Change Color", StringComparison.Ordinal));
             StartActionInNewTask(device, action, parameters);
         }
 
@@ -129,7 +123,7 @@ namespace Xpressive.Home.Plugins.Lifx
                 {"Transition time in seconds", transitionTimeInSeconds.ToString()}
             };
 
-            var action = _actions.Single(a => a.Name.Equals("Change Brightness", StringComparison.Ordinal));
+            var action = GetActions(device).Single(a => a.Name.Equals("Change Brightness", StringComparison.Ordinal));
             StartActionInNewTask(device, action, parameters);
         }
 

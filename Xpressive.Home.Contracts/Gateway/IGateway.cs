@@ -10,10 +10,10 @@ namespace Xpressive.Home.Contracts.Gateway
         bool CanCreateDevices { get; }
 
         IEnumerable<IDevice> Devices { get; }
-        IEnumerable<IAction> Actions { get; }
-
         IDevice CreateEmptyDevice();
         bool AddDevice(IDevice device);
+
+        IEnumerable<IAction> GetActions(IDevice device);
 
         Task StartAsync();
         void Stop();

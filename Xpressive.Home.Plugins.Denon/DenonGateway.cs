@@ -33,16 +33,6 @@ namespace Xpressive.Home.Plugins.Denon
         {
             _messageQueue = messageQueue;
             _upnpDeviceDiscoveringService = upnpDeviceDiscoveringService;
-
-            _actions.Add(new Action("Change Volume") { Fields = { "Volume" } });
-            _actions.Add(new Action("Volume Up"));
-            _actions.Add(new Action("Volume Down"));
-            _actions.Add(new Action("Power On"));
-            _actions.Add(new Action("Power Off"));
-            _actions.Add(new Action("Mute On"));
-            _actions.Add(new Action("Mute Off"));
-            _actions.Add(new Action("Change Input Source") { Fields = { "Source" } });
-
             _canCreateDevices = false;
 
             upnpDeviceDiscoveringService.DeviceFound += OnUpnpDeviceFound;
@@ -56,6 +46,21 @@ namespace Xpressive.Home.Plugins.Denon
         public IEnumerable<DenonDevice> GetDevices()
         {
             return Devices.OfType<DenonDevice>();
+        }
+
+        public override IEnumerable<IAction> GetActions(IDevice device)
+        {
+            if (device is DenonDevice)
+            {
+                yield return new Action("Change Volume") { Fields = { "Volume" } };
+                yield return new Action("Volume Up");
+                yield return new Action("Volume Down");
+                yield return new Action("Power On");
+                yield return new Action("Power Off");
+                yield return new Action("Mute On");
+                yield return new Action("Mute Off");
+                yield return new Action("Change Input Source") { Fields = { "Source" } };
+            }
         }
 
         public void PowerOn(DenonDevice device)

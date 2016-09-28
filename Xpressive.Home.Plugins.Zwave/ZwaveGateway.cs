@@ -50,6 +50,11 @@ namespace Xpressive.Home.Plugins.Zwave
             throw new NotSupportedException();
         }
 
+        public override IEnumerable<IAction> GetActions(IDevice device)
+        {
+            yield break;
+        }
+
         public override async Task StartAsync()
         {
             await Task.Delay(TimeSpan.FromSeconds(1));

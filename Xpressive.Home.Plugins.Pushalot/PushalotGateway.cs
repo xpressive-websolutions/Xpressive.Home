@@ -18,13 +18,11 @@ namespace Xpressive.Home.Plugins.Pushalot
             Name = "Pushalot";
             CanCreateDevices = false;
             Devices = new List<IDevice>(0);
-            Actions = new List<IAction>(0);
         }
 
         public string Name { get; }
         public bool CanCreateDevices { get; }
         public IEnumerable<IDevice> Devices { get; }
-        public IEnumerable<IAction> Actions { get; }
 
         public IDevice CreateEmptyDevice()
         {
@@ -34,6 +32,11 @@ namespace Xpressive.Home.Plugins.Pushalot
         public bool AddDevice(IDevice device)
         {
             throw new NotSupportedException();
+        }
+
+        public IEnumerable<IAction> GetActions(IDevice device)
+        {
+            yield break;
         }
 
         public async Task StartAsync()

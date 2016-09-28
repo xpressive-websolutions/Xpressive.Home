@@ -49,6 +49,11 @@ namespace Xpressive.Home.Plugins.Netatmo
             throw new NotSupportedException();
         }
 
+        public override IEnumerable<IAction> GetActions(IDevice device)
+        {
+            yield break;
+        }
+
         public IEnumerable<NetatmoDevice> GetDevices()
         {
             return Devices.Cast<NetatmoDevice>();

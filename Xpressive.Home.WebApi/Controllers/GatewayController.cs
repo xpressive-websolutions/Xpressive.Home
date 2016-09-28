@@ -100,8 +100,7 @@ namespace Xpressive.Home.WebApi.Controllers
         public IHttpActionResult ExecuteAction(string gatewayName, string deviceId, string actionName, [FromBody]Dictionary<string, string> parameters)
         {
             IGateway gateway;
-            if (!_gateways.TryGetValue(gatewayName, out gateway) ||
-                !gateway.Actions.Any(a => a.Name.Equals(actionName, StringComparison.Ordinal)))
+            if (!_gateways.TryGetValue(gatewayName, out gateway))
             {
                 return NotFound();
             }
@@ -113,12 +112,17 @@ namespace Xpressive.Home.WebApi.Controllers
                 return NotFound();
             }
 
+            if (!gateway.GetActions(device).Any(a => a.Name.Equals(actionName, StringComparison.Ordinal)))
+            {
+                return NotFound();
+            }
+
             _messageQueue.Publish(new CommandMessage(gatewayName, deviceId, actionName, parameters));
             return StatusCode(HttpStatusCode.NoContent);
         }
 
-        [HttpGet, Route("{gatewayName}/actions")]
-        public IEnumerable<ActionDto> GetActions(string gatewayName)
+        [HttpGet, Route("{gatewayName}/{deviceId}/actions")]
+        public IEnumerable<ActionDto> GetActions(string gatewayName, string deviceId)
         {
             IGateway gateway;
             if (!_gateways.TryGetValue(gatewayName, out gateway))
@@ -126,7 +130,14 @@ namespace Xpressive.Home.WebApi.Controllers
                 return Enumerable.Empty<ActionDto>();
             }
 
-            return gateway.Actions.Select(a => new ActionDto
+            var device = gateway.Devices.SingleOrDefault(d => d.Id.Equals(deviceId, StringComparison.Ordinal));
+
+            if (device == null)
+            {
+                return Enumerable.Empty<ActionDto>();
+            }
+
+            return gateway.GetActions(device).Select(a => new ActionDto
             {
                 Name = a.Name,
                 Fields = a.Fields.ToArray()

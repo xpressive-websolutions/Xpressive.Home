@@ -33,11 +33,7 @@ namespace Xpressive.Home.Plugins.MyStrom
             _messageQueue = messageQueue;
             _myStromDeviceNameService = myStromDeviceNameService;
             _upnpDeviceDiscoveringService = upnpDeviceDiscoveringService;
-
             _canCreateDevices = false;
-
-            _actions.Add(new Action("Switch On"));
-            _actions.Add(new Action("Switch Off"));
 
             _upnpDeviceDiscoveringService.DeviceFound += OnUpnpDeviceFound;
         }
@@ -55,6 +51,15 @@ namespace Xpressive.Home.Plugins.MyStrom
         public void SwitchOff(MyStromDevice device)
         {
             StartActionInNewTask(device, new Action("Switch Off"), null);
+        }
+
+        public override IEnumerable<IAction> GetActions(IDevice device)
+        {
+            if (device is MyStromDevice)
+            {
+                yield return new Action("Switch On");
+                yield return new Action("Switch Off");
+            }
         }
 
         public override async Task StartAsync()

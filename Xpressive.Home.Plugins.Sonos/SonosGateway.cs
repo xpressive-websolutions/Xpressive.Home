@@ -24,14 +24,8 @@ namespace Xpressive.Home.Plugins.Sonos
         {
             _messageQueue = messageQueue;
             _soapClient = soapClient;
-            _actions.Add(new Action("Play"));
-            _actions.Add(new Action("Pause"));
-            _actions.Add(new Action("Stop"));
-            _actions.Add(new Action("Play Radio") { Fields = { "Stream", "Title" } });
-            _actions.Add(new Action("Play File") { Fields = { "File", "Title", "Album" } });
-            _actions.Add(new Action("Change Volume") { Fields = { "Volume" } });
-
             _canCreateDevices = false;
+
             deviceDiscoverer.DeviceFound += (s, e) =>
             {
                 e.Id = e.Id.Replace("uuid:", string.Empty);
@@ -53,6 +47,19 @@ namespace Xpressive.Home.Plugins.Sonos
         public IEnumerable<SonosDevice> GetDevices()
         {
             return Devices.OfType<SonosDevice>();
+        }
+
+        public override IEnumerable<IAction> GetActions(IDevice device)
+        {
+            if (device is SonosDevice)
+            {
+                yield return new Action("Play");
+                yield return new Action("Pause");
+                yield return new Action("Stop");
+                yield return new Action("Play Radio") { Fields = { "Stream", "Title" } };
+                yield return new Action("Play File") { Fields = { "File", "Title", "Album" } };
+                yield return new Action("Change Volume") { Fields = { "Volume" } };
+            }
         }
 
         public void Play(SonosDevice device)

@@ -34,6 +34,11 @@ namespace Xpressive.Home.Plugins.Daylight
             return Devices.OfType<DaylightDevice>();
         }
 
+        public override IEnumerable<IAction> GetActions(IDevice device)
+        {
+            yield break;
+        }
+
         public override async Task StartAsync()
         {
             await Task.Delay(TimeSpan.FromSeconds(1));

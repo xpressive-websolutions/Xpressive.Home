@@ -39,29 +39,6 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             _messageQueue = messageQueue;
             _canCreateDevices = false;
 
-            _actions.Add(new Action("Switch On")
-            {
-                Fields = { "Transition time in seconds" }
-            });
-            _actions.Add(new Action("Switch Off")
-            {
-                Fields = { "Transition time in seconds" }
-            });
-            _actions.Add(new Action("Change Color")
-            {
-                Fields = { "Color", "Transition time in seconds" }
-            });
-            _actions.Add(new Action("Change Brightness")
-            {
-                Fields = { "Brightness", "Transition time in seconds" }
-            });
-            _actions.Add(new Action("Change Temperature")
-            {
-                Fields = { "Temperature" }
-            });
-            _actions.Add(new Action("Alarm Once"));
-            _actions.Add(new Action("Alarm Multiple"));
-
             deviceDiscoveringService.BulbFound += OnBulbFound;
 
             _executeCommandPolicy = Policy
@@ -79,6 +56,20 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             return Devices.OfType<PhilipsHueDevice>();
         }
 
+        public override IEnumerable<IAction> GetActions(IDevice device)
+        {
+            if (device is PhilipsHueDevice)
+            {
+                yield return new Action("Switch On") { Fields = { "Transition time in seconds" } };
+                yield return new Action("Switch Off") { Fields = { "Transition time in seconds" } };
+                yield return new Action("Change Color") { Fields = { "Color", "Transition time in seconds" } };
+                yield return new Action("Change Brightness") { Fields = { "Brightness", "Transition time in seconds" } };
+                yield return new Action("Change Temperature") { Fields = { "Temperature" } };
+                yield return new Action("Alarm Once");
+                yield return new Action("Alarm Multiple");
+            }
+        }
+
         public void SwitchOn(PhilipsHueDevice device, int transitionTimeInSeconds)
         {
             var parameters = new Dictionary<string, string>
@@ -86,7 +77,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                 {"Transition time in seconds", transitionTimeInSeconds.ToString()}
             };
 
-            var action = _actions.Single(a => a.Name.Equals("Switch On", StringComparison.Ordinal));
+            var action = GetActions(device).Single(a => a.Name.Equals("Switch On", StringComparison.Ordinal));
             StartActionInNewTask(device, action, parameters);
         }
 
@@ -97,7 +88,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                 {"Transition time in seconds", transitionTimeInSeconds.ToString()}
             };
 
-            var action = _actions.Single(a => a.Name.Equals("Switch Off", StringComparison.Ordinal));
+            var action = GetActions(device).Single(a => a.Name.Equals("Switch Off", StringComparison.Ordinal));
             StartActionInNewTask(device, action, parameters);
         }
 
@@ -109,7 +100,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                 {"Transition time in seconds", transitionTimeInSeconds.ToString()}
             };
 
-            var action = _actions.Single(a => a.Name.Equals("Change Color", StringComparison.Ordinal));
+            var action = GetActions(device).Single(a => a.Name.Equals("Change Color", StringComparison.Ordinal));
             StartActionInNewTask(device, action, parameters);
         }
 
@@ -121,7 +112,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                 {"Transition time in seconds", transitionTimeInSeconds.ToString()}
             };
 
-            var action = _actions.Single(a => a.Name.Equals("Change Brightness", StringComparison.Ordinal));
+            var action = GetActions(device).Single(a => a.Name.Equals("Change Brightness", StringComparison.Ordinal));
             StartActionInNewTask(device, action, parameters);
         }
 
@@ -132,7 +123,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                 {"Temperature", temperature.ToString("D")}
             };
 
-            var action = _actions.Single(a => a.Name.Equals("Change Temperature", StringComparison.Ordinal));
+            var action = GetActions(device).Single(a => a.Name.Equals("Change Temperature", StringComparison.Ordinal));
             StartActionInNewTask(device, action, parameters);
         }
 

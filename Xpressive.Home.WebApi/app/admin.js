@@ -201,6 +201,7 @@
         var gateway = $routeParams.gateway;
         var deviceId = $routeParams.device;
         var deviceIdEncoded = encodeURIComponent(deviceId);
+        $scope.actions = [];
 
         $http.get("/api/v1/variable/" + gateway + "?deviceId=" + deviceIdEncoded, { cache: false }).then(function(result) {
             $scope.variables = result.data;
@@ -214,6 +215,15 @@
                 $scope.gateway = gateway;
                 $scope.deviceId = deviceId;
             }
+        });
+
+        $http.get("/api/v1/gateway/" + gateway + "/" + deviceId + "/actions", { cache: false }).then(function(result) {
+            _.each(result.data, function(a) {
+                $scope.actions.push({
+                    name: a.name,
+                    fields: a.fields.join(", ")
+                });
+            });
         });
     }]);
 
