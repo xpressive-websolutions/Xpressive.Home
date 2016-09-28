@@ -11,6 +11,7 @@ using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 using ZWave;
 using ZWave.CommandClasses;
+using Action = Xpressive.Home.Contracts.Gateway.Action;
 using Version = ZWave.CommandClasses.Version;
 
 namespace Xpressive.Home.Plugins.Zwave
@@ -45,14 +46,41 @@ namespace Xpressive.Home.Plugins.Zwave
             throw new NotSupportedException();
         }
 
-        protected override Task ExecuteInternalAsync(IDevice device, IAction action, IDictionary<string, string> values)
+        protected override async Task ExecuteInternalAsync(IDevice device, IAction action, IDictionary<string, string> values)
         {
-            throw new NotSupportedException();
+            if (device == null)
+            {
+                _log.Warn($"Unable to execute action {action.Name} because the device was not found.");
+                return;
+            }
+
+            var d = (ZwaveDevice)device;
+            var nodes = await _controller.GetNodes();
+            var node = nodes[d.NodeId];
+
+            if (d.IsSwitchBinary && action.Name.Equals("Switch On", StringComparison.Ordinal))
+            {
+                await node.GetCommandClass<SwitchBinary>().Set(true);
+            }
+            else if (d.IsSwitchBinary && action.Name.Equals("Switch Off", StringComparison.Ordinal))
+            {
+                await node.GetCommandClass<SwitchBinary>().Set(false);
+            }
         }
 
         public override IEnumerable<IAction> GetActions(IDevice device)
         {
-            yield break;
+            var d = device as ZwaveDevice;
+            if (d == null)
+            {
+                yield break;
+            }
+
+            if (d.IsSwitchBinary)
+            {
+                yield return new Action("Switch On");
+                yield return new Action("Switch Off");
+            }
         }
 
         public override async Task StartAsync()

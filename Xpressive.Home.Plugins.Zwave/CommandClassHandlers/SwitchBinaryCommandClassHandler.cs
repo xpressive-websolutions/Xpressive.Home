@@ -18,6 +18,7 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
                 HandleSwitchBinaryReport(e.Report);
             };
 
+            device.IsSwitchBinary = true;
             Start(TimeSpan.FromMinutes(30), device, node, queue);
         }
 
