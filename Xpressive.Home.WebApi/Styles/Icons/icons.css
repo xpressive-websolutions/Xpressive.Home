@@ -63,3 +63,7 @@
 .PhilipsHueIcon_LWB010 {
     background: url("./PhilipsHue/white_e27.svg");
 }
+
+.PhilipsHueIcon_PresenceSensor {
+    background: url("./PhilipsHue/motion_sensor.svg");
+}

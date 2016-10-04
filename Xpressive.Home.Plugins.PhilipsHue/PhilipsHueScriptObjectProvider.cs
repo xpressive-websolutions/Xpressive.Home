@@ -103,13 +103,28 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 
             public object isOn()
             {
-                if (_device == null)
+                var bulb = _device as PhilipsHueBulb;
+
+                if (bulb == null)
                 {
-                    _log.Warn("Unable to get variable value because the device was not found.");
+                    _log.Warn("Unable to get variable value because the device was not found or it isn't a bulb.");
                     return null;
                 }
 
-                return _device.IsOn;
+                return bulb.IsOn;
+            }
+
+            public object hasPresence()
+            {
+                var sensor = _device as PhilipsHuePresenceSensor;
+
+                if (sensor == null)
+                {
+                    _log.Warn("Unable to get variable value because the device was not found or it isn't a sensor.");
+                    return null;
+                }
+
+                return sensor.HasPresence;
             }
 
             public void on()

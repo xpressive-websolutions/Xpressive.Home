@@ -76,6 +76,7 @@
     <Compile Include="LightCommandStrategies\LightCommandStrategyBase.cs" />
     <Compile Include="LightCommandStrategies\SwitchOffLightCommandStrategy.cs" />
     <Compile Include="LightCommandStrategies\SwitchOnLightCommandStrategy.cs" />
+    <Compile Include="PhilipsHueBulb.cs" />
     <Compile Include="PhilipsHueModule.cs" />
     <Compile Include="IPhilipsHueBridgeDiscoveringService.cs" />
     <Compile Include="IPhilipsHueDeviceDiscoveringService.cs" />
@@ -84,6 +85,7 @@
     <Compile Include="PhilipsHueDevice.cs" />
     <Compile Include="PhilipsHueDeviceDiscoveringService.cs" />
     <Compile Include="PhilipsHueGateway.cs" />
+    <Compile Include="PhilipsHuePresenceSensor.cs" />
     <Compile Include="PhilipsHueScriptObjectProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RgbToCieConverter.cs" />

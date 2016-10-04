@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -9,6 +10,7 @@ using log4net;
 using Polly;
 using Polly.Retry;
 using Q42.HueApi;
+using Q42.HueApi.Models;
 using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
@@ -27,7 +29,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
         private readonly AutoResetEvent _queryWaitHandle = new AutoResetEvent(false);
         private readonly AutoResetEvent _commandWaitHandle = new AutoResetEvent(false);
         private readonly RetryPolicy _executeCommandPolicy;
-        private readonly ConcurrentQueue<Tuple<PhilipsHueDevice, LightCommand>> _commandQueue = new ConcurrentQueue<Tuple<PhilipsHueDevice, LightCommand>>();
+        private readonly ConcurrentQueue<Tuple<PhilipsHueBulb, LightCommand>> _commandQueue = new ConcurrentQueue<Tuple<PhilipsHueBulb, LightCommand>>();
         private bool _isRunning = true;
 
         public PhilipsHueGateway(
@@ -40,6 +42,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             _canCreateDevices = false;
 
             deviceDiscoveringService.BulbFound += OnBulbFound;
+            deviceDiscoveringService.PresenceSensorFound += OnPresenceSensorFound;
 
             _executeCommandPolicy = Policy
                 .Handle<Exception>()
@@ -58,7 +61,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 
         public override IEnumerable<IAction> GetActions(IDevice device)
         {
-            if (device is PhilipsHueDevice)
+            if (device is PhilipsHueBulb)
             {
                 yield return new Action("Switch On") { Fields = { "Transition time in seconds" } };
                 yield return new Action("Switch Off") { Fields = { "Transition time in seconds" } };
@@ -140,48 +143,33 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 
             while (_isRunning)
             {
-                List<PhilipsHueDevice> bulbs;
+                List<PhilipsHueBulb> bulbs;
+                List<PhilipsHuePresenceSensor> presenceSensors;
 
                 lock (_devicesLock)
                 {
-                    bulbs = _devices.Cast<PhilipsHueDevice>().ToList();
+                    bulbs = _devices.OfType<PhilipsHueBulb>().ToList();
+                    presenceSensors = _devices.OfType<PhilipsHuePresenceSensor>().ToList();
                 }
 
-                var bridges = bulbs.Select(d => d.Bridge).Distinct().ToList();
+                var bridges = bulbs
+                    .Select(d => d.Bridge)
+                    .Union(presenceSensors.Select(s => s.Bridge))
+                    .Distinct()
+                    .ToList();
 
                 foreach (var bridge in bridges)
                 {
                     try
                     {
                         var client = GetClient(bridge);
-                        var lights = await client.GetLightsAsync();
-                        var tuples = lights.Select(l => Tuple.Create(bulbs.SingleOrDefault(b => IsEqual(b, l)), l));
 
-                        foreach (var tuple in tuples)
+                        await _executeCommandPolicy.ExecuteAsync(() => UpdateBulbVariablesAsync(client, bulbs));
+
+                        for (var i = 0; i < 5 && _isRunning; i++)
                         {
-                            var bulb = tuple.Item1;
-                            var light = tuple.Item2;
-                            var state = light.State;
-                            var brightness = state.Brightness / 255d;
-                            var temperature = state.ColorTemperature ?? 0;
-
-                            if (bulb == null)
-                            {
-                                continue;
-                            }
-
-                            if (temperature != 0)
-                            {
-                                temperature = MirekToKelvin(temperature);
-                            }
-
-                            bulb.IsOn = state.On;
-
-                            UpdateVariable($"{Name}.{bulb.Id}.Brightness", Math.Round(brightness, 2));
-                            UpdateVariable($"{Name}.{bulb.Id}.IsOn", state.On);
-                            UpdateVariable($"{Name}.{bulb.Id}.IsReachable", state.IsReachable);
-                            UpdateVariable($"{Name}.{bulb.Id}.Name", light.Name);
-                            UpdateVariable($"{Name}.{bulb.Id}.ColorTemperature", (double)temperature);
+                            await _executeCommandPolicy.ExecuteAsync(() => UpdateSensorVariablesAsync(client, presenceSensors));
+                            await TaskHelper.DelayAsync(TimeSpan.FromSeconds(5), () => _isRunning);
                         }
                     }
                     catch (WebException)
@@ -193,8 +181,6 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                         _log.Error(e.Message, e);
                     }
                 }
-
-                await TaskHelper.DelayAsync(TimeSpan.FromSeconds(30), () => _isRunning);
             }
 
             _queryWaitHandle.Set();
@@ -233,7 +219,14 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                 return Task.CompletedTask;
             }
 
-            var bulb = (PhilipsHueDevice)device;
+            var bulb = device as PhilipsHueBulb;
+
+            if (bulb == null)
+            {
+                _log.Warn($"Unable to execute action {action.Name} because the device isn't a bulb.");
+                return Task.CompletedTask;
+            }
+
             var strategy = LightCommandStrategyBase.Get(action);
             var command = strategy.GetLightCommand(values, bulb);
             _commandQueue.Enqueue(Tuple.Create(bulb, command));
@@ -241,11 +234,64 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             return Task.CompletedTask;
         }
 
+        private async Task UpdateBulbVariablesAsync(LocalHueClient client, List<PhilipsHueBulb> bulbs)
+        {
+            var lights = await client.GetLightsAsync();
+
+            foreach (var light in lights)
+            {
+                var bulb = bulbs.SingleOrDefault(b => IsEqual(b, light));
+
+                if (bulb == null)
+                {
+                    continue;
+                }
+
+                var state = light.State;
+                var brightness = state.Brightness / 255d;
+                var temperature = state.ColorTemperature ?? 0;
+
+                if (temperature != 0)
+                {
+                    temperature = MirekToKelvin(temperature);
+                }
+
+                bulb.IsOn = state.On;
+
+                UpdateVariable($"{Name}.{bulb.Id}.Brightness", Math.Round(brightness, 2));
+                UpdateVariable($"{Name}.{bulb.Id}.IsOn", state.On);
+                UpdateVariable($"{Name}.{bulb.Id}.IsReachable", state.IsReachable);
+                UpdateVariable($"{Name}.{bulb.Id}.Name", light.Name);
+                UpdateVariable($"{Name}.{bulb.Id}.ColorTemperature", (double)temperature);
+            }
+        }
+
+        private async Task UpdateSensorVariablesAsync(LocalHueClient client, List<PhilipsHuePresenceSensor> presenceSensors)
+        {
+            var sensors = await client.GetSensorsAsync();
+
+            foreach (var sensor in sensors)
+            {
+                var presenceSensor = presenceSensors.SingleOrDefault(s => IsEqual(s, sensor));
+
+                if (presenceSensor == null)
+                {
+                    continue;
+                }
+
+                var state = sensor.State;
+
+                presenceSensor.HasPresence = state.Presence;
+
+                UpdateVariable($"{Name}.{presenceSensor.Id}.Presence", state.Presence);
+            }
+        }
+
         private async void StartCommandQueueWorker()
         {
             while (_isRunning)
             {
-                Tuple<PhilipsHueDevice, LightCommand> tuple;
+                Tuple<PhilipsHueBulb, LightCommand> tuple;
                 if (_commandQueue.TryDequeue(out tuple))
                 {
                     var bulb = tuple.Item1;
@@ -296,7 +342,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             return TimeSpan.FromMilliseconds(numberOfCommands * 50);
         }
 
-        private async Task ExecuteCommand(PhilipsHueDevice bulb, LightCommand command)
+        private async Task ExecuteCommand(PhilipsHueBulb bulb, LightCommand command)
         {
             try
             {
@@ -333,7 +379,18 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                     return;
                 }
 
-                UpdateVariable($"{Name}.{e.Id}.Name", e.Name);
+                _devices.Add(e);
+            }
+        }
+
+        private void OnPresenceSensorFound(object sender, PhilipsHuePresenceSensor e)
+        {
+            lock (_devicesLock)
+            {
+                if (_devices.Cast<PhilipsHueDevice>().Any(d => d.Id.Equals(e.Id, StringComparison.OrdinalIgnoreCase)))
+                {
+                    return;
+                }
 
                 _devices.Add(e);
             }
@@ -344,10 +401,21 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             _messageQueue.Publish(new UpdateVariableMessage(name, value));
         }
 
-        private bool IsEqual(PhilipsHueDevice device, Light light)
+        private bool IsEqual(PhilipsHueBulb device, Light light)
         {
             var lightId = light.UniqueId.Replace(":", string.Empty).Replace("-", string.Empty);
             return device.Id.Equals(lightId, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private bool IsEqual(PhilipsHuePresenceSensor device, Sensor sensor)
+        {
+            if (sensor.UniqueId == null)
+            {
+                return false;
+            }
+
+            var sensorId = sensor.UniqueId.Replace(":", string.Empty).Replace("-", string.Empty);
+            return device.Id.Equals(sensorId, StringComparison.OrdinalIgnoreCase);
         }
 
         private LocalHueClient GetClient(PhilipsHueBridge bridge)
