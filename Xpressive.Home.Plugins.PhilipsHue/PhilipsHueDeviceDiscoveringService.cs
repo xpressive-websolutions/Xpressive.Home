@@ -56,7 +56,8 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                     var sensor = new PhilipsHuePresenceSensor(presenceSensor.Id, id, presenceSensor.Name, bridge)
                     {
                         Model = presenceSensor.ModelId,
-                        Icon = "PhilipsHueIcon PhilipsHueIcon_PresenceSensor"
+                        Icon = "PhilipsHueIcon PhilipsHueIcon_PresenceSensor",
+                        Battery = presenceSensor.Config.Battery ?? 100
                     };
 
                     OnPresenceSensorFound(sensor);

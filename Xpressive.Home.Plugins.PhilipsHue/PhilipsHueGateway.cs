@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -282,6 +281,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                 var state = sensor.State;
 
                 presenceSensor.HasPresence = state.Presence;
+                presenceSensor.Battery = sensor.Config.Battery ?? 100;
 
                 UpdateVariable($"{Name}.{presenceSensor.Id}.Presence", state.Presence);
             }
