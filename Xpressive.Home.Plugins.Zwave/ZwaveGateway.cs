@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.IO.Ports;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using log4net;
+using Polly;
 using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
@@ -104,7 +106,18 @@ namespace Xpressive.Home.Plugins.Zwave
 
             try
             {
-                await _library.Load();
+                await Policy
+                    .Handle<WebException>()
+                    .Or<Exception>()
+                    .WaitAndRetryForeverAsync(_ => TimeSpan.FromSeconds(1))
+                    .ExecuteAsync(async () =>
+                    {
+                        if (!_isRunning)
+                        {
+                            return;
+                        }
+                        await _library.Load();
+                    });
 
                 _controller = new ZWaveController(_comPortName);
                 _controller.Open();

@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Globalization;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using ForecastIO;
 using log4net;
+using Polly;
 using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
@@ -19,6 +21,7 @@ namespace Xpressive.Home.Plugins.Forecast
         private readonly string _apiKey;
         private readonly IMessageQueue _messageQueue;
         private readonly AutoResetEvent _taskWaitHandle = new AutoResetEvent(false);
+        private readonly Policy _policy;
         private bool _isRunning = true;
 
         public ForecastGateway(IMessageQueue messageQueue) : base("Weather")
@@ -26,6 +29,15 @@ namespace Xpressive.Home.Plugins.Forecast
             _messageQueue = messageQueue;
             _apiKey = ConfigurationManager.AppSettings["forecast.apikey"];
             _canCreateDevices = true;
+
+            _policy = Policy
+                .Handle<WebException>()
+                .WaitAndRetry(new[]
+                {
+                    TimeSpan.FromSeconds(1),
+                    TimeSpan.FromSeconds(2),
+                    TimeSpan.FromSeconds(5)
+                });
         }
 
         public override IDevice CreateEmptyDevice()
@@ -103,7 +115,11 @@ namespace Xpressive.Home.Plugins.Forecast
             try
             {
                 var request = new ForecastIORequest(_apiKey, latitude, longitude, Unit.si);
-                response = request.Get();
+                response = _policy.Execute(() => request.Get());
+            }
+            catch (WebException)
+            {
+                return;
             }
             catch (Exception e)
             {
