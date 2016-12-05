@@ -132,7 +132,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(t => { });
 
             var _ = Task.Factory.StartNew(() => StartCommandQueueWorker(cancellationToken), TaskCreationOptions.LongRunning);
 
@@ -164,7 +164,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                         for (var i = 0; i < 5 && !cancellationToken.IsCancellationRequested; i++)
                         {
                             await _executeCommandPolicy.ExecuteAsync(() => UpdateSensorVariablesAsync(client, presenceSensors));
-                            await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+                            await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken).ContinueWith(t => { });
                         }
                     }
                     catch (WebException)
@@ -283,11 +283,11 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                     }
 
                     await ExecuteCommand(bulb, command);
-                    await Task.Delay(waitTime, cancellationToken);
+                    await Task.Delay(waitTime, cancellationToken).ContinueWith(_ => { });
                 }
                 else
                 {
-                    await Task.Delay(TimeSpan.FromMilliseconds(5), cancellationToken);
+                    await Task.Delay(TimeSpan.FromMilliseconds(5), cancellationToken).ContinueWith(_ => { });
                 }
             }
         }

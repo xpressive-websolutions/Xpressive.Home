@@ -83,7 +83,7 @@ namespace Xpressive.Home.Plugins.Zwave
 
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
 
             if (string.IsNullOrEmpty(_comPortName))
             {
@@ -121,7 +121,7 @@ namespace Xpressive.Home.Plugins.Zwave
                 {
                     _log.Debug("Discover Nodes");
                     await DiscoverNodes(cancellationToken);
-                    await Task.Delay(TimeSpan.FromHours(1), cancellationToken);
+                    await Task.Delay(TimeSpan.FromHours(1), cancellationToken).ContinueWith(_ => { });
                 }
             }
             catch (Exception e)

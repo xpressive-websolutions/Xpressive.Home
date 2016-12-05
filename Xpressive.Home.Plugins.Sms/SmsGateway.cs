@@ -42,7 +42,7 @@ namespace Xpressive.Home.Plugins.Sms
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
             var username = ConfigurationManager.AppSettings["sms.username"];
             var password = ConfigurationManager.AppSettings["sms.password"];
 

@@ -63,7 +63,7 @@ namespace Xpressive.Home.Plugins.Netatmo
 
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
 
             if (!_isValidConfiguration)
             {
@@ -96,7 +96,7 @@ namespace Xpressive.Home.Plugins.Netatmo
                     _log.Error(e.Message, e);
                 }
 
-                await Task.Delay(TimeSpan.FromMinutes(1), cancellationToken);
+                await Task.Delay(TimeSpan.FromMinutes(1), cancellationToken).ContinueWith(_ => { });
             }
         }
 

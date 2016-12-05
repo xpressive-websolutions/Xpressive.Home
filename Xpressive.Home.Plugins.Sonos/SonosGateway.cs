@@ -109,7 +109,7 @@ namespace Xpressive.Home.Plugins.Sonos
 
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
 
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -127,7 +127,7 @@ namespace Xpressive.Home.Plugins.Sonos
                     _log.Error(e.Message, e);
                 }
 
-                await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken);
+                await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken).ContinueWith(_ => { });
             }
         }
 

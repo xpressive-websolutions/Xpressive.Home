@@ -21,7 +21,7 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
             {
                 while (!_isDisposing)
                 {
-                    await Task.Delay(interval, cancellationToken);
+                    await Task.Delay(interval, cancellationToken).ContinueWith(_ => { });
                     Execute(device, node, queue);
                 }
             });

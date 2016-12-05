@@ -20,9 +20,9 @@ namespace Xpressive.Home.Services
 
         public async Task StartDiscoveringAsync()
         {
-            var runningTask = Task.Run(async () => { await Task.Delay(TimeSpan.MaxValue, _cancellationToken.Token); });
+            var runningTask = Task.Run(async () => { await Task.Delay(TimeSpan.MaxValue, _cancellationToken.Token).ContinueWith(_ => { }); });
 
-            await Task.Delay(TimeSpan.FromSeconds(5), _cancellationToken.Token);
+            await Task.Delay(TimeSpan.FromSeconds(5), _cancellationToken.Token).ContinueWith(_ => { });
 
             using (var deviceLocator = new SsdpDeviceLocator())
             {
@@ -81,7 +81,7 @@ namespace Xpressive.Home.Services
                         OnDeviceFound(response);
                     }
 
-                    await Task.Delay(TimeSpan.FromSeconds(60), _cancellationToken.Token);
+                    await Task.Delay(TimeSpan.FromSeconds(60), _cancellationToken.Token).ContinueWith(_ => { });
                 }
             }
         }

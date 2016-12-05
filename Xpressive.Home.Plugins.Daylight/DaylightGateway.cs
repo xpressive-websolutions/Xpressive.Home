@@ -38,7 +38,7 @@ namespace Xpressive.Home.Plugins.Daylight
 
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
 
             await LoadDevicesAsync((id, name) => new DaylightDevice { Id = id, Name = name });
 
@@ -49,7 +49,7 @@ namespace Xpressive.Home.Plugins.Daylight
                     UpdateVariables(device);
                 }
 
-                await Task.Delay(TimeSpan.FromMinutes(1), cancellationToken);
+                await Task.Delay(TimeSpan.FromMinutes(1), cancellationToken).ContinueWith(_ => { });
             }
         }
 

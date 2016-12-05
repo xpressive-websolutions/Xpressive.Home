@@ -126,7 +126,7 @@ namespace Xpressive.Home.Plugins.Lifx
 
         public override Task StartAsync(CancellationToken cancellationToken)
         {
-            Task.WaitAll(Task.Delay(TimeSpan.FromSeconds(1), cancellationToken));
+            Task.WaitAll(Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { }));
 
             FindLocalBulbsAsync(cancellationToken).ConfigureAwait(false);
             FindCloudBulbsAsync(cancellationToken).ConfigureAwait(false);
@@ -146,7 +146,7 @@ namespace Xpressive.Home.Plugins.Lifx
             {
                 await ExecuteWithRetriesAsync(GetHttpLights, "get cloud bulbs");
 
-                await Task.Delay(TimeSpan.FromMinutes(1), cancellationToken);
+                await Task.Delay(TimeSpan.FromMinutes(1), cancellationToken).ContinueWith(_ => { });
             }
         }
 

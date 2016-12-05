@@ -42,7 +42,7 @@ namespace Xpressive.Home.Plugins.Pushalot
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
             var token = ConfigurationManager.AppSettings["pushalot.token"];
 
             if (string.IsNullOrEmpty(token))

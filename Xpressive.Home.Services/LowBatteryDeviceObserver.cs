@@ -47,7 +47,7 @@ namespace Xpressive.Home.Services
                     }
                 }
 
-                await Task.Delay(TimeSpan.FromMinutes(1), _cancellationToken.Token);
+                await Task.Delay(TimeSpan.FromMinutes(1), _cancellationToken.Token).ContinueWith(_ => { });
             }
         }
     }

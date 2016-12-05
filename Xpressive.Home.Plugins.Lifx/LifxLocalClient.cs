@@ -61,7 +61,7 @@ namespace Xpressive.Home.Plugins.Lifx
                 {
                 }
 
-                await Task.Delay(TimeSpan.FromMinutes(5), cancellationToken);
+                await Task.Delay(TimeSpan.FromMinutes(5), cancellationToken).ContinueWith(t => { });
             }
         }
 

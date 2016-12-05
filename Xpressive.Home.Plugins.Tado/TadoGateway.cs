@@ -36,7 +36,7 @@ namespace Xpressive.Home.Plugins.Tado
 
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
 
             if (string.IsNullOrEmpty(_username) || string.IsNullOrEmpty(_password))
             {
@@ -88,7 +88,7 @@ namespace Xpressive.Home.Plugins.Tado
                     _log.Error(e.Message, e);
                 }
 
-                await Task.Delay(TimeSpan.FromSeconds(60), cancellationToken);
+                await Task.Delay(TimeSpan.FromSeconds(60), cancellationToken).ContinueWith(_ => { });
             }
         }
 

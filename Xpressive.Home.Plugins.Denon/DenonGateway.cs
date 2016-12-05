@@ -172,7 +172,7 @@ namespace Xpressive.Home.Plugins.Denon
 
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
 
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -184,7 +184,7 @@ namespace Xpressive.Home.Plugins.Denon
                     }
                 }
 
-                await Task.Delay(TimeSpan.FromMinutes(1), cancellationToken);
+                await Task.Delay(TimeSpan.FromMinutes(1), cancellationToken).ContinueWith(_ => { });
             }
         }
 

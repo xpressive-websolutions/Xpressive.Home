@@ -61,7 +61,7 @@ namespace Xpressive.Home.Plugins.MyStrom
 
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
 
             var previousPowers = new Dictionary<string, double>();
 
@@ -98,7 +98,7 @@ namespace Xpressive.Home.Plugins.MyStrom
                     }
                 }
 
-                await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken);
+                await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken).ContinueWith(_ => { });
             }
         }
 

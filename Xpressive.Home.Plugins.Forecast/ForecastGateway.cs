@@ -49,7 +49,7 @@ namespace Xpressive.Home.Plugins.Forecast
 
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
 
             await LoadDevicesAsync((id, name) => new ForecastDevice { Id = id, Name = name });
 
@@ -72,7 +72,7 @@ namespace Xpressive.Home.Plugins.Forecast
                 }
 
                 var minutes = Math.Max(_devices.Count*2.5, 10);
-                await Task.Delay(TimeSpan.FromMinutes(minutes), cancellationToken);
+                await Task.Delay(TimeSpan.FromMinutes(minutes), cancellationToken).ContinueWith(_ => { });
             }
         }
 
@@ -116,7 +116,7 @@ namespace Xpressive.Home.Plugins.Forecast
                 UpdateVariables(device.Id, $"D+{day}_", data);
             }
 
-            await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken);
+            await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken).ContinueWith(_ => { });
         }
 
         private void UpdateVariables(string deviceId, string prefix, object data)

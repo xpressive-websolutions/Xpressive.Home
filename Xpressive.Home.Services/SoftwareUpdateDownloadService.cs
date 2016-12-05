@@ -55,7 +55,7 @@ namespace Xpressive.Home.Services
                 while (!_cancellationToken.IsCancellationRequested)
                 {
                     await CheckForUpdateAsync();
-                    await Task.Delay(TimeSpan.FromHours(1), _cancellationToken.Token);
+                    await Task.Delay(TimeSpan.FromHours(1), _cancellationToken.Token).ContinueWith(_ => { });
                 }
             });
         }
