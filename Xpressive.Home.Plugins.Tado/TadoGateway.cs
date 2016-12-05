@@ -74,7 +74,7 @@ namespace Xpressive.Home.Plugins.Tado
                         {
                             if (!_devices.Cast<TadoDevice>().Any(d => d.Id.Equals(deviceId, StringComparison.OrdinalIgnoreCase)))
                             {
-                                _devices.Add(new TadoDevice { Id = deviceId, Name = zone.Name, Icon = "tado" });
+                                _devices.Add(new TadoDevice { Id = deviceId, Name = zone.Name, Icon = "fa fa-thermometer-full" });
                             }
                         }
 

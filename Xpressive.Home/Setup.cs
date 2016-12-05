@@ -18,7 +18,7 @@ namespace Xpressive.Home
             RegisterMessageQueueListeners();
 
             var gateways = IocContainer.Resolve<IList<IGateway>>();
-             var cancellationToken = new CancellationTokenSource();
+            var cancellationToken = new CancellationTokenSource();
 
             foreach (var gateway in gateways)
             {
