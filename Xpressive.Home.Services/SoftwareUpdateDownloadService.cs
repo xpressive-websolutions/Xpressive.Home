@@ -5,20 +5,20 @@ using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Security.Cryptography;
+using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
 using Octokit;
 using Org.BouncyCastle.Crypto.Digests;
 using Polly;
-using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Services;
 
 namespace Xpressive.Home.Services
 {
     internal sealed class SoftwareUpdateDownloadService : ISoftwareUpdateDownloadService, IStartable, IDisposable
     {
+        private readonly CancellationTokenSource _cancellationToken = new CancellationTokenSource();
         private bool _isUpdateAvailable;
-        private bool _isRunning;
 
         public bool IsNewVersionAvailable()
         {
@@ -50,21 +50,20 @@ namespace Xpressive.Home.Services
 
         public void Start()
         {
-            _isRunning = true;
-
             Task.Run(async () =>
             {
-                while (_isRunning)
+                while (!_cancellationToken.IsCancellationRequested)
                 {
                     await CheckForUpdateAsync();
-                    await TaskHelper.DelayAsync(TimeSpan.FromHours(1), () => _isRunning);
+                    await Task.Delay(TimeSpan.FromHours(1), _cancellationToken.Token);
                 }
             });
         }
 
         public void Dispose()
         {
-            _isRunning = false;
+            _cancellationToken.Cancel();
+            _cancellationToken.Dispose();
         }
 
         private async Task CheckForUpdateAsync()

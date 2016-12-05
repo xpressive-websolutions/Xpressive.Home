@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Threading;
 using System.Threading.Tasks;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
@@ -39,9 +40,9 @@ namespace Xpressive.Home.Plugins.Sms
             yield break;
         }
 
-        public async Task StartAsync()
+        public async Task StartAsync(CancellationToken cancellationToken)
         {
-            await Task.Delay(TimeSpan.FromSeconds(1));
+            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
             var username = ConfigurationManager.AppSettings["sms.username"];
             var password = ConfigurationManager.AppSettings["sms.password"];
 
@@ -50,8 +51,6 @@ namespace Xpressive.Home.Plugins.Sms
                 _messageQueue.Publish(new NotifyUserMessage("Add sms configuration to config file."));
             }
         }
-
-        public void Stop() { }
 
         public void Dispose() { }
     }

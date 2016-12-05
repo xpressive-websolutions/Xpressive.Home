@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using Xpressive.Home.Contracts.Messaging;
 using ZWave;
 using ZWave.Channel;
@@ -11,14 +12,14 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
         public BasicCommandClassHandler(IMessageQueue messageQueue)
             : base(messageQueue, CommandClass.Basic) { }
 
-        protected override void Handle(ZwaveDevice device, Node node, ZwaveCommandQueue queue)
+        protected override void Handle(ZwaveDevice device, Node node, ZwaveCommandQueue queue, CancellationToken cancellationToken)
         {
             node.GetCommandClass<Basic>().Changed += (s, e) =>
             {
                 HandleBasicReport(e.Report);
             };
 
-            Start(TimeSpan.FromMinutes(30), device, node, queue);
+            Start(TimeSpan.FromMinutes(30), device, node, queue, cancellationToken);
         }
 
         private void HandleBasicReport(BasicReport report)

@@ -1,3 +1,4 @@
+using System.Threading;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 using ZWave;
@@ -19,9 +20,9 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
 
         public CommandClass CommandClass => _commandClass;
 
-        public void Handle(IDevice device, Node node, ZwaveCommandQueue queue)
+        public void Handle(IDevice device, Node node, ZwaveCommandQueue queue, CancellationToken cancellationToken)
         {
-            Handle((ZwaveDevice)device, node, queue);
+            Handle((ZwaveDevice)device, node, queue, cancellationToken);
         }
 
         protected void UpdateVariable(NodeReport nodeReport, string variable, object value)
@@ -30,7 +31,7 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
             _messageQueue.Publish(new UpdateVariableMessage("zwave", device, variable, value));
         }
 
-        protected abstract void Handle(ZwaveDevice device, Node node, ZwaveCommandQueue queue);
+        protected abstract void Handle(ZwaveDevice device, Node node, ZwaveCommandQueue queue, CancellationToken cancellationToken);
 
         public void Dispose()
         {

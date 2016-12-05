@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using log4net;
 using Xpressive.Home.Contracts.Messaging;
@@ -35,8 +36,7 @@ namespace Xpressive.Home.Contracts.Gateway
 
         public abstract IEnumerable<IAction> GetActions(IDevice device);
 
-        public abstract Task StartAsync();
-        public abstract void Stop();
+        public abstract Task StartAsync(CancellationToken cancellationToken);
         public abstract IDevice CreateEmptyDevice();
 
         public void Notify(CommandMessage message)

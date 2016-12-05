@@ -89,7 +89,6 @@
     <Compile Include="Services\ITuneInRadioStationService.cs" />
     <Compile Include="Services\IUpnpDeviceDiscoveringService.cs" />
     <Compile Include="Services\IUpnpDeviceResponse.cs" />
-    <Compile Include="TaskHelper.cs" />
     <Compile Include="Variables\BooleanVariable.cs" />
     <Compile Include="Variables\DoubleVariable.cs" />
     <Compile Include="Variables\IVariableRepository.cs" />

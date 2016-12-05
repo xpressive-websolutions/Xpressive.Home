@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Xpressive.Home.Contracts.Messaging;
 using Xunit;
@@ -19,7 +20,7 @@ namespace Xpressive.Home.Plugins.Netatmo.Tests
         public async Task X()
         {
             var gateway = new NetatmoGateway(new MessageQueueMock(_output.WriteLine));
-            await gateway.StartAsync();
+            await gateway.StartAsync(new CancellationToken());
         }
     }
 

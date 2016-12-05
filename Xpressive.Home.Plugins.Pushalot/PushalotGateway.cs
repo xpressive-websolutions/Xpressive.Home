@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Threading;
 using System.Threading.Tasks;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
@@ -39,9 +40,9 @@ namespace Xpressive.Home.Plugins.Pushalot
             yield break;
         }
 
-        public async Task StartAsync()
+        public async Task StartAsync(CancellationToken cancellationToken)
         {
-            await Task.Delay(TimeSpan.FromSeconds(1));
+            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
             var token = ConfigurationManager.AppSettings["pushalot.token"];
 
             if (string.IsNullOrEmpty(token))
@@ -49,8 +50,6 @@ namespace Xpressive.Home.Plugins.Pushalot
                 _messageQueue.Publish(new NotifyUserMessage("Add pushalot configuration to config file."));
             }
         }
-
-        public void Stop() { }
 
         public void Dispose() { }
     }

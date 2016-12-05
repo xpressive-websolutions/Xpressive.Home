@@ -8,7 +8,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using log4net;
 using Polly;
-using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 using ZWave;
@@ -26,9 +25,7 @@ namespace Xpressive.Home.Plugins.Zwave
         private readonly string _comPortName;
         private readonly ZwaveDeviceLibrary _library;
         private readonly Dictionary<byte, ZwaveCommandQueue> _nodeCommandQueues;
-        private readonly AutoResetEvent _taskWaitHandle = new AutoResetEvent(false);
         private ZWaveController _controller;
-        private bool _isRunning;
 
         public ZwaveGateway(IMessageQueue messageQueue, IList<ICommandClassHandler> commandClassHandlers)
             : base("zwave")
@@ -36,7 +33,6 @@ namespace Xpressive.Home.Plugins.Zwave
             _messageQueue = messageQueue;
             _commandClassHandlers = commandClassHandlers;
             _canCreateDevices = false;
-            _isRunning = true;
 
             _comPortName = ConfigurationManager.AppSettings["zwave.port"];
             _library = new ZwaveDeviceLibrary();
@@ -85,14 +81,13 @@ namespace Xpressive.Home.Plugins.Zwave
             }
         }
 
-        public override async Task StartAsync()
+        public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            await Task.Delay(TimeSpan.FromSeconds(1));
+            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
 
             if (string.IsNullOrEmpty(_comPortName))
             {
                 _messageQueue.Publish(new NotifyUserMessage("Add z-wave configuration (port) to config file."));
-                _taskWaitHandle.Set();
                 return;
             }
 
@@ -100,7 +95,6 @@ namespace Xpressive.Home.Plugins.Zwave
             if (!validComPorts.Contains(_comPortName))
             {
                 _messageQueue.Publish(new NotifyUserMessage("COM Port for z-wave configuration is invalid."));
-                _taskWaitHandle.Set();
                 return;
             }
 
@@ -112,7 +106,7 @@ namespace Xpressive.Home.Plugins.Zwave
                     .WaitAndRetryForeverAsync(_ => TimeSpan.FromSeconds(1))
                     .ExecuteAsync(async () =>
                     {
-                        if (!_isRunning)
+                        if (cancellationToken.IsCancellationRequested)
                         {
                             return;
                         }
@@ -123,32 +117,20 @@ namespace Xpressive.Home.Plugins.Zwave
                 _controller.Open();
                 _controller.Channel.NodeEventReceived += (s, e) => ContinueNodeQueueWorker(e.NodeID);
 
-                while (_isRunning)
+                while (!cancellationToken.IsCancellationRequested)
                 {
                     _log.Debug("Discover Nodes");
-                    await DiscoverNodes();
-
-                    await TaskHelper.DelayAsync(TimeSpan.FromHours(1), () => _isRunning);
+                    await DiscoverNodes(cancellationToken);
+                    await Task.Delay(TimeSpan.FromHours(1), cancellationToken);
                 }
             }
             catch (Exception e)
             {
                 _log.Error(e.Message, e);
             }
-
-            _taskWaitHandle.Set();
         }
 
-        public override void Stop()
-        {
-            _isRunning = false;
-            if (!_taskWaitHandle.WaitOne(TimeSpan.FromSeconds(5)))
-            {
-                _log.Error("Unable to shutdown.");
-            }
-        }
-
-        private async Task DiscoverNodes()
+        private async Task DiscoverNodes(CancellationToken cancellationToken)
         {
             var controllerNodeId = await _controller.GetNodeID();
             var nodes = await _controller.DiscoverNodes();
@@ -166,7 +148,7 @@ namespace Xpressive.Home.Plugins.Zwave
                     queue.Add("UpdateDeviceProtocolInfo", () => UpdateDeviceProtocolInfo(device, node));
                     queue.Add("GetNodeVersion", () => GetNodeVersion(device, node));
                     queue.Add("GetNodeProductInformation", () => GetNodeProductInformation(device, node));
-                    queue.Add("GetSupportedCommandClasses", () => GetSupportedCommandClasses(device, node));
+                    queue.Add("GetSupportedCommandClasses", () => GetSupportedCommandClasses(device, node, cancellationToken));
 
                     queue.StartOrContinueWorker();
                 }
@@ -220,9 +202,14 @@ namespace Xpressive.Home.Plugins.Zwave
             _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Manufacturer", device.Manufacturer));
             _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "ProductName", device.ProductName));
             _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Description", device.ProductDescription));
+
+            if (string.IsNullOrEmpty(device.Name))
+            {
+                device.Name = string.Join(" ", device.Manufacturer, device.ProductName, device.ProductDescription);
+            }
         }
 
-        private async Task GetSupportedCommandClasses(ZwaveDevice device, Node node)
+        private async Task GetSupportedCommandClasses(ZwaveDevice device, Node node, CancellationToken cancellationToken)
         {
             var commandClasses = await node.GetSupportedCommandClasses();
             var handlers = _commandClassHandlers.ToDictionary(h => h.CommandClass);
@@ -234,7 +221,7 @@ namespace Xpressive.Home.Plugins.Zwave
                 ICommandClassHandler handler;
                 if (handlers.TryGetValue(commandClassReport.Class, out handler))
                 {
-                    handler.Handle(device, node, _nodeCommandQueues[node.NodeID]);
+                    handler.Handle(device, node, _nodeCommandQueues[node.NodeID], cancellationToken);
                 }
                 else
                 {
@@ -254,8 +241,6 @@ namespace Xpressive.Home.Plugins.Zwave
 
         protected override void Dispose(bool disposing)
         {
-            _isRunning = false;
-
             if (disposing)
             {
                 foreach (var commandQueue in _nodeCommandQueues)
@@ -269,7 +254,6 @@ namespace Xpressive.Home.Plugins.Zwave
                 }
 
                 _controller?.Close();
-                _taskWaitHandle.Dispose();
             }
 
             base.Dispose(disposing);

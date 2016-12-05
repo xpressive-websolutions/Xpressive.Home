@@ -7,7 +7,6 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Xpressive.Home.Contracts;
 using Xpressive.Home.Plugins.Lifx.Utils;
 
 namespace Xpressive.Home.Plugins.Lifx
@@ -15,9 +14,6 @@ namespace Xpressive.Home.Plugins.Lifx
     internal class LifxLocalClient : IDisposable
     {
         private UdpClient _listeningClient;
-        private readonly AutoResetEvent _receiveWaitHandle = new AutoResetEvent(false);
-        private readonly AutoResetEvent _discoverWaitHandle = new AutoResetEvent(false);
-        private bool _isRunning = true;
         private readonly Dictionary<string, LifxLocalLight> _discoveredBulbs = new Dictionary<string, LifxLocalLight>();
         private static readonly Random _randomizer = new Random();
 
@@ -26,9 +22,9 @@ namespace Xpressive.Home.Plugins.Lifx
 
         public IEnumerable<LifxLocalLight> Lights => _discoveredBulbs.Values;
 
-        private async Task Receive()
+        private async Task Receive(CancellationToken cancellationToken)
         {
-            while (_isRunning)
+            while (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
@@ -39,17 +35,15 @@ namespace Xpressive.Home.Plugins.Lifx
                 {
                 }
             }
-
-            _receiveWaitHandle.Set();
         }
 
-        public async Task StartDeviceDiscoveryAsync()
+        public async Task StartDeviceDiscoveryAsync(CancellationToken cancellationToken)
         {
             _listeningClient = new UdpClient(56700);
             _listeningClient.Client.Blocking = false;
             _listeningClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
 
-            var _ = Task.Factory.StartNew(Receive);
+            var _ = Task.Factory.StartNew(() => Receive(cancellationToken));
 
             var source = (uint) _randomizer.Next(int.MaxValue);
             var header = new FrameHeader
@@ -57,7 +51,7 @@ namespace Xpressive.Home.Plugins.Lifx
                 Identifier = source
             };
 
-            while (_isRunning)
+            while (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
@@ -67,19 +61,8 @@ namespace Xpressive.Home.Plugins.Lifx
                 {
                 }
 
-                await TaskHelper.DelayAsync(TimeSpan.FromMinutes(5), () => _isRunning);
+                await Task.Delay(TimeSpan.FromMinutes(5), cancellationToken);
             }
-
-            _discoverWaitHandle.Set();
-        }
-
-        public bool Stop()
-        {
-            _isRunning = false;
-            _listeningClient.Dispose();
-
-            return _receiveWaitHandle.WaitOne(TimeSpan.FromSeconds(2)) &&
-                _discoverWaitHandle.WaitOne(TimeSpan.FromSeconds(2));
         }
 
         private void HandleIncomingMessages(byte[] data, IPEndPoint remoteEndPoint)
@@ -401,7 +384,6 @@ namespace Xpressive.Home.Plugins.Lifx
         /// </summary>
         public void Dispose()
         {
-            _isRunning = false;
             _listeningClient?.Dispose();
         }
     }

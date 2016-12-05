@@ -10,7 +10,6 @@ using System.Xml;
 using log4net;
 using Polly;
 using RestSharp;
-using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 using Xpressive.Home.Contracts.Services;
@@ -24,8 +23,6 @@ namespace Xpressive.Home.Plugins.Denon
         private readonly IMessageQueue _messageQueue;
         private readonly IUpnpDeviceDiscoveringService _upnpDeviceDiscoveringService;
         private readonly object _deviceLock = new object();
-        private readonly AutoResetEvent _taskWaitHandle = new AutoResetEvent(false);
-        private bool _isRunning;
 
         public DenonGateway(
             IMessageQueue messageQueue,
@@ -173,35 +170,21 @@ namespace Xpressive.Home.Plugins.Denon
             }
         }
 
-        public override async Task StartAsync()
+        public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            _isRunning = true;
+            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
 
-            await TaskHelper.DelayAsync(TimeSpan.FromSeconds(1), () => _isRunning);
-
-            while (_isRunning)
+            while (!cancellationToken.IsCancellationRequested)
             {
                 foreach (var device in GetDevices())
                 {
-                    if (_isRunning)
+                    if (!cancellationToken.IsCancellationRequested)
                     {
                         await UpdateVariablesAsync(device);
                     }
                 }
 
-                await TaskHelper.DelayAsync(TimeSpan.FromMinutes(1), () => _isRunning);
-            }
-
-            _taskWaitHandle.Set();
-        }
-
-        public override void Stop()
-        {
-            _isRunning = false;
-            _upnpDeviceDiscoveringService.DeviceFound -= OnUpnpDeviceFound;
-            if (!_taskWaitHandle.WaitOne(TimeSpan.FromSeconds(5)))
-            {
-                _log.Error("Unable to shutdown.");
+                await Task.Delay(TimeSpan.FromMinutes(1), cancellationToken);
             }
         }
 
@@ -209,7 +192,7 @@ namespace Xpressive.Home.Plugins.Denon
         {
             if (disposing)
             {
-                _taskWaitHandle.Dispose();
+                _upnpDeviceDiscoveringService.DeviceFound -= OnUpnpDeviceFound;
             }
             base.Dispose(disposing);
         }

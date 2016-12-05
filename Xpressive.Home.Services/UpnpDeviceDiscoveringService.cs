@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using log4net;
 using Rssdp;
-using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Services;
 
 namespace Xpressive.Home.Services
@@ -14,19 +14,19 @@ namespace Xpressive.Home.Services
     internal sealed class UpnpDeviceDiscoveringService : IUpnpDeviceDiscoveringService
     {
         private static readonly ILog _log = LogManager.GetLogger(typeof(UpnpDeviceDiscoveringService));
-        private bool _isRunning = true;
+        private readonly CancellationTokenSource _cancellationToken = new CancellationTokenSource();
 
         public event EventHandler<IUpnpDeviceResponse> DeviceFound;
 
         public async Task StartDiscoveringAsync()
         {
-            var runningTask = Task.Run(async () => { await TaskHelper.DelayAsync(TimeSpan.MaxValue, () => _isRunning); });
+            var runningTask = Task.Run(async () => { await Task.Delay(TimeSpan.MaxValue, _cancellationToken.Token); });
 
-            await TaskHelper.DelayAsync(TimeSpan.FromSeconds(5), () => _isRunning);
+            await Task.Delay(TimeSpan.FromSeconds(5), _cancellationToken.Token);
 
             using (var deviceLocator = new SsdpDeviceLocator())
             {
-                while (_isRunning)
+                while (!_cancellationToken.IsCancellationRequested)
                 {
                     Task<IEnumerable<DiscoveredSsdpDevice>> searchTask;
 
@@ -41,7 +41,7 @@ namespace Xpressive.Home.Services
                         continue;
                     }
 
-                    if (!_isRunning)
+                    if (_cancellationToken.IsCancellationRequested)
                     {
                         break;
                     }
@@ -81,7 +81,7 @@ namespace Xpressive.Home.Services
                         OnDeviceFound(response);
                     }
 
-                    await TaskHelper.DelayAsync(TimeSpan.FromSeconds(60), () => _isRunning);
+                    await Task.Delay(TimeSpan.FromSeconds(60), _cancellationToken.Token);
                 }
             }
         }
@@ -120,7 +120,8 @@ namespace Xpressive.Home.Services
 
         public void Dispose()
         {
-            _isRunning = false;
+            _cancellationToken.Cancel();
+            _cancellationToken.Dispose();
         }
     }
 }

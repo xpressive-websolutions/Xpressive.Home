@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
@@ -13,9 +14,9 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
         public BatteryCommandClassHandler(IMessageQueue messageQueue)
             : base(messageQueue, CommandClass.Battery) { }
 
-        protected override void Handle(ZwaveDevice device, Node node, ZwaveCommandQueue queue)
+        protected override void Handle(ZwaveDevice device, Node node, ZwaveCommandQueue queue, CancellationToken cancellationToken)
         {
-            Start(TimeSpan.FromDays(1), device, node, queue);
+            Start(TimeSpan.FromDays(1), device, node, queue, cancellationToken);
         }
 
         protected override void Execute(ZwaveDevice device, Node node, ZwaveCommandQueue queue)

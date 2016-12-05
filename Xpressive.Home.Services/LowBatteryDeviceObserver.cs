@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
-using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 
@@ -13,7 +13,7 @@ namespace Xpressive.Home.Services
     {
         private readonly IMessageQueue _messageQueue;
         private readonly IList<IGateway> _gateways;
-        private bool _isRunning;
+        private readonly CancellationTokenSource _cancellationToken = new CancellationTokenSource();
 
         public LowBatteryDeviceObserver(IMessageQueue messageQueue, IEnumerable<IGateway> gateways)
         {
@@ -23,21 +23,19 @@ namespace Xpressive.Home.Services
 
         public void Start()
         {
-            _isRunning = true;
             Task.Run(Observe);
         }
 
         public void Dispose()
         {
-            _isRunning = false;
+            _cancellationToken.Cancel();
+            _cancellationToken.Dispose();
         }
 
         private async Task Observe()
         {
-            while (_isRunning)
+            while (!_cancellationToken.IsCancellationRequested)
             {
-                await TaskHelper.DelayAsync(TimeSpan.FromMinutes(1), () => _isRunning);
-
                 foreach (var gateway in _gateways)
                 {
                     foreach (var device in gateway.Devices)
@@ -48,6 +46,8 @@ namespace Xpressive.Home.Services
                         }
                     }
                 }
+
+                await Task.Delay(TimeSpan.FromMinutes(1), _cancellationToken.Token);
             }
         }
     }

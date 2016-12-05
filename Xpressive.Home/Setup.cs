@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
@@ -17,13 +18,14 @@ namespace Xpressive.Home
             RegisterMessageQueueListeners();
 
             var gateways = IocContainer.Resolve<IList<IGateway>>();
+             var cancellationToken = new CancellationTokenSource();
 
             foreach (var gateway in gateways)
             {
-                Task.Factory.StartNew(() => gateway.StartAsync(), TaskCreationOptions.LongRunning);
+                Task.Factory.StartNew(() => gateway.StartAsync(cancellationToken.Token), TaskCreationOptions.LongRunning);
             }
 
-            return new Disposer(gateways);
+            return new Disposer(cancellationToken);
         }
 
         private static void RegisterMessageQueueListeners()
@@ -42,20 +44,16 @@ namespace Xpressive.Home
 
         private class Disposer : IDisposable
         {
-            private readonly IEnumerable<IGateway> _gateways;
+            private readonly CancellationTokenSource _cancellationToken;
 
-            public Disposer(IEnumerable<IGateway> gateways)
+            public Disposer(CancellationTokenSource cancellationToken)
             {
-                _gateways = gateways;
+                _cancellationToken = cancellationToken;
             }
 
             public void Dispose()
             {
-                foreach (var gateway in _gateways)
-                {
-                    gateway.Stop();
-                }
-
+                _cancellationToken.Cancel();
                 IocContainer.Dispose();
             }
         }

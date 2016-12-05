@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Messaging;
@@ -14,13 +15,13 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
         protected CommandClassHandlerTaskRunnerBase(IMessageQueue messageQueue, CommandClass commandClass)
             : base(messageQueue, commandClass) { }
 
-        protected void Start(TimeSpan interval, ZwaveDevice device, Node node, ZwaveCommandQueue queue)
+        protected void Start(TimeSpan interval, ZwaveDevice device, Node node, ZwaveCommandQueue queue, CancellationToken cancellationToken)
         {
             Task.Run(async () =>
             {
                 while (!_isDisposing)
                 {
-                    await TaskHelper.DelayAsync(interval, () => !_isDisposing);
+                    await Task.Delay(interval, cancellationToken);
                     Execute(device, node, queue);
                 }
             });

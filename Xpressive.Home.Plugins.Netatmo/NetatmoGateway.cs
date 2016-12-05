@@ -8,7 +8,6 @@ using log4net;
 using Polly;
 using Polly.Retry;
 using RestSharp;
-using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 
@@ -24,8 +23,6 @@ namespace Xpressive.Home.Plugins.Netatmo
         private readonly string _username;
         private readonly string _password;
         private readonly bool _isValidConfiguration;
-        private readonly AutoResetEvent _taskWaitHandle = new AutoResetEvent(false);
-        private bool _isRunning = true;
 
         public NetatmoGateway(IMessageQueue messageQueue) : base("Netatmo")
         {
@@ -64,20 +61,19 @@ namespace Xpressive.Home.Plugins.Netatmo
             throw new NotSupportedException();
         }
 
-        public override async Task StartAsync()
+        public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            await Task.Delay(TimeSpan.FromSeconds(1));
+            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
 
             if (!_isValidConfiguration)
             {
                 _messageQueue.Publish(new NotifyUserMessage("Add netatmo configuration to config file."));
-                _taskWaitHandle.Set();
                 return;
             }
 
             var token = await GetTokenAsync();
 
-            while (_isRunning)
+            while (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
@@ -100,28 +96,8 @@ namespace Xpressive.Home.Plugins.Netatmo
                     _log.Error(e.Message, e);
                 }
 
-                await TaskHelper.DelayAsync(TimeSpan.FromMinutes(1), () => _isRunning);
+                await Task.Delay(TimeSpan.FromMinutes(1), cancellationToken);
             }
-
-            _taskWaitHandle.Set();
-        }
-
-        public override void Stop()
-        {
-            _isRunning = false;
-            if (!_taskWaitHandle.WaitOne(TimeSpan.FromSeconds(5)))
-            {
-                _log.Error("Unable to shutdown.");
-            }
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                _taskWaitHandle.Dispose();
-            }
-            base.Dispose(disposing);
         }
 
         private async Task GetDeviceData(TokenResponseDto token)

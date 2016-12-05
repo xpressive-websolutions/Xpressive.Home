@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using Xpressive.Home.Contracts.Messaging;
 using ZWave;
 using ZWave.Channel;
@@ -11,7 +12,7 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
         public SwitchBinaryCommandClassHandler(IMessageQueue messageQueue)
             : base(messageQueue, CommandClass.SwitchBinary) { }
 
-        protected override void Handle(ZwaveDevice device, Node node, ZwaveCommandQueue queue)
+        protected override void Handle(ZwaveDevice device, Node node, ZwaveCommandQueue queue, CancellationToken cancellationToken)
         {
             node.GetCommandClass<SwitchBinary>().Changed += (s, e) =>
             {
@@ -19,7 +20,7 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
             };
 
             device.IsSwitchBinary = true;
-            Start(TimeSpan.FromMinutes(30), device, node, queue);
+            Start(TimeSpan.FromMinutes(30), device, node, queue, cancellationToken);
         }
 
         protected override void Execute(ZwaveDevice device, Node node, ZwaveCommandQueue queue)

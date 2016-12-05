@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using Xpressive.Home.Contracts.Messaging;
 using ZWave;
 using ZWave.Channel;
@@ -14,14 +15,14 @@ namespace Xpressive.Home.Plugins.Zwave.CommandClassHandlers
         public MeterCommandClassHandler(IMessageQueue messageQueue)
             : base(messageQueue, CommandClass.Meter) { }
 
-        protected override void Handle(ZwaveDevice device, Node node, ZwaveCommandQueue queue)
+        protected override void Handle(ZwaveDevice device, Node node, ZwaveCommandQueue queue, CancellationToken cancellationToken)
         {
             node.GetCommandClass<Meter>().Changed += (s, e) =>
             {
                 HandleMeterReport(e.Report);
             };
 
-            Start(_interval, device, node, queue);
+            Start(_interval, device, node, queue, cancellationToken);
         }
 
         protected override void Execute(ZwaveDevice device, Node node, ZwaveCommandQueue queue)

@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using Xpressive.Home.Contracts.Gateway;
 using ZWave;
 using ZWave.Channel;
@@ -9,6 +10,6 @@ namespace Xpressive.Home.Plugins.Zwave
     {
         CommandClass CommandClass { get; }
 
-        void Handle(IDevice device, Node node, ZwaveCommandQueue queue);
+        void Handle(IDevice device, Node node, ZwaveCommandQueue queue, CancellationToken cancellationToken);
     }
 }

@@ -10,7 +10,6 @@ using Polly;
 using Polly.Retry;
 using Q42.HueApi;
 using Q42.HueApi.Models;
-using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 using Xpressive.Home.Contracts.Variables;
@@ -25,11 +24,8 @@ namespace Xpressive.Home.Plugins.PhilipsHue
         private readonly IVariableRepository _variableRepository;
         private readonly IMessageQueue _messageQueue;
         private readonly object _devicesLock = new object();
-        private readonly AutoResetEvent _queryWaitHandle = new AutoResetEvent(false);
-        private readonly AutoResetEvent _commandWaitHandle = new AutoResetEvent(false);
         private readonly RetryPolicy _executeCommandPolicy;
         private readonly ConcurrentQueue<Tuple<PhilipsHueBulb, LightCommand>> _commandQueue = new ConcurrentQueue<Tuple<PhilipsHueBulb, LightCommand>>();
-        private bool _isRunning = true;
 
         public PhilipsHueGateway(
             IVariableRepository variableRepository,
@@ -134,13 +130,13 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             throw new NotSupportedException();
         }
 
-        public override async Task StartAsync()
+        public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            await TaskHelper.DelayAsync(TimeSpan.FromSeconds(1), () => _isRunning);
+            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
 
-            var _ = Task.Factory.StartNew(StartCommandQueueWorker, TaskCreationOptions.LongRunning);
+            var _ = Task.Factory.StartNew(() => StartCommandQueueWorker(cancellationToken), TaskCreationOptions.LongRunning);
 
-            while (_isRunning)
+            while (!cancellationToken.IsCancellationRequested)
             {
                 List<PhilipsHueBulb> bulbs;
                 List<PhilipsHuePresenceSensor> presenceSensors;
@@ -165,10 +161,10 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 
                         await _executeCommandPolicy.ExecuteAsync(() => UpdateBulbVariablesAsync(client, bulbs));
 
-                        for (var i = 0; i < 5 && _isRunning; i++)
+                        for (var i = 0; i < 5 && !cancellationToken.IsCancellationRequested; i++)
                         {
                             await _executeCommandPolicy.ExecuteAsync(() => UpdateSensorVariablesAsync(client, presenceSensors));
-                            await TaskHelper.DelayAsync(TimeSpan.FromSeconds(5), () => _isRunning);
+                            await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
                         }
                     }
                     catch (WebException)
@@ -181,33 +177,6 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                     }
                 }
             }
-
-            _queryWaitHandle.Set();
-        }
-
-        public override void Stop()
-        {
-            _isRunning = false;
-
-            if (!_queryWaitHandle.WaitOne(TimeSpan.FromSeconds(5)))
-            {
-                _log.Error("Unable to shutdown query loop.");
-            }
-
-            if (!_commandWaitHandle.WaitOne(TimeSpan.FromSeconds(5)))
-            {
-                _log.Error("Unable to shutdown command loop.");
-            }
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                _queryWaitHandle.Dispose();
-                _commandWaitHandle.Dispose();
-            }
-            base.Dispose(disposing);
         }
 
         protected override Task ExecuteInternalAsync(IDevice device, IAction action, IDictionary<string, string> values)
@@ -287,9 +256,9 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             }
         }
 
-        private async void StartCommandQueueWorker()
+        private async void StartCommandQueueWorker(CancellationToken cancellationToken)
         {
-            while (_isRunning)
+            while (!cancellationToken.IsCancellationRequested)
             {
                 Tuple<PhilipsHueBulb, LightCommand> tuple;
                 if (_commandQueue.TryDequeue(out tuple))
@@ -314,15 +283,13 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                     }
 
                     await ExecuteCommand(bulb, command);
-                    await TaskHelper.DelayAsync(waitTime, () => _isRunning);
+                    await Task.Delay(waitTime, cancellationToken);
                 }
                 else
                 {
-                    await TaskHelper.DelayAsync(TimeSpan.FromMilliseconds(5), () => _isRunning);
+                    await Task.Delay(TimeSpan.FromMilliseconds(5), cancellationToken);
                 }
             }
-
-            _commandWaitHandle.Set();
         }
 
         private TimeSpan GetWaitTimeAfterCommandExecution(LightCommand command)

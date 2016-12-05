@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using ForecastIO;
 using log4net;
 using Polly;
-using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 
@@ -20,9 +19,7 @@ namespace Xpressive.Home.Plugins.Forecast
         private static readonly ILog _log = LogManager.GetLogger(typeof(ForecastGateway));
         private readonly string _apiKey;
         private readonly IMessageQueue _messageQueue;
-        private readonly AutoResetEvent _taskWaitHandle = new AutoResetEvent(false);
         private readonly Policy _policy;
-        private bool _isRunning = true;
 
         public ForecastGateway(IMessageQueue messageQueue) : base("Weather")
         {
@@ -50,25 +47,24 @@ namespace Xpressive.Home.Plugins.Forecast
             yield break;
         }
 
-        public override async Task StartAsync()
+        public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            await Task.Delay(TimeSpan.FromSeconds(1));
+            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
 
             await LoadDevicesAsync((id, name) => new ForecastDevice { Id = id, Name = name });
 
             if (string.IsNullOrEmpty(_apiKey))
             {
                 _messageQueue.Publish(new NotifyUserMessage("Add forecast.io configuration to config file."));
-                _taskWaitHandle.Set();
                 return;
             }
 
-            while (_isRunning)
+            while (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
                     var devices = _devices.Cast<ForecastDevice>().ToList();
-                    devices.ForEach(async d => await GetWeatherInfo(d));
+                    devices.ForEach(async d => await GetWeatherInfo(d, cancellationToken));
                 }
                 catch (Exception e)
                 {
@@ -76,18 +72,7 @@ namespace Xpressive.Home.Plugins.Forecast
                 }
 
                 var minutes = Math.Max(_devices.Count*2.5, 10);
-                await TaskHelper.DelayAsync(TimeSpan.FromMinutes(minutes), () => _isRunning);
-            }
-
-            _taskWaitHandle.Set();
-        }
-
-        public override void Stop()
-        {
-            _isRunning = false;
-            if (!_taskWaitHandle.WaitOne(TimeSpan.FromSeconds(5)))
-            {
-                _log.Error("Unable to shutdown.");
+                await Task.Delay(TimeSpan.FromMinutes(minutes), cancellationToken);
             }
         }
 
@@ -96,17 +81,7 @@ namespace Xpressive.Home.Plugins.Forecast
             throw new NotSupportedException();
         }
 
-        protected override void Dispose(bool disposing)
-        {
-            _isRunning = false;
-            if (disposing)
-            {
-                _taskWaitHandle.Dispose();
-            }
-            base.Dispose(disposing);
-        }
-
-        private async Task GetWeatherInfo(ForecastDevice device)
+        private async Task GetWeatherInfo(ForecastDevice device, CancellationToken cancellationToken)
         {
             var latitude = (float)device.Latitude;
             var longitude = (float)device.Longitude;
@@ -141,7 +116,7 @@ namespace Xpressive.Home.Plugins.Forecast
                 UpdateVariables(device.Id, $"D+{day}_", data);
             }
 
-            await TaskHelper.DelayAsync(TimeSpan.FromSeconds(10), () => _isRunning);
+            await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken);
         }
 
         private void UpdateVariables(string deviceId, string prefix, object data)

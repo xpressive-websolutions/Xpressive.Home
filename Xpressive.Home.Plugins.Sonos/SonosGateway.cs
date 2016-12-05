@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using log4net;
 using RestSharp.Extensions.MonoHttp;
-using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 using Action = Xpressive.Home.Contracts.Gateway.Action;
@@ -17,8 +16,6 @@ namespace Xpressive.Home.Plugins.Sonos
         private static readonly ILog _log = LogManager.GetLogger(typeof(SonosGateway));
         private readonly IMessageQueue _messageQueue;
         private readonly ISonosSoapClient _soapClient;
-        private readonly AutoResetEvent _taskWaitHandle = new AutoResetEvent(false);
-        private bool _isRunning = true;
 
         public SonosGateway(IMessageQueue messageQueue, ISonosDeviceDiscoverer deviceDiscoverer, ISonosSoapClient soapClient) : base("Sonos")
         {
@@ -110,11 +107,11 @@ namespace Xpressive.Home.Plugins.Sonos
             StartActionInNewTask(device, new Action("Change Volume"), parameters);
         }
 
-        public override async Task StartAsync()
+        public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            await TaskHelper.DelayAsync(TimeSpan.FromSeconds(1), () => _isRunning);
+            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
 
-            while (_isRunning)
+            while (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
@@ -130,28 +127,8 @@ namespace Xpressive.Home.Plugins.Sonos
                     _log.Error(e.Message, e);
                 }
 
-                await TaskHelper.DelayAsync(TimeSpan.FromSeconds(10), () => _isRunning);
+                await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken);
             }
-
-            _taskWaitHandle.Set();
-        }
-
-        public override void Stop()
-        {
-            _isRunning = false;
-            if (!_taskWaitHandle.WaitOne(TimeSpan.FromSeconds(5)))
-            {
-                _log.Error("Unable to shutdown.");
-            }
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                _taskWaitHandle.Dispose();
-            }
-            base.Dispose(disposing);
         }
 
         protected override async Task ExecuteInternalAsync(IDevice device, IAction action, IDictionary<string, string> values)

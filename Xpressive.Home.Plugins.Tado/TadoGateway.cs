@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using log4net;
 using RestSharp;
-using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 
@@ -17,11 +16,9 @@ namespace Xpressive.Home.Plugins.Tado
         private static readonly ILog _log = LogManager.GetLogger(typeof(TadoGateway));
         private readonly object _deviceListLock = new object();
         private readonly IMessageQueue _messageQueue;
-        private readonly AutoResetEvent _taskWaitHandle = new AutoResetEvent(false);
         private readonly RestClient _client;
         private readonly string _username;
         private readonly string _password;
-        private bool _isRunning = true;
 
         public TadoGateway(IMessageQueue messageQueue) : base("tado")
         {
@@ -37,14 +34,13 @@ namespace Xpressive.Home.Plugins.Tado
             yield break;
         }
 
-        public override async Task StartAsync()
+        public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            await TaskHelper.DelayAsync(TimeSpan.FromSeconds(1), () => _isRunning);
+            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
 
             if (string.IsNullOrEmpty(_username) || string.IsNullOrEmpty(_password))
             {
                 _messageQueue.Publish(new NotifyUserMessage("Add tado configuration to config file."));
-                _taskWaitHandle.Set();
                 return;
             }
 
@@ -59,11 +55,10 @@ namespace Xpressive.Home.Plugins.Tado
             catch (Exception e)
             {
                 _log.Error(e.Message, e);
-                _taskWaitHandle.Set();
                 return;
             }
 
-            while (_isRunning)
+            while (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
@@ -93,10 +88,8 @@ namespace Xpressive.Home.Plugins.Tado
                     _log.Error(e.Message, e);
                 }
 
-                await TaskHelper.DelayAsync(TimeSpan.FromSeconds(60), () => _isRunning);
+                await Task.Delay(TimeSpan.FromSeconds(60), cancellationToken);
             }
-
-            _taskWaitHandle.Set();
         }
 
         private async Task<T> GetAsync<T>(string url, TokenDto token) where T : new()
@@ -141,24 +134,6 @@ namespace Xpressive.Home.Plugins.Tado
             token = await _client.PostTaskAsync<TokenDto>(refreshRequest);
             token.Expires = DateTime.UtcNow.AddSeconds(token.ExpiresIn);
             return token;
-        }
-
-        public override void Stop()
-        {
-            _isRunning = false;
-            if (!_taskWaitHandle.WaitOne(TimeSpan.FromSeconds(5)))
-            {
-                _log.Error("Unable to shutdown.");
-            }
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                _taskWaitHandle.Dispose();
-            }
-            base.Dispose(disposing);
         }
 
         public override IDevice CreateEmptyDevice()

@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using log4net;
 using Polly;
 using RestSharp;
-using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 using Xpressive.Home.Contracts.Services;
@@ -22,8 +21,6 @@ namespace Xpressive.Home.Plugins.MyStrom
         private readonly IMyStromDeviceNameService _myStromDeviceNameService;
         private readonly IUpnpDeviceDiscoveringService _upnpDeviceDiscoveringService;
         private readonly object _deviceListLock = new object();
-        private readonly AutoResetEvent _taskWaitHandle = new AutoResetEvent(false);
-        private bool _isRunning = true;
 
         public MyStromGateway(
             IMessageQueue messageQueue,
@@ -62,13 +59,13 @@ namespace Xpressive.Home.Plugins.MyStrom
             }
         }
 
-        public override async Task StartAsync()
+        public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            await Task.Delay(TimeSpan.FromSeconds(1));
+            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
 
             var previousPowers = new Dictionary<string, double>();
 
-            while (_isRunning)
+            while (!cancellationToken.IsCancellationRequested)
             {
                 foreach (var device in _devices.Cast<MyStromDevice>())
                 {
@@ -101,24 +98,13 @@ namespace Xpressive.Home.Plugins.MyStrom
                     }
                 }
 
-                await TaskHelper.DelayAsync(TimeSpan.FromSeconds(10), () => _isRunning);
+                await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken);
             }
-
-            _taskWaitHandle.Set();
         }
 
         public override IDevice CreateEmptyDevice()
         {
             throw new NotSupportedException();
-        }
-
-        public override void Stop()
-        {
-            _isRunning = false;
-            if (!_taskWaitHandle.WaitOne(TimeSpan.FromSeconds(5)))
-            {
-                _log.Error("Unable to shutdown.");
-            }
         }
 
         protected override async Task ExecuteInternalAsync(IDevice device, IAction action, IDictionary<string, string> values)
@@ -150,11 +136,9 @@ namespace Xpressive.Home.Plugins.MyStrom
 
         protected override void Dispose(bool disposing)
         {
-            _isRunning = false;
             if (disposing)
             {
                 _upnpDeviceDiscoveringService.DeviceFound -= OnUpnpDeviceFound;
-                _taskWaitHandle.Dispose();
             }
             base.Dispose(disposing);
         }

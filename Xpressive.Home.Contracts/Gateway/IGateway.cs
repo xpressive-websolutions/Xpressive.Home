@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Xpressive.Home.Contracts.Gateway
@@ -15,7 +16,6 @@ namespace Xpressive.Home.Contracts.Gateway
 
         IEnumerable<IAction> GetActions(IDevice device);
 
-        Task StartAsync();
-        void Stop();
+        Task StartAsync(CancellationToken cancellationToken);
     }
 }

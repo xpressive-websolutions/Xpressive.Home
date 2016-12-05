@@ -7,7 +7,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using log4net;
 using Polly;
-using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 using Action = Xpressive.Home.Contracts.Gateway.Action;
@@ -21,8 +20,6 @@ namespace Xpressive.Home.Plugins.Lifx
         private readonly string _token;
         private readonly object _deviceLock = new object();
         private readonly LifxLocalClient _localClient = new LifxLocalClient();
-        private readonly AutoResetEvent _taskWaitHandle = new AutoResetEvent(false);
-        private bool _isRunning = true;
 
         public LifxGateway(IMessageQueue messageQueue) : base("Lifx")
         {
@@ -127,55 +124,37 @@ namespace Xpressive.Home.Plugins.Lifx
             StartActionInNewTask(device, action, parameters);
         }
 
-        public override Task StartAsync()
+        public override Task StartAsync(CancellationToken cancellationToken)
         {
-            Task.WaitAll(Task.Delay(TimeSpan.FromSeconds(1)));
+            Task.WaitAll(Task.Delay(TimeSpan.FromSeconds(1), cancellationToken));
 
-            FindLocalBulbsAsync().ConfigureAwait(false);
-            FindCloudBulbsAsync().ConfigureAwait(false);
+            FindLocalBulbsAsync(cancellationToken).ConfigureAwait(false);
+            FindCloudBulbsAsync(cancellationToken).ConfigureAwait(false);
 
             return Task.CompletedTask;
         }
 
-        public override void Stop()
-        {
-            _isRunning = false;
-
-            if (!_localClient.Stop())
-            {
-                _log.Error("Unable to shutdown local client.");
-            }
-
-            if (!_taskWaitHandle.WaitOne(TimeSpan.FromSeconds(5)))
-            {
-                _log.Error("Unable to shutdown cloud client.");
-            }
-        }
-
-        private async Task FindCloudBulbsAsync()
+        private async Task FindCloudBulbsAsync(CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(_token))
             {
                 _messageQueue.Publish(new NotifyUserMessage("Add LIFX cloud token to config file."));
-                _taskWaitHandle.Set();
                 return;
             }
 
-            while (_isRunning)
+            while (!cancellationToken.IsCancellationRequested)
             {
                 await ExecuteWithRetriesAsync(GetHttpLights, "get cloud bulbs");
 
-                await TaskHelper.DelayAsync(TimeSpan.FromMinutes(1), () => _isRunning);
+                await Task.Delay(TimeSpan.FromMinutes(1), cancellationToken);
             }
-
-            _taskWaitHandle.Set();
         }
 
-        private async Task FindLocalBulbsAsync()
+        private async Task FindLocalBulbsAsync(CancellationToken cancellationToken)
         {
             try
             {
-                await _localClient.StartDeviceDiscoveryAsync();
+                await _localClient.StartDeviceDiscoveryAsync(cancellationToken);
             }
             catch (Exception e)
             {
@@ -408,9 +387,7 @@ namespace Xpressive.Home.Plugins.Lifx
         {
             if (disposing)
             {
-                _isRunning = false;
                 _localClient.Dispose();
-                _taskWaitHandle.Dispose();
             }
         }
     }
