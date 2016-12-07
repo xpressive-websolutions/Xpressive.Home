@@ -30,6 +30,10 @@ namespace Xpressive.Home.Services
         public string Usn => _usn;
         public IDictionary<string, string> OtherHeaders => new ReadOnlyDictionary<string, string>(_otherHeaders);
 
+        public string FriendlyName { get; set; }
+        public string Manufacturer { get; set; }
+        public string ModelName { get; set; }
+
         internal void AddHeader(string key, string value)
         {
             _otherHeaders.Add(key, value);

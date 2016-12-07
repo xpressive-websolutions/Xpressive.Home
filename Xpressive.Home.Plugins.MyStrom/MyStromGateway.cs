@@ -145,7 +145,8 @@ namespace Xpressive.Home.Plugins.MyStrom
 
         private async void OnUpnpDeviceFound(object sender, IUpnpDeviceResponse e)
         {
-            if (e.Usn.IndexOf("wifi-switch", StringComparison.OrdinalIgnoreCase) < 0)
+            if (e.Usn.IndexOf("wifi-switch", StringComparison.OrdinalIgnoreCase) < 0 &&
+                !e.FriendlyName.Equals("mystrom wifi switch", StringComparison.OrdinalIgnoreCase))
             {
                 return;
             }
@@ -188,7 +189,6 @@ namespace Xpressive.Home.Plugins.MyStrom
                     name = ipAddress;
                 }
 
-                _log.Info($"Found myStrom device {ipAddress} - {response.Data.Mac}");
                 _devices.Add(new MyStromDevice(name, ipAddress, response.Data.Mac));
             }
 

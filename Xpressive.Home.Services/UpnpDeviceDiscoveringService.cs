@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -14,6 +15,7 @@ namespace Xpressive.Home.Services
     internal sealed class UpnpDeviceDiscoveringService : IUpnpDeviceDiscoveringService
     {
         private static readonly ILog _log = LogManager.GetLogger(typeof(UpnpDeviceDiscoveringService));
+        private static readonly ConcurrentDictionary<string, DateTime> _occurrences = new ConcurrentDictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
         private readonly CancellationTokenSource _cancellationToken = new CancellationTokenSource();
 
         public event EventHandler<IUpnpDeviceResponse> DeviceFound;
@@ -26,6 +28,9 @@ namespace Xpressive.Home.Services
 
             using (var deviceLocator = new SsdpDeviceLocator())
             {
+                deviceLocator.StartListeningForNotifications();
+                deviceLocator.DeviceAvailable += async (s, e) => { await UpnpDeviceFound(e.DiscoveredDevice); };
+
                 while (!_cancellationToken.IsCancellationRequested)
                 {
                     Task<IEnumerable<DiscoveredSsdpDevice>> searchTask;
@@ -47,7 +52,6 @@ namespace Xpressive.Home.Services
                     }
 
                     var devices = searchTask.Result;
-                    var responses = new Dictionary<string, UpnpDeviceResponse>(StringComparer.OrdinalIgnoreCase);
 
                     if (devices == null)
                     {
@@ -56,29 +60,7 @@ namespace Xpressive.Home.Services
 
                     foreach (var device in devices)
                     {
-                        try
-                        {
-                            var response = await CreateUpnpDeviceAsync(device);
-                            var key = $"{device.DescriptionLocation.Host}/{response.Usn}";
-                            responses[key] = response;
-                        }
-                        catch (HttpRequestException)
-                        {
-                            continue;
-                        }
-                        catch (WebException)
-                        {
-                            continue;
-                        }
-                        catch (Exception e)
-                        {
-                            _log.Error(e.Message, e);
-                        }
-                    }
-
-                    foreach (var response in responses.Values)
-                    {
-                        OnDeviceFound(response);
+                        await UpnpDeviceFound(device);
                     }
 
                     await Task.Delay(TimeSpan.FromSeconds(60), _cancellationToken.Token).ContinueWith(_ => { });
@@ -86,28 +68,76 @@ namespace Xpressive.Home.Services
             }
         }
 
+        private async Task UpnpDeviceFound(DiscoveredSsdpDevice device)
+        {
+            try
+            {
+                var response = await CreateUpnpDeviceAsync(device);
+
+                if (response == null)
+                {
+                    return;
+                }
+
+                var key = $"{device.DescriptionLocation.Host}/{response.Usn}";
+
+                DateTime lastOccurrence;
+                if (_occurrences.TryGetValue(key, out lastOccurrence))
+                {
+                    if ((DateTime.UtcNow - lastOccurrence) < TimeSpan.FromSeconds(5))
+                    {
+                        return;
+                    }
+                }
+
+                _occurrences.AddOrUpdate(key, DateTime.UtcNow, (k, v) => DateTime.UtcNow);
+
+                OnDeviceFound(response);
+            }
+            catch (HttpRequestException)
+            {
+            }
+            catch (WebException)
+            {
+            }
+            catch (Exception e)
+            {
+                _log.Error(e.Message, e);
+            }
+        }
+
         private async Task<UpnpDeviceResponse> CreateUpnpDeviceAsync(DiscoveredSsdpDevice device)
         {
             var info = await device.GetDeviceInfo();
-            var headers = device.ResponseHeaders.ToDictionary(
+            var headers = device.ResponseHeaders?.ToDictionary(
                 h => h.Key, h => string.Join(" ", h.Value), StringComparer.OrdinalIgnoreCase);
+
+            headers = headers ?? new Dictionary<string, string>(0);
 
             string server;
             string location;
             string usn = info.Udn;
 
-            if (!headers.TryGetValue("server", out server) ||
-                !headers.TryGetValue("location", out location))
+            if (!headers.TryGetValue("location", out location))
             {
-                return null;
+                location = device.DescriptionLocation.AbsoluteUri;
             }
 
-            var response = new UpnpDeviceResponse(location, server, usn);
-
-            foreach (var keyValuePair in device.ResponseHeaders)
+            if (!headers.TryGetValue("server", out server))
             {
-                var value = string.Join(" ", keyValuePair.Value);
-                response.AddHeader(keyValuePair.Key, value);
+                server = string.Empty;
+            }
+
+            var response = new UpnpDeviceResponse(location, server, usn)
+            {
+                FriendlyName = info.FriendlyName,
+                Manufacturer = info.Manufacturer,
+                ModelName = info.ModelName
+            };
+
+            foreach (var keyValuePair in headers)
+            {
+                response.AddHeader(keyValuePair.Key, keyValuePair.Value);
             }
 
             return response;

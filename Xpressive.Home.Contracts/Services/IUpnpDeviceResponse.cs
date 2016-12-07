@@ -9,5 +9,9 @@ namespace Xpressive.Home.Contracts.Services
         string Server { get; }
         string Usn { get; }
         IDictionary<string, string> OtherHeaders { get; }
+
+        string FriendlyName { get; }
+        string Manufacturer { get; }
+        string ModelName { get; }
     }
 }
