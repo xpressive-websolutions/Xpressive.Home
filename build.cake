@@ -6,7 +6,7 @@ Information(configuration);
 var build = (int)(DateTime.Now - new DateTime(2015, 1, 1)).TotalHours;
 var versionPrefix = "1.0.0";
 var version = string.Format("{0}.{1}", versionPrefix, build);
-var informationalVersion = versionPrefix + "-beta.6";
+var informationalVersion = versionPrefix + "-beta.7";
 
 Setup(context =>
 {
@@ -87,6 +87,9 @@ Task("Copy").IsDependentOn("Build").Does(() =>
     CopyFiles(GetFiles("Xpressive.Home.Services/bin/" + configuration + "/*.*"), "./Build");
     CopyFiles(GetFiles("Xpressive.Home.WebApi/bin/" + configuration + "/*.*"), "./Build");
     CopyFiles(GetFiles("Xpressive.Home.Deployment.Updater/bin/" + configuration + "/*.*"), "./Build");
+
+    XmlPoke(File("./Build/Xpressive.Home.ConsoleHost.exe.config"), "/configuration/appSettings/add/@value", "");
+    XmlPoke(File("./Build/Xpressive.Home.Service.exe.config"), "/configuration/appSettings/add/@value", "");
 
     DeleteFiles("./Build/**/*.xml");
 });
