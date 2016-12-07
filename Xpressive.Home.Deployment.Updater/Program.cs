@@ -1,9 +1,10 @@
 ﻿using System;
 using System.IO;
-using System.IO.Compression;
 using System.Reflection;
 using System.ServiceProcess;
+using System.Threading;
 using System.Threading.Tasks;
+using ICSharpCode.SharpZipLib.Zip;
 
 namespace Xpressive.Home.Deployment.Updater
 {
@@ -17,28 +18,52 @@ namespace Xpressive.Home.Deployment.Updater
             }
 
             var package = new FileInfo(args[0]);
-            if (!package.Exists || !package.Name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+            if (!package.Exists)
             {
                 return;
             }
 
             var tmp = Unzip(package);
             StopService();
-            Copy(tmp);
+            Copy(tmp, Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
             StartService();
             Directory.Delete(tmp, true);
             package.Delete();
         }
 
-        private static void Copy(string tempDirectory)
+        private static void Copy(string sourceDirectory, string targetDirectory)
         {
-            var target = Assembly.GetExecutingAssembly().Location;
-            var files = new DirectoryInfo(tempDirectory).EnumerateFiles();
+            var files = new DirectoryInfo(sourceDirectory).EnumerateFiles();
+
+            if (!Directory.Exists(targetDirectory))
+            {
+                Directory.CreateDirectory(targetDirectory);
+            }
 
             Parallel.ForEach(files, f =>
             {
-                File.Copy(f.FullName, Path.Combine(target, f.Name), true);
+                if (f.Name.EndsWith(".exe.config"))
+                {
+                    return;
+                }
+
+                if (f.Name.StartsWith("Xpressive.Home.Deployment.Updater.", StringComparison.OrdinalIgnoreCase))
+                {
+                    return;
+                }
+
+                File.Copy(f.FullName, Path.Combine(targetDirectory, f.Name), true);
             });
+
+            var directories = Directory.GetDirectories(sourceDirectory);
+
+            foreach (var directory in directories)
+            {
+                var name = new DirectoryInfo(directory).Name;
+                var source = directory;
+                var target = Path.Combine(targetDirectory, name);
+                Copy(source, target);
+            }
         }
 
         private static void StartService()
@@ -46,7 +71,7 @@ namespace Xpressive.Home.Deployment.Updater
             using (var service = new ServiceController("Xpressive.Home.Service"))
             {
                 service.Start();
-                service.WaitForStatus(ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(10));
+                service.WaitForStatus(ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(30));
             }
         }
 
@@ -54,9 +79,14 @@ namespace Xpressive.Home.Deployment.Updater
         {
             using (var service = new ServiceController("Xpressive.Home.Service"))
             {
-                service.Stop();
-                service.WaitForStatus(ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(10));
+                if (service.Status == ServiceControllerStatus.Running)
+                {
+                    service.Stop();
+                    service.WaitForStatus(ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(30));
+                }
             }
+
+            Thread.Sleep(TimeSpan.FromSeconds(10));
         }
 
         private static string Unzip(FileInfo package)
@@ -64,36 +94,10 @@ namespace Xpressive.Home.Deployment.Updater
             var tmp = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("n"));
             Directory.CreateDirectory(tmp);
 
-            using (var ps = package.OpenRead())
-            {
-                using (var archive = new ZipArchive(ps))
-                {
-                    Parallel.ForEach(archive.Entries, e => Unzip(tmp, e));
-                }
-            }
+            var fastZip = new FastZip();
+            fastZip.ExtractZip(package.FullName, tmp, null);
 
             return tmp;
-        }
-
-        private static void Unzip(string tempDirectory, ZipArchiveEntry entry)
-        {
-            if (entry.Name.EndsWith(".exe.config"))
-            {
-                return;
-            }
-
-            if (entry.Name.Equals("Xpressive.Home.Deployment.Updater.exe", StringComparison.OrdinalIgnoreCase))
-            {
-                return;
-            }
-
-            using (var es = File.Create(Path.Combine(tempDirectory, entry.Name)))
-            {
-                using (var ss = entry.Open())
-                {
-                    ss.CopyTo(es);
-                }
-            }
         }
     }
 }
