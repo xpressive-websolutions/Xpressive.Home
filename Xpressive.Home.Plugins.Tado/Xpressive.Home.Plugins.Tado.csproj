@@ -50,10 +50,20 @@
     <Compile Include="..\Xpressive.Home\Properties\AssemblyInfo.shared.cs">
       <Link>Properties\AssemblyInfo.shared.cs</Link>
     </Compile>
+    <Compile Include="HumidityDto.cs" />
+    <Compile Include="MeDto.cs" />
+    <Compile Include="PowerMode.cs" />
+    <Compile Include="SensorDataDto.cs" />
+    <Compile Include="SettingDto.cs" />
+    <Compile Include="StateDto.cs" />
     <Compile Include="TadoDevice.cs" />
     <Compile Include="TadoGateway.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TadoMode.cs" />
     <Compile Include="TadoModule.cs" />
+    <Compile Include="TemperatureDto.cs" />
+    <Compile Include="TokenDto.cs" />
+    <Compile Include="ZoneDto.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Xpressive.Home.Contracts\Xpressive.Home.Contracts.csproj">

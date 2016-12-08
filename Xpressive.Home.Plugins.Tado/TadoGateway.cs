@@ -80,7 +80,12 @@ namespace Xpressive.Home.Plugins.Tado
 
                         var state = await GetAsync<StateDto>($"api/v2/homes/{me.HomeId}/zones/{zone.Id}/state", token);
 
-                        _messageQueue.Publish(new UpdateVariableMessage(Name, deviceId, "Mode", state.TadoMode));
+                        _messageQueue.Publish(new UpdateVariableMessage(Name, deviceId, "Mode", state.TadoMode.ToString()));
+                        _messageQueue.Publish(new UpdateVariableMessage(Name, deviceId, "Temperature", Round(state.SensorDataPoints.InsideTemperature.Celsius)));
+                        _messageQueue.Publish(new UpdateVariableMessage(Name, deviceId, "Humidity", Round(state.SensorDataPoints.Humidity.Percentage)));
+                        _messageQueue.Publish(new UpdateVariableMessage(Name, deviceId, "TargetTemperature", Round(state.Setting.Temperature.Celsius)));
+                        _messageQueue.Publish(new UpdateVariableMessage(Name, deviceId, "Power", state.Setting.Power.ToString()));
+                        _messageQueue.Publish(new UpdateVariableMessage(Name, deviceId, "Type", state.Setting.Type));
                     }
                 }
                 catch (Exception e)
@@ -90,6 +95,11 @@ namespace Xpressive.Home.Plugins.Tado
 
                 await Task.Delay(TimeSpan.FromSeconds(60), cancellationToken).ContinueWith(_ => { });
             }
+        }
+
+        private static double Round(double value)
+        {
+            return Math.Round(value);
         }
 
         private async Task<T> GetAsync<T>(string url, TokenDto token) where T : new()
@@ -144,30 +154,6 @@ namespace Xpressive.Home.Plugins.Tado
         protected override Task ExecuteInternalAsync(IDevice device, IAction action, IDictionary<string, string> values)
         {
             throw new NotImplementedException();
-        }
-
-        public class TokenDto
-        {
-            public string AccessToken { get; set; }
-            public string RefreshToken { get; set; }
-            public int ExpiresIn { get; set; }
-            public DateTime Expires { get; set; }
-        }
-
-        public class MeDto
-        {
-            public int HomeId { get; set; }
-        }
-
-        public class ZoneDto
-        {
-            public int Id { get; set; }
-            public string Name { get; set; }
-        }
-
-        public class StateDto
-        {
-            public string TadoMode { get; set; }
         }
     }
 }
