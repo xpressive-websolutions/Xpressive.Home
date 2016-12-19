@@ -17,7 +17,16 @@ namespace Xpressive.Home.Service
         protected override void OnStart(string[] args)
         {
             _log.Info("Start Xpressive.Home");
-            _application = Setup.Run();
+
+            try
+            {
+                _application = Setup.Run();
+            }
+            catch (Exception e)
+            {
+                _log.Fatal($"Unable to start service: {e.Message}", e);
+                throw;
+            }
         }
 
         protected override void OnStop()

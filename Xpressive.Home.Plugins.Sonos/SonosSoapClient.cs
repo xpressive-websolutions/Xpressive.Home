@@ -47,11 +47,11 @@ namespace Xpressive.Home.Plugins.Sonos
             }
             catch (WebException e)
             {
-                _log.Error(e.Message);
+                _log.Error($"Unable to execute action {action.Name} for device {device.Name}: {e.Message}");
             }
             catch (Exception e)
             {
-                _log.Error(e.Message, e);
+                _log.Error($"Unable to execute action {action.Name} for device {device.Name}: {e.Message}", e);
             }
 
             return result;
