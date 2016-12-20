@@ -31,7 +31,7 @@ namespace Xpressive.Home.Plugins.MyStrom
         {
             using (await _lock.LockAsync())
             {
-                if ((DateTime.UtcNow - _recentResultTimestamp).TotalSeconds < 60)
+                if ((DateTime.UtcNow - _recentResultTimestamp).TotalMinutes < 10)
                 {
                     return _recentResult;
                 }
@@ -41,6 +41,7 @@ namespace Xpressive.Home.Plugins.MyStrom
                 if (string.IsNullOrEmpty(_username) || string.IsNullOrEmpty(_password))
                 {
                     _messageQueue.Publish(new NotifyUserMessage("Add mystrom configuration to config file."));
+                    _recentResultTimestamp = DateTime.UtcNow;
                     return result;
                 }
 
