@@ -100,6 +100,10 @@ namespace Xpressive.Home.Services
             catch (WebException)
             {
             }
+            catch (TaskCanceledException)
+            {
+                _log.Error($"TaskCanceledException for device {device.DescriptionLocation.OriginalString}");
+            }
             catch (Exception e)
             {
                 _log.Error(e.Message, e);

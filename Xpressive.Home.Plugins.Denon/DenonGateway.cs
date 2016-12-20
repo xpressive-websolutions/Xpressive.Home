@@ -207,6 +207,7 @@ namespace Xpressive.Home.Plugins.Denon
 
             var policy = Policy
                 .Handle<WebException>()
+                .Or<XmlException>()
                 .WaitAndRetryAsync(new[]
                 {
                     TimeSpan.FromSeconds(1),

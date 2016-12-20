@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Autofac;
+using log4net;
 using Quartz;
 using Quartz.Impl;
 using Quartz.Spi;
@@ -10,6 +11,7 @@ namespace Xpressive.Home.Automation
 {
     internal class CronService : IStartable, ICronService, IDisposable
     {
+        private static readonly ILog _log = LogManager.GetLogger(typeof(CronService));
         private static readonly object _schedulerLock = new object();
         private static volatile IScheduler _scheduler;
         private readonly IJobFactory _jobFactory;
@@ -88,6 +90,8 @@ namespace Xpressive.Home.Automation
                 .Build();
 
             _scheduler.ScheduleJob(job, trigger);
+
+            _log.Info($"Schedule {id:N} with cron tab {cronTab} scheduled.");
         }
 
         private async Task SchedulePersistedJobsAsync()
