@@ -9,22 +9,21 @@ namespace Xpressive.Home.Plugins.Zwave
         public static void Resolve(ZwaveDeviceLibrary library, ZwaveDevice device)
         {
             var devices = library.Devices
-                .Where(d => string.Equals(d.ManufacturerId, device.ManufacturerId, StringComparison.OrdinalIgnoreCase))
-                .Where(d => string.Equals(d.BasicClass, device.BasicType.ToString("x2"), StringComparison.OrdinalIgnoreCase))
-                .Where(d => string.Equals(d.GenericClass, device.GenericType.ToString("x2"), StringComparison.OrdinalIgnoreCase))
+                .Where(d => d.ManufacturerId.Equals(device.ManufacturerId))
+                .Where(d => d.ProductId.Equals(device.ProductId))
                 .ToList();
 
-            devices = Filter(devices, d => string.Equals(d.SpecificClass, device.SpecificType.ToString("x2"), StringComparison.OrdinalIgnoreCase));
-            devices = Filter(devices, d => string.Equals(d.ProductType, device.ProductType, StringComparison.OrdinalIgnoreCase));
-            devices = Filter(devices, d => string.Equals(d.RfFrequency, "EU", StringComparison.OrdinalIgnoreCase));
+            devices = Filter(devices, d => d.ProductTypeId.Equals(device.ProductType));
+            devices = Filter(devices, d => d.OemVersion.Equals(device.Application, StringComparison.OrdinalIgnoreCase));
+            devices = Filter(devices, d => d.FrequencyName.ToLowerInvariant().Contains("europe"));
 
             var libraryDevice = devices.FirstOrDefault();
             if (libraryDevice != null)
             {
-                device.Manufacturer = libraryDevice.BrandName;
-                device.ProductName = libraryDevice.ProductName;
-                device.ProductDescription = libraryDevice.Description.FirstOrDefault()?.Description;
-                device.ImagePath = libraryDevice.DeviceImage;
+                device.Manufacturer = libraryDevice.Brand;
+                device.ProductName = libraryDevice.Name;
+                device.ProductDescription = libraryDevice.Description;
+                device.ImagePath = libraryDevice.Image;
             }
         }
 

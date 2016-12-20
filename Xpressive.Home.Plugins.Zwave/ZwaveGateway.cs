@@ -110,8 +110,13 @@ namespace Xpressive.Home.Plugins.Zwave
                         {
                             return;
                         }
-                        await _library.Load();
+                        await _library.Load(cancellationToken);
                     });
+
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
 
                 _controller = new ZWaveController(_comPortName);
                 _controller.Open();
@@ -178,9 +183,9 @@ namespace Xpressive.Home.Plugins.Zwave
         {
             var specific = await node.GetCommandClass<ManufacturerSpecific>().Get();
 
-            device.ManufacturerId = specific.ManufacturerID.ToString("x4");
-            device.ProductType = specific.ProductType.ToString("x4");
-            device.ProductId = specific.ProductID.ToString("x4");
+            device.ManufacturerId = specific.ManufacturerID;
+            device.ProductType = specific.ProductType;
+            device.ProductId = specific.ProductID;
 
             UpdateDeviceWithLibrary(device);
         }
@@ -190,9 +195,9 @@ namespace Xpressive.Home.Plugins.Zwave
             if (device.Application == null ||
                 device.Library == null ||
                 device.Protocol == null ||
-                device.ManufacturerId == null ||
-                device.ProductType == null ||
-                device.ProductId == null)
+                device.ManufacturerId == 0 ||
+                device.ProductType == 0 ||
+                device.ProductId == 0)
             {
                 return;
             }
@@ -205,7 +210,7 @@ namespace Xpressive.Home.Plugins.Zwave
 
             if (string.IsNullOrEmpty(device.Name))
             {
-                device.Name = string.Join(" ", device.Manufacturer, device.ProductName, device.ProductDescription);
+                device.Name = device.ProductName;
             }
         }
 

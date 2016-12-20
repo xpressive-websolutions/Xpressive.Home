@@ -105,7 +105,7 @@ namespace Xpressive.Home.Plugins.Zwave
             {
                 await _semaphore.WaitAsync();
 
-                _log.Debug("Start processing queue for node " + _node.NodeID);
+                _log.Debug($"Start processing queue for node {_node.NodeID}");
                 _isWithinLoop = true;
                 var isException = false;
                 var nodeCommands = GetDistinctNodeCommands(_queue).OrderByDescending(GetSuccess).ToList();
@@ -148,7 +148,7 @@ namespace Xpressive.Home.Plugins.Zwave
                     await TryExecuteQueueTask(() => _node.GetCommandClass<WakeUp>().NoMoreInformation());
                 }
 
-                _log.Debug("Finished processing queue for node " + _node.NodeID);
+                _log.Debug($"Finished processing queue for node {_node.NodeID}");
                 _isWithinLoop = false;
             }
         }

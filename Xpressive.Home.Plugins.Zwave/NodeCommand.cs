@@ -15,5 +15,10 @@ namespace Xpressive.Home.Plugins.Zwave
         public string Description { get; }
         public Func<Task> Function { get; }
         public bool IsDistinct { get; }
+
+        public override string ToString()
+        {
+            return Description;
+        }
     }
 }

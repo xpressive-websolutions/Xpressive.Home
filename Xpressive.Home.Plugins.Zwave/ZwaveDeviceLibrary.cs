@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using log4net;
@@ -12,6 +14,7 @@ namespace Xpressive.Home.Plugins.Zwave
     internal class ZwaveDeviceLibrary
     {
         private static readonly ILog _log = LogManager.GetLogger(typeof(ZwaveDeviceLibrary));
+        private static readonly WebClient _webClient = new WebClient();
         private List<ZwaveDeviceLibraryItem> _devices;
 
         public ZwaveDeviceLibrary()
@@ -21,69 +24,127 @@ namespace Xpressive.Home.Plugins.Zwave
 
         public IEnumerable<ZwaveDeviceLibraryItem> Devices => _devices.AsReadOnly();
 
-        public async Task Load()
+        public async Task Load(CancellationToken cancellationToken)
         {
-            var stream = await DownloadZipFile();
-            var files = GetXmlFiles(stream);
-            _devices = LoadIntoLibrary(files);
+            var directory = GetDirectory();
+            CleanUp(directory);
+            await DownloadDeviceDefinitions(directory, cancellationToken);
+            _devices = GetItems(directory).ToList();
         }
 
-        private static async Task<Stream> DownloadZipFile()
+        internal void CleanUp(string directory)
         {
-            const string url = "http://www.pepper1.net/zwavedb/device/export/device_archive.zip";
+            Directory.CreateDirectory(directory);
 
-            using (var client = new WebClient())
-            {
-                var binary = await client.DownloadDataTaskAsync(url);
-                return new MemoryStream(binary);
-            }
+            var emptyFiles = Directory
+                .GetFiles(directory, "*.xml", SearchOption.TopDirectoryOnly)
+                .Select(f => new FileInfo(f))
+                .OrderByDescending(f => int.Parse(f.Name.Substring(0, f.Name.IndexOf(".", StringComparison.OrdinalIgnoreCase))))
+                .TakeWhile(f => f.Length == 0)
+                .ToList();
+            emptyFiles.ForEach(f => f.Delete());
         }
 
-        private static IEnumerable<Tuple<string, Stream>> GetXmlFiles(Stream stream)
+        internal async Task DownloadDeviceDefinitions(string directory, CancellationToken cancellationToken)
         {
-            var archive = new System.IO.Compression.ZipArchive(stream);
+            var xmlId = 1;
+            var numberOfErrors = 0;
 
-            foreach (var zipArchiveEntry in archive.Entries)
+            while (!cancellationToken.IsCancellationRequested)
             {
-                yield return Tuple.Create(zipArchiveEntry.Name, zipArchiveEntry.Open());
-            }
-        }
+                var xmlPath = Path.Combine(directory, $"{xmlId}.xml");
 
-        private static List<ZwaveDeviceLibraryItem> LoadIntoLibrary(IEnumerable<Tuple<string, Stream>> streams)
-        {
-            var devices = new List<ZwaveDeviceLibraryItem>();
-
-            foreach (var stream in streams)
-            {
-                if (!stream.Item1.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
+                if (File.Exists(xmlPath))
                 {
+                    xmlId++;
                     continue;
                 }
 
-                try
+                var file = await DownloadDeviceDefinition(xmlId, cancellationToken);
+                File.WriteAllBytes(xmlPath, file);
+
+                if (file.Length == 0)
                 {
-                    var reader = new XmlTextReader(stream.Item2)
+                    numberOfErrors++;
+
+                    if (numberOfErrors >= 20)
                     {
-                        Namespaces = false,
-                    };
+                        return;
+                    }
+                }
+                else
+                {
+                    numberOfErrors = 0;
+                }
 
+                await Task.Delay(TimeSpan.FromSeconds(.1), cancellationToken).ContinueWith(t => { });
+                xmlId++;
+            }
+        }
+
+        internal async Task<byte[]> DownloadDeviceDefinition(int xmlId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var url = $"http://products.z-wavealliance.org/Products/{xmlId}/XML";
+                var binary = await _webClient.DownloadDataTaskAsync(url);
+                return binary;
+            }
+            catch (WebException)
+            {
+                return new byte[0];
+            }
+        }
+
+        internal IEnumerable<ZwaveDeviceLibraryItem> GetItems(string directory)
+        {
+            var files = Directory
+                .GetFiles(directory, "*.xml", SearchOption.TopDirectoryOnly)
+                .Select(f => new FileInfo(f))
+                .Where(f => f.Length > 0)
+                .ToList();
+
+            foreach (var file in files)
+            {
+                using (var fileStream = file.OpenRead())
+                {
+                    ZwaveDeviceLibraryItem device;
                     var document = new XmlDocument();
-                    document.Load(reader);
 
-                    var device = LoadIntoLibrary(document);
-                    devices.Add(device);
-                }
-                catch (XmlException e)
-                {
-                    _log.Error(stream.Item1 + ": " + e.Message);
-                }
-                catch (Exception e)
-                {
-                    _log.Error(stream.Item1 + ": " + e.Message, e);
+                    try
+                    {
+                        var reader = new XmlTextReader(fileStream)
+                        {
+                            Namespaces = false,
+                        };
+
+                        document.Load(reader);
+
+                        device = LoadIntoLibrary(document);
+                    }
+                    catch (XmlException e)
+                    {
+                        _log.Error(file.Name + ": " + e.Message);
+                        continue;
+                    }
+                    catch (Exception e)
+                    {
+                        _log.Error(file.Name + ": " + e.Message, e);
+                        continue;
+                    }
+
+                    yield return device;
                 }
             }
+        }
 
-            return devices;
+        internal string GetDirectory()
+        {
+            return Path.Combine(
+                Path.GetDirectoryName(Assembly.GetEntryAssembly().Location),
+                "Data",
+                "Zwave",
+                "DeviceInformation");
         }
 
         private static ZwaveDeviceLibraryItem LoadIntoLibrary(XmlDocument document)
@@ -91,74 +152,68 @@ namespace Xpressive.Home.Plugins.Zwave
             var device = new ZwaveDeviceLibraryItem();
 
             GetDeviceData(document, device);
-            GetDescription(document, device);
+            //GetDescription(document, device);
 
             return device;
         }
 
         private static void GetDeviceData(XmlDocument document, ZwaveDeviceLibraryItem device)
         {
-            device.ManufacturerId = document.SelectSingleNode("//deviceData/manufacturerId/@value")?.Value;
-            device.ProductType = document.SelectSingleNode("//deviceData/productType/@value")?.Value;
-            device.ProductId = document.SelectSingleNode("//deviceData/productId/@value")?.Value;
-            device.LibraryType = document.SelectSingleNode("//deviceData/libType/@value")?.Value;
-            device.ProtocolVersion = document.SelectSingleNode("//deviceData/protoVersion/@value")?.Value;
-            device.ProtocolSubVersion= document.SelectSingleNode("//deviceData/protoSubVersion/@value")?.Value;
-            device.ApplicationVersion= document.SelectSingleNode("//deviceData/appVersion/@value")?.Value;
-            device.ApplicationSubVersion = document.SelectSingleNode("//deviceData/appSubVersion/@value")?.Value;
-            device.BasicClass = document.SelectSingleNode("//deviceData/basicClass/@value")?.Value;
-            device.GenericClass = document.SelectSingleNode("//deviceData/genericClass/@value")?.Value;
-            device.SpecificClass = document.SelectSingleNode("//deviceData/specificClass/@value")?.Value;
-            device.BeamSensor = document.SelectSingleNode("//deviceData/beamSensor")?.InnerText;
-            device.RfFrequency = document.SelectSingleNode("//deviceData/rfFrequency")?.InnerText;
-
-            var optional = document.SelectSingleNode("//deviceData/optional/@value")?.Value ?? "true";
-            var listening = document.SelectSingleNode("//deviceData/listening/@value")?.Value ?? "false";
-            var routing = document.SelectSingleNode("//deviceData/routing/@value")?.Value ?? "false";
-
-            device.IsOptional = bool.Parse(optional);
-            device.IsListening = bool.Parse(listening);
-            device.IsRouting = bool.Parse(routing);
+            device.Id = int.Parse(GetNodeValue(document, "//ProductExport/Id"));
+            device.Name = GetNodeValue(document, "//ProductExport/Name");
+            device.Description = GetNodeValue(document, "//ProductExport/Description");
+            device.Brand = GetNodeValue(document, "//ProductExport/Brand");
+            device.Identifier = GetNodeValue(document, "//ProductExport/Identifier");
+            device.CertificationNumber = GetNodeValue(document, "//ProductExport/CertificationNumber");
+            device.OemVersion = GetNodeValue(document, "//ProductExport/OemVersion");
+            device.HardwarePlatform = GetNodeValue(document, "//ProductExport/HardwarePlatform");
+            device.ZWaveVersion = GetNodeValue(document, "//ProductExport/ZWaveVersion");
+            device.LibraryType = GetNodeValue(document, "//ProductExport/LibraryType");
+            device.SpecificDeviceClass = GetNodeValue(document, "//ProductExport/SpecificDeviceClass");
+            device.GenericDeviceClass = GetNodeValue(document, "//ProductExport/GenericDeviceClass");
+            device.DeviceType = GetNodeValue(document, "//ProductExport/DeviceType");
+            device.ManufacturerId = GetNodeValueAsInt32(document, "//ProductExport/ManufacturerId");
+            device.ProductTypeId = GetNodeValueAsInt32(document, "//ProductExport/ProductTypeId");
+            device.ProductId = GetNodeValueAsInt32(document, "//ProductExport/ProductId");
+            device.FrequencyName = GetNodeValue(document, "//ProductExport/FrequencyName");
+            device.Image = GetNodeValue(document, "//ProductExport/Image");
         }
 
-        private static void GetDescription(XmlDocument document, ZwaveDeviceLibraryItem device)
+        private static string GetNodeValue(XmlDocument document, string xpath)
         {
-            device.Description = GetDescription(document, "description").ToList();
-            device.WakeupNote = GetDescription(document, "wakeupNote").ToList();
-            device.InclusionNote = GetDescription(document, "inclusionNote").ToList();
-
-            device.DeviceImage = document.SelectSingleNode("//resourceLinks/deviceImage/@url")?.Value;
-            device.ProductName = document.SelectSingleNode("//deviceDescription/productName")?.InnerText;
-            device.ProductCode = document.SelectSingleNode("//deviceDescription/productCode")?.InnerText;
-            device.BrandName = document.SelectSingleNode("//deviceDescription/brandName")?.InnerText;
+            return document.SelectSingleNode(xpath)?.InnerText ?? string.Empty;
         }
 
-        private static IEnumerable<ZwaveDeviceLibraryItemDescription> GetDescription(XmlDocument document, string nodeName)
+        private static int GetNodeValueAsInt32(XmlDocument document, string xpath)
         {
-            var nodeList = document.SelectNodes($"//deviceDescription/{nodeName}/lang");
+            var value = document.SelectSingleNode(xpath)?.InnerText;
 
-            if (nodeList == null)
+            if (string.IsNullOrEmpty(value))
             {
-                yield break;
+                return 0;
             }
 
-            var nodes = nodeList.OfType<XmlNode>().ToList();
-
-            foreach (var node in nodes)
+            if (value.IndexOf("(", StringComparison.Ordinal) > 0)
             {
-                var language = node.Attributes?["xml:lang"]?.Value;
-
-                if (language == null)
-                {
-                    continue;
-                }
-
-                yield return new ZwaveDeviceLibraryItemDescription
-                {
-                    Description = node.InnerText,
-                    Language = language
-                };
+                value = value.Substring(0, value.IndexOf("(", StringComparison.Ordinal));
             }
+
+            if (value.StartsWith("0x00 0x", StringComparison.OrdinalIgnoreCase))
+            {
+                value = value.Substring(5).Trim();
+            }
+
+            if (value.StartsWith("0x0x", StringComparison.OrdinalIgnoreCase))
+            {
+                value = value.Substring(2);
+            }
+
+            if (value.Length <= 2)
+            {
+                return 0;
+            }
+
+            return Convert.ToInt32(value, 16);
         }
     }
 }

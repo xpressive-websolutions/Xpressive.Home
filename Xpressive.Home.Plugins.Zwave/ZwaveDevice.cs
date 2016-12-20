@@ -16,9 +16,9 @@ namespace Xpressive.Home.Plugins.Zwave
         public byte GenericType { get; set; }
         public byte SpecificType { get; set; }
 
-        public string ManufacturerId { get; set; }
-        public string ProductType { get; set; }
-        public string ProductId { get; set; }
+        public int ManufacturerId { get; set; }
+        public int ProductType { get; set; }
+        public int ProductId { get; set; }
         public string Application { get; set; }
         public string Library { get; set; }
         public string Protocol { get; set; }
