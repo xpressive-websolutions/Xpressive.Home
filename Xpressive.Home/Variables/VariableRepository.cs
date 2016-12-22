@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Autofac;
+using log4net;
 using Xpressive.Home.Contracts.Messaging;
 using Xpressive.Home.Contracts.Variables;
 
@@ -9,6 +10,7 @@ namespace Xpressive.Home.Variables
 {
     internal sealed class VariableRepository : IVariableRepository, IMessageQueueListener<UpdateVariableMessage>, IStartable
     {
+        private static readonly ILog _log = LogManager.GetLogger(typeof(VariableRepository));
         private readonly IVariablePersistingService _variablePersistingService;
         private readonly object _variablesLock = new object();
         private readonly Dictionary<string, IVariable> _variables;
@@ -72,14 +74,21 @@ namespace Xpressive.Home.Variables
 
         private async Task InitAsync()
         {
-            var variables = await _variablePersistingService.LoadAsync();
-
-            lock (_variablesLock)
+            try
             {
-                foreach (var variable in variables)
+                var variables = await _variablePersistingService.LoadAsync();
+
+                lock (_variablesLock)
                 {
-                    _variables.Add(variable.Name, variable);
+                    foreach (var variable in variables)
+                    {
+                        _variables.Add(variable.Name, variable);
+                    }
                 }
+            }
+            catch (Exception e)
+            {
+                _log.Error(e.Message, e);
             }
         }
 

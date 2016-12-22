@@ -301,7 +301,7 @@
         };
     }]);
 
-    xha.controller("scriptDetailController", ["$scope", "$log", "$http", "$routeParams", "$uibModal", "$interval", function($scope, $log, $http, $routeParams, $uibModal, $interval) {
+    xha.controller("scriptDetailController", ["toaster", "$scope", "$log", "$http", "$routeParams", "$uibModal", "$interval", function(toaster, $scope, $log, $http, $routeParams, $uibModal, $interval) {
         var id = $routeParams.id;
 
         $scope.triggers = [];
@@ -421,7 +421,19 @@
             });
 
             modal.result.then(function(result) {
-                $http.post("/api/v1/schedule/" + id, "'" + result + "'").then(getSchedules);
+                $http.post("/api/v1/schedule/" + id, "'" + result + "'").then(
+                    function () {
+                        getSchedules();
+                    },
+                    function () {
+                        toaster.pop({
+                            type: "error",
+                            title: "Error",
+                            body: "Unable to save schedule with cron tab " + result,
+                            timeout: 3000
+                        });
+                    }
+                );
             });
         };
 

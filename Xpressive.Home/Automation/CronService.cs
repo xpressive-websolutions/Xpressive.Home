@@ -25,8 +25,12 @@ namespace Xpressive.Home.Automation
 
         public async Task<ScheduledScript> ScheduleAsync(Guid scriptId, string cronTab)
         {
-            var id = Guid.NewGuid();
+            if (!CronExpression.IsValidExpression(cronTab))
+            {
+                throw new InvalidOperationException($"Cron tab {cronTab} is invalid.");
+            }
 
+            var id = Guid.NewGuid();
             await _scheduledScriptRepository.InsertAsync(id, scriptId, cronTab);
 
             Schedule(id, cronTab);
@@ -57,25 +61,32 @@ namespace Xpressive.Home.Automation
 
         private async Task InitAsync()
         {
-            if (_scheduler != null)
-            {
-                return;
-            }
-
-            lock (_schedulerLock)
+            try
             {
                 if (_scheduler != null)
                 {
                     return;
                 }
 
-                var factory = new StdSchedulerFactory();
-                _scheduler = factory.GetScheduler();
-                _scheduler.JobFactory = _jobFactory;
-                _scheduler.Start();
-            }
+                lock (_schedulerLock)
+                {
+                    if (_scheduler != null)
+                    {
+                        return;
+                    }
 
-            await SchedulePersistedJobsAsync();
+                    var factory = new StdSchedulerFactory();
+                    _scheduler = factory.GetScheduler();
+                    _scheduler.JobFactory = _jobFactory;
+                    _scheduler.Start();
+                }
+
+                await SchedulePersistedJobsAsync();
+            }
+            catch (Exception e)
+            {
+                _log.Error(e.Message, e);
+            }
         }
 
         private void Schedule(Guid id, string cronTab)
