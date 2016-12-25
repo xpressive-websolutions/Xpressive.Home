@@ -249,7 +249,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 
                 var state = sensor.State;
 
-                presenceSensor.HasPresence = state.Presence;
+                presenceSensor.HasPresence = state.Presence ?? false;
                 presenceSensor.Battery = sensor.Config.Battery ?? 100;
 
                 UpdateVariable($"{Name}.{presenceSensor.Id}.Presence", state.Presence);

@@ -49,7 +49,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="Q42.HueApi, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Q42.HueApi.3.0.0\lib\portable-net45+win+wpa81+wp80+MonoAndroid10+MonoTouch10\Q42.HueApi.dll</HintPath>
+      <HintPath>..\packages\Q42.HueApi.3.2.7\lib\portable-net45+win+wpa81+wp80+MonoAndroid10+MonoTouch10\Q42.HueApi.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Q42.HueApi.ColorConverters, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
