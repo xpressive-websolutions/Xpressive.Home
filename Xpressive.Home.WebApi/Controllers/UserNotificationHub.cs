@@ -33,7 +33,7 @@ namespace Xpressive.Home.WebApi.Controllers
 
                 if (connectionIds.Any())
                 {
-                    Clients.Clients(connectionIds)?.onNotification(dto);
+                    Clients?.Clients(connectionIds)?.onNotification(dto);
                 }
             }
         }

@@ -101,8 +101,6 @@ namespace Xpressive.Home.Automation
                 .Build();
 
             _scheduler.ScheduleJob(job, trigger);
-
-            _log.Info($"Schedule {id:N} with cron tab {cronTab} scheduled.");
         }
 
         private async Task SchedulePersistedJobsAsync()
@@ -111,7 +109,15 @@ namespace Xpressive.Home.Automation
 
             foreach (var schedule in schedules)
             {
-                Schedule(schedule.Id, schedule.CronTab);
+                try
+                {
+                    Schedule(schedule.Id, schedule.CronTab);
+                    _log.Info($"Schedule {schedule.Id:N} with cron tab {schedule.CronTab} scheduled.");
+                }
+                catch (Exception e)
+                {
+                    _log.Error($"Unable to schedule {schedule.Id} with cron tab {schedule.CronTab}: {e.Message}");
+                }
             }
         }
     }
