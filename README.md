@@ -140,6 +140,7 @@ var sonosDevices = sonos_list.byRoom("Living room");
 
 ```javascript
 // messaging
+pushover.send("Hi!", "USER_KEY"); // via pushover.net
 pushalot.send("Hi!") // via pushalot.com
 sms.send("+41790000000", "Hi!"); // via aspsms.com
 ```
