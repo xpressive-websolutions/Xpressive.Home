@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml;
 using log4net;
 using Rssdp;
 using Xpressive.Home.Contracts.Services;
@@ -103,6 +104,10 @@ namespace Xpressive.Home.Services
             catch (TaskCanceledException)
             {
                 _log.Error($"TaskCanceledException for device {device.DescriptionLocation.OriginalString}");
+            }
+            catch (XmlException e)
+            {
+                _log.Error($"Xml exception in {device.DescriptionLocation.OriginalString}: {e.Message}");
             }
             catch (Exception e)
             {
