@@ -18,10 +18,15 @@ namespace Xpressive.Home
             builder.RegisterType<RecurrentScriptJobFactory>().As<IJobFactory>();
             builder.RegisterType<ScheduledScriptRepository>().As<IScheduledScriptRepository>();
             builder.RegisterType<ScriptRepository>().As<IScriptRepository>();
-            builder.RegisterType<ScriptEngine>().As<IScriptEngine>();
             builder.RegisterType<VariableScriptObjectProvider>().As<IScriptObjectProvider>();
             builder.RegisterType<DefaultScriptObjectProvider>().As<IScriptObjectProvider>();
+            builder.RegisterType<SchedulerScriptObjectProvider>().As<IScriptObjectProvider>();
             builder.RegisterType<ScriptTriggerService>().As<IScriptTriggerService>();
+
+            builder.RegisterType<ScriptEngine>()
+                .As<IScriptEngine>()
+                .As<IMessageQueueListener<ExecuteScriptMessage>>()
+                .SingleInstance();
 
             builder.RegisterType<MessageQueueScriptTriggerListener>()
                 .As<IMessageQueueListener<UpdateVariableMessage>>()
@@ -33,6 +38,7 @@ namespace Xpressive.Home
                 .As<IMessageQueueListener<NotifyUserMessage>>()
                 .As<IMessageQueueListener<CommandMessage>>()
                 .As<IMessageQueueListener<LowBatteryMessage>>()
+                .As<IMessageQueueListener<ExecuteScriptMessage>>()
                 .SingleInstance();
 
             builder.RegisterType<VariableRepository>()

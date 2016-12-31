@@ -34,12 +34,14 @@ namespace Xpressive.Home
             var commandMessageListener = IocContainer.Resolve<IList<IMessageQueueListener<CommandMessage>>>().ToList();
             var lowBatteryListener = IocContainer.Resolve<IList<IMessageQueueListener<LowBatteryMessage>>>().ToList();
             var notifyUserListener = IocContainer.Resolve<IList<IMessageQueueListener<NotifyUserMessage>>>().ToList();
+            var executeScriptListener = IocContainer.Resolve<IList<IMessageQueueListener<ExecuteScriptMessage>>>().ToList();
             var messageQueue = IocContainer.Resolve<IMessageQueue>();
 
             updateVariableListener.ForEach(l => messageQueue.Subscribe<UpdateVariableMessage>(l.Notify));
             commandMessageListener.ForEach(l => messageQueue.Subscribe<CommandMessage>(l.Notify));
             lowBatteryListener.ForEach(l => messageQueue.Subscribe<LowBatteryMessage>(l.Notify));
             notifyUserListener.ForEach(l => messageQueue.Subscribe<NotifyUserMessage>(l.Notify));
+            executeScriptListener.ForEach(l => messageQueue.Subscribe<ExecuteScriptMessage>(l.Notify));
         }
 
         private class Disposer : IDisposable

@@ -24,6 +24,10 @@ Xpressive.Home consists of these main concepts
 var durationInMilliseconds = 200;
 sleep(durationInMilliseconds);
 
+// execute other scripts
+execute("script ID");
+execute("script ID", delayInMilliseconds);
+
 // write to the logfile
 log.debug("this is a debug message");
 log.info("this is an info message");

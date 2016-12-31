@@ -68,6 +68,7 @@
     <Compile Include="Gateway\IDevicePersistingService.cs" />
     <Compile Include="Gateway\IGateway.cs" />
     <Compile Include="Messaging\CommandMessage.cs" />
+    <Compile Include="Messaging\ExecuteScriptMessage.cs" />
     <Compile Include="Messaging\IMessageQueue.cs" />
     <Compile Include="Messaging\IMessageQueueListener.cs" />
     <Compile Include="Messaging\IMessageQueueMessage.cs" />

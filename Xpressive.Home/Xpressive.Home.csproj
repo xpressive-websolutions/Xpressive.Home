@@ -71,6 +71,7 @@
     <Compile Include="Automation\DefaultScriptObjectProvider.cs" />
     <Compile Include="Automation\DoNothingJob.cs" />
     <Compile Include="Automation\MessageQueueScriptTriggerListener.cs" />
+    <Compile Include="Automation\SchedulerScriptObjectProvider.cs" />
     <Compile Include="Automation\ScriptEngine.cs" />
     <Compile Include="Automation\RecurrentScriptExecution.cs" />
     <Compile Include="Automation\RecurrentScriptJobFactory.cs" />
