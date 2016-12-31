@@ -1,17 +1,22 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using log4net;
 
 namespace Xpressive.Home.Plugins.Zwave
 {
     internal static class ZwaveDeviceLibraryResolver
     {
+        private static readonly ILog _log = LogManager.GetLogger(typeof(ZwaveDeviceLibraryResolver));
+
         public static void Resolve(ZwaveDeviceLibrary library, ZwaveDevice device)
         {
             var devices = library.Devices
                 .Where(d => d.ManufacturerId.Equals(device.ManufacturerId))
                 .Where(d => d.ProductId.Equals(device.ProductId))
                 .ToList();
+
+            _log.Debug($"Found {devices.Count} devices for {device.NodeId} (ManufacturerId:{device.ManufacturerId} ProductId:{device.ProductId}");
 
             devices = Filter(devices, d => d.ProductTypeId.Equals(device.ProductType));
             devices = Filter(devices, d => d.OemVersion.Equals(device.Application, StringComparison.OrdinalIgnoreCase));

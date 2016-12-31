@@ -137,26 +137,33 @@ namespace Xpressive.Home.Plugins.Zwave
 
         private async Task DiscoverNodes(CancellationToken cancellationToken)
         {
-            var controllerNodeId = await _controller.GetNodeID();
-            var nodes = await _controller.DiscoverNodes();
-            var slaveNodes = nodes.Where(n => n.NodeID != controllerNodeId).ToList();
-
-            foreach (var node in slaveNodes)
+            try
             {
-                if (!_nodeCommandQueues.ContainsKey(node.NodeID))
+                var controllerNodeId = await _controller.GetNodeID();
+                var nodes = await _controller.DiscoverNodes();
+                var slaveNodes = nodes.Where(n => n.NodeID != controllerNodeId).ToList();
+
+                foreach (var node in slaveNodes)
                 {
-                    var device = new ZwaveDevice(node.NodeID);
-                    var queue = new ZwaveCommandQueue(node);
-                    _nodeCommandQueues.Add(node.NodeID, queue);
-                    _devices.Add(device);
+                    if (!_nodeCommandQueues.ContainsKey(node.NodeID))
+                    {
+                        var device = new ZwaveDevice(node.NodeID);
+                        var queue = new ZwaveCommandQueue(node);
+                        _nodeCommandQueues.Add(node.NodeID, queue);
+                        _devices.Add(device);
 
-                    queue.Add("UpdateDeviceProtocolInfo", () => UpdateDeviceProtocolInfo(device, node));
-                    queue.Add("GetNodeVersion", () => GetNodeVersion(device, node));
-                    queue.Add("GetNodeProductInformation", () => GetNodeProductInformation(device, node));
-                    queue.Add("GetSupportedCommandClasses", () => GetSupportedCommandClasses(device, node, cancellationToken));
+                        queue.Add("UpdateDeviceProtocolInfo", () => UpdateDeviceProtocolInfo(device, node));
+                        queue.Add("GetNodeVersion", () => GetNodeVersion(device, node));
+                        queue.Add("GetNodeProductInformation", () => GetNodeProductInformation(device, node));
+                        queue.Add("GetSupportedCommandClasses", () => GetSupportedCommandClasses(device, node, cancellationToken));
 
-                    queue.StartOrContinueWorker();
+                        queue.StartOrContinueWorker();
+                    }
                 }
+            }
+            catch (Exception e)
+            {
+                _log.Error(e.Message, e);
             }
         }
 
@@ -193,8 +200,6 @@ namespace Xpressive.Home.Plugins.Zwave
         private void UpdateDeviceWithLibrary(ZwaveDevice device)
         {
             if (device.Application == null ||
-                device.Library == null ||
-                device.Protocol == null ||
                 device.ManufacturerId == 0 ||
                 device.ProductType == 0 ||
                 device.ProductId == 0)
