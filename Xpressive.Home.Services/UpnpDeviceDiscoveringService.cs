@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using log4net;
+using Nito.AsyncEx;
 using Rssdp;
 using Xpressive.Home.Contracts.Services;
 
@@ -17,6 +18,7 @@ namespace Xpressive.Home.Services
     {
         private static readonly ILog _log = LogManager.GetLogger(typeof(UpnpDeviceDiscoveringService));
         private static readonly ConcurrentDictionary<string, DateTime> _occurrences = new ConcurrentDictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
+        private static readonly AsyncLock _lock = new AsyncLock();
         private readonly CancellationTokenSource _cancellationToken = new CancellationTokenSource();
 
         public event EventHandler<IUpnpDeviceResponse> DeviceFound;
@@ -73,25 +75,30 @@ namespace Xpressive.Home.Services
         {
             try
             {
-                var response = await CreateUpnpDeviceAsync(device);
+                UpnpDeviceResponse response;
 
-                if (response == null)
+                using (await _lock.LockAsync())
                 {
-                    return;
-                }
+                    response = await CreateUpnpDeviceAsync(device);
 
-                var key = $"{device.DescriptionLocation.Host}/{response.Usn}";
-
-                DateTime lastOccurrence;
-                if (_occurrences.TryGetValue(key, out lastOccurrence))
-                {
-                    if ((DateTime.UtcNow - lastOccurrence) < TimeSpan.FromSeconds(5))
+                    if (response == null)
                     {
                         return;
                     }
-                }
 
-                _occurrences.AddOrUpdate(key, DateTime.UtcNow, (k, v) => DateTime.UtcNow);
+                    var key = $"{device.DescriptionLocation.Host}/{response.Usn}";
+
+                    DateTime lastOccurrence;
+                    if (_occurrences.TryGetValue(key, out lastOccurrence))
+                    {
+                        if ((DateTime.UtcNow - lastOccurrence) < TimeSpan.FromMinutes(5))
+                        {
+                            return;
+                        }
+                    }
+
+                    _occurrences.AddOrUpdate(key, DateTime.UtcNow, (k, v) => DateTime.UtcNow);
+                }
 
                 OnDeviceFound(response);
             }
