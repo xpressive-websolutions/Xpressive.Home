@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml;
 using log4net;
 using Polly;
 using Xpressive.Home.Contracts.Gateway;
@@ -232,6 +233,10 @@ namespace Xpressive.Home.Plugins.Lifx
             {
                 _log.Error($"Error while executing {description}: {e.Message}");
             }
+            catch (XmlException e)
+            {
+                _log.Error($"Error while executing {description}: {e.Message}");
+            }
             catch (Exception e)
             {
                 _log.Error(e.Message, e);
@@ -347,7 +352,7 @@ namespace Xpressive.Home.Plugins.Lifx
             var client = new LifxHttpClient(_token);
             var lights = await client.GetLights();
 
-            foreach (var light in lights)
+            foreach (var light in lights.Where(l => l != null))
             {
                 LifxDevice device;
 
