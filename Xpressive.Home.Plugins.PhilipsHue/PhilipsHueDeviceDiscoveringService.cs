@@ -8,17 +8,23 @@ namespace Xpressive.Home.Plugins.PhilipsHue
     internal class PhilipsHueDeviceDiscoveringService : IPhilipsHueDeviceDiscoveringService
     {
         private readonly IVariableRepository _variableRepository;
+        private readonly IPhilipsHueBridgeDiscoveringService _bridgeDiscoveringService;
 
         public PhilipsHueDeviceDiscoveringService(IVariableRepository variableRepository, IPhilipsHueBridgeDiscoveringService bridgeDiscoveringService)
         {
             _variableRepository = variableRepository;
-
-            bridgeDiscoveringService.BridgeFound += OnBridgeFound;
+            _bridgeDiscoveringService = bridgeDiscoveringService;
         }
 
         public event EventHandler<PhilipsHueBulb> BulbFound;
 
         public event EventHandler<PhilipsHuePresenceSensor> PresenceSensorFound;
+
+        public void Start()
+        {
+            _bridgeDiscoveringService.BridgeFound += OnBridgeFound;
+            _bridgeDiscoveringService.Start();
+        }
 
         private async void OnBridgeFound(object sender, PhilipsHueBridge bridge)
         {

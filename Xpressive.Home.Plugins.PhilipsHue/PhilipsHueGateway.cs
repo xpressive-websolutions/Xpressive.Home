@@ -38,6 +38,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 
             deviceDiscoveringService.BulbFound += OnBulbFound;
             deviceDiscoveringService.PresenceSensorFound += OnPresenceSensorFound;
+            deviceDiscoveringService.Start();
 
             _executeCommandPolicy = Policy
                 .Handle<Exception>()

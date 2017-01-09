@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Q42.HueApi;
 using Xpressive.Home.Contracts.Messaging;
@@ -13,24 +14,32 @@ namespace Xpressive.Home.Plugins.PhilipsHue
         private readonly IMessageQueue _messageQueue;
         private readonly IVariableRepository _variableRepository;
         private readonly IUpnpDeviceDiscoveringService _upnpDeviceDiscoveringService;
+        private readonly IDeviceConfigurationBackupService _deviceConfigurationBackupService;
         private readonly object _lock;
         private readonly Dictionary<string, PhilipsHueBridge> _bridges;
 
         public PhilipsHueBridgeDiscoveringService(
             IMessageQueue messageQueue,
             IVariableRepository variableRepository,
-            IUpnpDeviceDiscoveringService upnpDeviceDiscoveringService)
+            IUpnpDeviceDiscoveringService upnpDeviceDiscoveringService,
+            IDeviceConfigurationBackupService deviceConfigurationBackupService)
         {
             _lock = new object();
             _bridges = new Dictionary<string, PhilipsHueBridge>(StringComparer.OrdinalIgnoreCase);
             _messageQueue = messageQueue;
             _variableRepository = variableRepository;
             _upnpDeviceDiscoveringService = upnpDeviceDiscoveringService;
-
-            _upnpDeviceDiscoveringService.DeviceFound += OnUpnpDeviceFound;
+            _deviceConfigurationBackupService = deviceConfigurationBackupService;
         }
 
         public event EventHandler<PhilipsHueBridge> BridgeFound;
+
+        public void Start()
+        {
+            LoadBridgesFromBackup();
+
+            _upnpDeviceDiscoveringService.DeviceFound += OnUpnpDeviceFound;
+        }
 
         private void OnUpnpDeviceFound(object sender, IUpnpDeviceResponse e)
         {
@@ -109,6 +118,16 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             return null;
         }
 
+        private void LoadBridgesFromBackup()
+        {
+            var backup = _deviceConfigurationBackupService.Get<BridgeConfigurationBackupDto[]>("PhilipsHue");
+
+            foreach (var dto in backup)
+            {
+                OnBridgeFound(new PhilipsHueBridge(dto.Id, dto.IpAddress));
+            }
+        }
+
         private void OnBridgeFound(PhilipsHueBridge e)
         {
             BridgeFound?.Invoke(this, e);
@@ -117,6 +136,21 @@ namespace Xpressive.Home.Plugins.PhilipsHue
         public void Dispose()
         {
             _upnpDeviceDiscoveringService.DeviceFound -= OnUpnpDeviceFound;
+
+            var backup = _bridges.Select(p => new BridgeConfigurationBackupDto(p.Key, p.Value.IpAddress)).ToArray();
+            _deviceConfigurationBackupService.Save("PhilipsHue", backup);
+        }
+
+        private class BridgeConfigurationBackupDto
+        {
+            public BridgeConfigurationBackupDto(string id, string ipAddress)
+            {
+                Id = id;
+                IpAddress = ipAddress;
+            }
+
+            public string Id { get; }
+            public string IpAddress { get; }
         }
     }
 }
