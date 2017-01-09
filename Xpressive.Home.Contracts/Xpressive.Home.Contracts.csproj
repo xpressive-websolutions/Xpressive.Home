@@ -84,6 +84,7 @@
     <Compile Include="Rooms\RoomScript.cs" />
     <Compile Include="Rooms\RoomScriptGroup.cs" />
     <Compile Include="Services\FavoriteRadioStation.cs" />
+    <Compile Include="Services\IDeviceConfigurationBackupService.cs" />
     <Compile Include="Services\IFavoriteRadioStationService.cs" />
     <Compile Include="Services\IIpAddressService.cs" />
     <Compile Include="Services\ISoftwareUpdateDownloadService.cs" />

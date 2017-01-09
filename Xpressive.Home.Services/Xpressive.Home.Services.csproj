@@ -116,6 +116,7 @@
     <Compile Include="..\Xpressive.Home\Properties\AssemblyInfo.shared.cs">
       <Link>Properties\AssemblyInfo.shared.cs</Link>
     </Compile>
+    <Compile Include="DeviceConfigurationBackupService.cs" />
     <Compile Include="DevicePersistingService.cs" />
     <Compile Include="FavoriteRadioStationService.cs" />
     <Compile Include="LowBatteryDeviceObserver.cs" />
