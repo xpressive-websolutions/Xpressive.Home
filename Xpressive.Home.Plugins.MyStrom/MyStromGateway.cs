@@ -20,16 +20,19 @@ namespace Xpressive.Home.Plugins.MyStrom
         private readonly IMessageQueue _messageQueue;
         private readonly IMyStromDeviceNameService _myStromDeviceNameService;
         private readonly IUpnpDeviceDiscoveringService _upnpDeviceDiscoveringService;
+        private readonly IDeviceConfigurationBackupService _deviceConfigurationBackupService;
         private readonly object _deviceListLock = new object();
 
         public MyStromGateway(
             IMessageQueue messageQueue,
             IMyStromDeviceNameService myStromDeviceNameService,
-            IUpnpDeviceDiscoveringService upnpDeviceDiscoveringService) : base("myStrom")
+            IUpnpDeviceDiscoveringService upnpDeviceDiscoveringService,
+            IDeviceConfigurationBackupService deviceConfigurationBackupService) : base("myStrom")
         {
             _messageQueue = messageQueue;
             _myStromDeviceNameService = myStromDeviceNameService;
             _upnpDeviceDiscoveringService = upnpDeviceDiscoveringService;
+            _deviceConfigurationBackupService = deviceConfigurationBackupService;
             _canCreateDevices = false;
 
             _upnpDeviceDiscoveringService.DeviceFound += OnUpnpDeviceFound;
@@ -61,6 +64,8 @@ namespace Xpressive.Home.Plugins.MyStrom
 
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
+            await LoadDevicesFromBackup();
+
             await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
 
             var previousPowers = new Dictionary<string, double>();
@@ -77,6 +82,7 @@ namespace Xpressive.Home.Plugins.MyStrom
                         continue;
                     }
 
+                    device.ReadStatus = DeviceReadStatus.Ok;
                     device.Power = dto.Power;
                     device.Relay = dto.Relay;
                     _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Relay", dto.Relay));
@@ -139,6 +145,8 @@ namespace Xpressive.Home.Plugins.MyStrom
             if (disposing)
             {
                 _upnpDeviceDiscoveringService.DeviceFound -= OnUpnpDeviceFound;
+                var ipAddresses = _devices.OfType<MyStromDevice>().Select(d => d.IpAddress).ToList();
+                _deviceConfigurationBackupService.Save(Name, new DeviceConfigurationBackupDto(ipAddresses));
             }
             base.Dispose(disposing);
         }
@@ -151,6 +159,23 @@ namespace Xpressive.Home.Plugins.MyStrom
                 return;
             }
 
+            await RegisterDeviceWithRetry(e.IpAddress);
+        }
+
+        private async Task LoadDevicesFromBackup()
+        {
+            var backup = _deviceConfigurationBackupService.Get<DeviceConfigurationBackupDto>(Name);
+            if (backup != null)
+            {
+                foreach (var ipAddress in backup.IpAddresses)
+                {
+                    await RegisterDeviceWithRetry(ipAddress);
+                }
+            }
+        }
+
+        private async Task RegisterDeviceWithRetry(string ipAddress)
+        {
             await Policy
                 .Handle<WebException>()
                 .OrResult(false)
@@ -160,7 +185,7 @@ namespace Xpressive.Home.Plugins.MyStrom
                     TimeSpan.FromSeconds(2),
                     TimeSpan.FromSeconds(5),
                 })
-                .ExecuteAsync(async () => await RegisterDevice(e.IpAddress));
+                .ExecuteAsync(async () => await RegisterDevice(ipAddress));
         }
 
         private async Task<bool> RegisterDevice(string ipAddress)
@@ -174,25 +199,32 @@ namespace Xpressive.Home.Plugins.MyStrom
                 return false;
             }
 
+            await AddDeviceAsync(null, ipAddress, response.Data.Mac);
+
+            return true;
+        }
+
+        private async Task AddDeviceAsync(string name, string ipAddress, string macAddress)
+        {
             var namesByMacAddress = await _myStromDeviceNameService.GetDeviceNamesByMacAsync();
 
             lock (_deviceListLock)
             {
-                if (_devices.Cast<MyStromDevice>().Any(d => d.MacAddress.Equals(response.Data.Mac)))
+                if (_devices.Cast<MyStromDevice>().Any(d => d.MacAddress.Equals(macAddress)))
                 {
-                    return true;
+                    return;
                 }
 
-                string name;
-                if (!namesByMacAddress.TryGetValue(response.Data.Mac, out name))
+                if (string.IsNullOrEmpty(name))
                 {
-                    name = ipAddress;
+                    if (!namesByMacAddress.TryGetValue(macAddress, out name))
+                    {
+                        name = ipAddress;
+                    }
                 }
 
-                _devices.Add(new MyStromDevice(name, ipAddress, response.Data.Mac));
+                _devices.Add(new MyStromDevice(name, ipAddress, macAddress));
             }
-
-            return true;
         }
 
         private async Task<Dto> GetReport(string ipAddress)
@@ -222,6 +254,16 @@ namespace Xpressive.Home.Plugins.MyStrom
         {
             public string Version { get; set; }
             public string Mac { get; set; }
+        }
+
+        private class DeviceConfigurationBackupDto
+        {
+            public DeviceConfigurationBackupDto(IEnumerable<string> ipAddresses)
+            {
+                IpAddresses = new List<string>(ipAddresses);
+            }
+
+            public List<string> IpAddresses { get; set; }
         }
     }
 }
