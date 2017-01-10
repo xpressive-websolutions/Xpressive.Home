@@ -22,6 +22,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
     {
         private static readonly ILog _log = LogManager.GetLogger(typeof(PhilipsHueGateway));
         private readonly IVariableRepository _variableRepository;
+        private readonly IPhilipsHueDeviceDiscoveringService _deviceDiscoveringService;
         private readonly IMessageQueue _messageQueue;
         private readonly object _devicesLock = new object();
         private readonly RetryPolicy _executeCommandPolicy;
@@ -33,12 +34,12 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             IMessageQueue messageQueue) : base("PhilipsHue")
         {
             _variableRepository = variableRepository;
+            _deviceDiscoveringService = deviceDiscoveringService;
             _messageQueue = messageQueue;
             _canCreateDevices = false;
 
-            deviceDiscoveringService.BulbFound += OnBulbFound;
-            deviceDiscoveringService.PresenceSensorFound += OnPresenceSensorFound;
-            deviceDiscoveringService.Start();
+            _deviceDiscoveringService.BulbFound += OnBulbFound;
+            _deviceDiscoveringService.PresenceSensorFound += OnPresenceSensorFound;
 
             _executeCommandPolicy = Policy
                 .Handle<Exception>()
@@ -134,6 +135,8 @@ namespace Xpressive.Home.Plugins.PhilipsHue
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
             await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(t => { });
+
+            _deviceDiscoveringService.Start();
 
             var _ = Task.Factory.StartNew(() => StartCommandQueueWorker(cancellationToken), TaskCreationOptions.LongRunning);
 

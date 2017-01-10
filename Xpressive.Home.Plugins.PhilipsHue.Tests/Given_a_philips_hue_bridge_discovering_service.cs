@@ -11,7 +11,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue.Tests
         public void Then_the_bridge_is_found()
         {
             var upnpDeviceDiscoveringService = new UpnpDeviceDiscoveringService();
-            var service = new PhilipsHueBridgeDiscoveringService(null, null, upnpDeviceDiscoveringService);
+            var service = new PhilipsHueBridgeDiscoveringService(null, null, upnpDeviceDiscoveringService, null);
 
             var task1 = upnpDeviceDiscoveringService.StartDiscoveringAsync();
             var task2 = Task.Delay(TimeSpan.FromHours(1));

@@ -122,6 +122,11 @@ namespace Xpressive.Home.Plugins.PhilipsHue
         {
             var backup = _deviceConfigurationBackupService.Get<BridgeConfigurationBackupDto[]>("PhilipsHue");
 
+            if (backup == null)
+            {
+                return;
+            }
+
             foreach (var dto in backup)
             {
                 OnBridgeFound(new PhilipsHueBridge(dto.Id, dto.IpAddress));
