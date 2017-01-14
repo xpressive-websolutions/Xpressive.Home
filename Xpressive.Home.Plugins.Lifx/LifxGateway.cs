@@ -30,17 +30,7 @@ namespace Xpressive.Home.Plugins.Lifx
 
             _localClient.DeviceDiscovered += async (s, e) =>
             {
-                lock (_deviceLock)
-                {
-                    var device = _devices.Cast<LifxDevice>().SingleOrDefault(d => d.Id.Equals(e.Id));
-
-                    if (device == null)
-                    {
-                        device = new LifxDevice(e);
-                        _devices.Add(device);
-                    }
-                }
-
+                AddLifxDevice(e.Id, () => new LifxDevice(e));
                 await _localClient.GetLightStateAsync(e);
             };
 
@@ -352,22 +342,35 @@ namespace Xpressive.Home.Plugins.Lifx
             var client = new LifxHttpClient(_token);
             var lights = await client.GetLights();
 
-            foreach (var light in lights.Where(l => l != null))
+            foreach (var light in lights)
             {
-                LifxDevice device;
+                var device = AddLifxDevice(light?.Id, () => new LifxDevice(light));
 
-                lock (_deviceLock)
+                if (device != null)
                 {
-                    device = _devices.Cast<LifxDevice>().SingleOrDefault(d => d.Id.Equals(light.Id));
+                    UpdateDeviceVariables(device, light);
+                }
+            }
+        }
 
-                    if (device == null)
-                    {
-                        device = new LifxDevice(light);
-                        _devices.Add(device);
-                    }
+        private LifxDevice AddLifxDevice(string id, Func<LifxDevice> create)
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                return null;
+            }
+
+            lock (_deviceLock)
+            {
+                var device = _devices.Cast<LifxDevice>().SingleOrDefault(d => d.Id.Equals(id));
+
+                if (device == null)
+                {
+                    device = create();
+                    _devices.Add(device);
                 }
 
-                UpdateDeviceVariables(device, light);
+                return device;
             }
         }
 
