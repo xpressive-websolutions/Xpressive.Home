@@ -263,7 +263,7 @@ namespace Xpressive.Home.Plugins.MyStrom
                 IpAddresses = new List<string>(ipAddresses);
             }
 
-            public List<string> IpAddresses { get; set; }
+            public List<string> IpAddresses { get; }
         }
     }
 }

@@ -8,8 +8,8 @@ using System.Runtime.InteropServices;
 
 [assembly: AssemblyCompany("Xpressive Websolutions")]
 [assembly: AssemblyProduct("Xpressive.Home")]
-[assembly: AssemblyVersion("1.0.0.17870")]
-[assembly: AssemblyFileVersion("1.0.0.17870")]
+[assembly: AssemblyVersion("1.0.0.17897")]
+[assembly: AssemblyFileVersion("1.0.0.17897")]
 [assembly: AssemblyInformationalVersion("1.0.0-beta.7")]
 [assembly: AssemblyCopyright("Copyright © 2017")]
 [assembly: AssemblyTrademark("")]

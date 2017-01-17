@@ -31,9 +31,6 @@ namespace Xpressive.Home.Services
 
             using (var deviceLocator = new SsdpDeviceLocator())
             {
-                deviceLocator.StartListeningForNotifications();
-                deviceLocator.DeviceAvailable += async (s, e) => { await UpnpDeviceFound(e.DiscoveredDevice); };
-
                 while (!_cancellationToken.IsCancellationRequested)
                 {
                     Task<IEnumerable<DiscoveredSsdpDevice>> searchTask;

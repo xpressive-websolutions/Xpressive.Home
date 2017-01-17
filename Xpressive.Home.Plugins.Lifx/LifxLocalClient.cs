@@ -225,63 +225,67 @@ namespace Xpressive.Home.Plugins.Lifx
                 endpoint = new IPEndPoint(IPAddress.Broadcast, 56700);
             }
 
-            var ms = new MemoryStream();
-            var w = new EndianBinaryWriter(EndianBitConverter.Little, ms, Encoding.UTF8);
-            w.Write((ushort)((payload?.Length ?? 0) + 36));
-            w.Write((ushort)0x3400);
-            w.Write(header.Identifier);
-            w.Write(header.TargetMacAddress);
-            w.Write(new byte[6]); //reserved 1
-
-            if (header.AcknowledgeRequired && header.ResponseRequired)
+            using (var ms = new MemoryStream())
             {
-                w.Write((byte)0x03);
-            }
-            else if (header.AcknowledgeRequired)
-            {
-                w.Write((byte)0x02);
-            }
-            else if (header.ResponseRequired)
-            {
-                w.Write((byte) 0x01);
-            }
-            else
-            {
-                w.Write((byte)0x00);
-            }
-
-            w.Write(header.Sequence);
-
-            if (header.AtTime > DateTime.MinValue)
-            {
-                var time = header.AtTime.ToUniversalTime();
-                w.Write((ulong)(time - new DateTime(1970, 01, 01)).TotalMilliseconds * 10);
-            }
-            else
-            {
-                w.Write((ulong)0);
-            }
-
-            w.Write((ushort)type);
-            w.Write((ushort)0);
-
-            if (payload != null)
-            {
-                w.Write(payload);
-            }
-
-            using (var client = new UdpClient())
-            {
-                var data = ms.ToArray();
-                client.DontFragment = true;
-                if (endpoint.Address.Equals(IPAddress.Broadcast))
+                using (var w = new EndianBinaryWriter(EndianBitConverter.Little, ms, Encoding.UTF8))
                 {
-                    client.EnableBroadcast = true;
-                }
-                client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-                client.Connect(endpoint);
+                    w.Write((ushort) ((payload?.Length ?? 0) + 36));
+                    w.Write((ushort) 0x3400);
+                    w.Write(header.Identifier);
+                    w.Write(header.TargetMacAddress);
+                    w.Write(new byte[6]); //reserved 1
 
-                await client.SendAsync(data, data.Length).ConfigureAwait(false);
+                    if (header.AcknowledgeRequired && header.ResponseRequired)
+                    {
+                        w.Write((byte) 0x03);
+                    }
+                    else if (header.AcknowledgeRequired)
+                    {
+                        w.Write((byte) 0x02);
+                    }
+                    else if (header.ResponseRequired)
+                    {
+                        w.Write((byte) 0x01);
+                    }
+                    else
+                    {
+                        w.Write((byte) 0x00);
+                    }
+
+                    w.Write(header.Sequence);
+
+                    if (header.AtTime > DateTime.MinValue)
+                    {
+                        var time = header.AtTime.ToUniversalTime();
+                        w.Write((ulong) (time - new DateTime(1970, 01, 01)).TotalMilliseconds*10);
+                    }
+                    else
+                    {
+                        w.Write((ulong) 0);
+                    }
+
+                    w.Write((ushort) type);
+                    w.Write((ushort) 0);
+
+                    if (payload != null)
+                    {
+                        w.Write(payload);
+                    }
+
+                    using (var client = new UdpClient())
+                    {
+                        var data = ms.ToArray();
+                        client.DontFragment = true;
+                        if (endpoint.Address.Equals(IPAddress.Broadcast))
+                        {
+                            client.EnableBroadcast = true;
+                        }
+                        client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                        client.Connect(endpoint);
+
+                        await client.SendAsync(data, data.Length).ConfigureAwait(false);
+                    }
+                }
             }
         }
 
@@ -306,7 +310,7 @@ namespace Xpressive.Home.Plugins.Lifx
         {
             if (transitionDuration.TotalMilliseconds > uint.MaxValue || transitionDuration.Ticks < 0)
             {
-                throw new ArgumentOutOfRangeException("transitionDuration");
+                throw new ArgumentOutOfRangeException(nameof(transitionDuration));
             }
 
             var header = new FrameHeader()

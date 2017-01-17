@@ -241,12 +241,15 @@ namespace Xpressive.Home.Plugins.Sonos
                 return;
             }
 
+            string trackUri;
+            positionInfo.TryGetValue("TrackURI", out trackUri);
+
             transportState = transportState[0] + transportState.Substring(1).ToLowerInvariant();
 
             device.CurrentUri = currentUri;
             device.TransportState = transportState;
             device.Volume = double.Parse(currentVolume);
-            device.IsMaster = string.IsNullOrEmpty(positionInfo["TrackURI"]) || !positionInfo["TrackURI"].StartsWith("x-rincon:RINCON");
+            device.IsMaster = string.IsNullOrEmpty(trackUri) || !trackUri.StartsWith("x-rincon:RINCON");
             device.Zone = zoneAttributes["CurrentZoneName"] ?? string.Empty;
 
             var master = GetMaster(device);
