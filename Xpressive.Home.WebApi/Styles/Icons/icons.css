@@ -67,3 +67,9 @@
 .PhilipsHueIcon_PresenceSensor {
     background: url("./PhilipsHue/motion_sensor.svg");
 }
+.PhilipsHueIcon_ZllSwitch {
+    background: url("./PhilipsHue/hds.svg");
+}
+.PhilipsHueIcon_ZgpSwitch {
+    background: url("./PhilipsHue/tap.svg");
+}

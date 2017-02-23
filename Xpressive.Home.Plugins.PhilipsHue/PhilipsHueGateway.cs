@@ -38,8 +38,9 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             _messageQueue = messageQueue;
             _canCreateDevices = false;
 
-            _deviceDiscoveringService.BulbFound += OnBulbFound;
-            _deviceDiscoveringService.PresenceSensorFound += OnPresenceSensorFound;
+            _deviceDiscoveringService.BulbFound += OnDeviceFound;
+            _deviceDiscoveringService.PresenceSensorFound += OnDeviceFound;
+            _deviceDiscoveringService.ButtonSensorFound += OnDeviceFound;
 
             _executeCommandPolicy = Policy
                 .Handle<Exception>()
@@ -144,11 +145,13 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             {
                 List<PhilipsHueBulb> bulbs;
                 List<PhilipsHuePresenceSensor> presenceSensors;
+                List<PhilipsHueButtonSensor> buttonSensors;
 
                 lock (_devicesLock)
                 {
                     bulbs = _devices.OfType<PhilipsHueBulb>().ToList();
                     presenceSensors = _devices.OfType<PhilipsHuePresenceSensor>().ToList();
+                    buttonSensors = _devices.OfType<PhilipsHueButtonSensor>().ToList();
                 }
 
                 var bridges = bulbs
@@ -167,8 +170,10 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 
                         for (var i = 0; i < 5 && !cancellationToken.IsCancellationRequested; i++)
                         {
-                            await _executeCommandPolicy.ExecuteAsync(() => UpdateSensorVariablesAsync(client, presenceSensors));
-                            await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken).ContinueWith(t => { });
+                            var sensors = await _executeCommandPolicy.ExecuteAsync(() => client.GetSensorsAsync());
+                            UpdateSensorVariables(sensors, presenceSensors);
+                            UpdateSensorVariables(sensors, buttonSensors);
+                            await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken).ContinueWith(t => { });
                         }
                     }
                     catch (WebException)
@@ -238,10 +243,8 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             }
         }
 
-        private async Task UpdateSensorVariablesAsync(LocalHueClient client, List<PhilipsHuePresenceSensor> presenceSensors)
+        private void UpdateSensorVariables(IEnumerable<Sensor> sensors, List<PhilipsHuePresenceSensor> presenceSensors)
         {
-            var sensors = await client.GetSensorsAsync();
-
             foreach (var sensor in sensors)
             {
                 var presenceSensor = presenceSensors.SingleOrDefault(s => IsEqual(s, sensor));
@@ -257,6 +260,51 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                 presenceSensor.Battery = sensor.Config.Battery ?? 100;
 
                 UpdateVariable($"{Name}.{presenceSensor.Id}.Presence", state.Presence);
+            }
+        }
+
+        private void UpdateSensorVariables(IEnumerable<Sensor> sensors, List<PhilipsHueButtonSensor> buttonSensors)
+        {
+            foreach (var sensor in sensors)
+            {
+                var buttonSensor = buttonSensors.SingleOrDefault(s => IsEqual(s, sensor));
+
+                if (buttonSensor == null)
+                {
+                    continue;
+                }
+
+                DateTime lastButtonOccurrence;
+                if (!DateTime.TryParse(sensor.State.Lastupdated, out lastButtonOccurrence))
+                {
+                    lastButtonOccurrence = DateTime.MinValue;
+                }
+
+                buttonSensor.LastButton = sensor.State.ButtonEvent ?? 0;
+                var isFirstTime = buttonSensor.LastButtonOccurrence == DateTime.MinValue;
+                var somethingHappend = !isFirstTime && buttonSensor.LastButtonOccurrence < lastButtonOccurrence;
+                UpdateButtonSensorVariables(buttonSensor, somethingHappend);
+                buttonSensor.LastButtonOccurrence = lastButtonOccurrence;
+
+                buttonSensor.Battery = sensor.Config.Battery ?? 100;
+            }
+        }
+
+        private void UpdateButtonSensorVariables(PhilipsHueButtonSensor buttonSensor, bool somethingHappend)
+        {
+            if (buttonSensor.Type.Equals("ZGPSwitch", StringComparison.OrdinalIgnoreCase))
+            {
+                UpdateVariable($"{Name}.{buttonSensor.Id}.Button1", somethingHappend && buttonSensor.LastButton == 34);
+                UpdateVariable($"{Name}.{buttonSensor.Id}.Button2", somethingHappend && buttonSensor.LastButton == 16);
+                UpdateVariable($"{Name}.{buttonSensor.Id}.Button3", somethingHappend && buttonSensor.LastButton == 17);
+                UpdateVariable($"{Name}.{buttonSensor.Id}.Button4", somethingHappend && buttonSensor.LastButton == 18);
+            }
+            else if (buttonSensor.Type.Equals("ZLLSwitch", StringComparison.OrdinalIgnoreCase))
+            {
+                UpdateVariable($"{Name}.{buttonSensor.Id}.ButtonOn", somethingHappend && buttonSensor.LastButton >= 1000 && buttonSensor.LastButton < 2000);
+                UpdateVariable($"{Name}.{buttonSensor.Id}.ButtonUp", somethingHappend && buttonSensor.LastButton >= 2000 && buttonSensor.LastButton < 3000);
+                UpdateVariable($"{Name}.{buttonSensor.Id}.ButtonDown", somethingHappend && buttonSensor.LastButton >= 3000 && buttonSensor.LastButton < 4000);
+                UpdateVariable($"{Name}.{buttonSensor.Id}.ButtonOff", somethingHappend && buttonSensor.LastButton >= 4000 && buttonSensor.LastButton < 5000);
             }
         }
 
@@ -341,29 +389,16 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             }
         }
 
-        private void OnBulbFound(object sender, PhilipsHueDevice e)
+        private void OnDeviceFound(object sender, PhilipsHueDevice device)
         {
             lock (_devicesLock)
             {
-                if (_devices.Cast<PhilipsHueDevice>().Any(d => d.Id.Equals(e.Id, StringComparison.OrdinalIgnoreCase)))
+                if (_devices.Cast<PhilipsHueDevice>().Any(d => d.Id.Equals(device.Id, StringComparison.OrdinalIgnoreCase)))
                 {
                     return;
                 }
 
-                _devices.Add(e);
-            }
-        }
-
-        private void OnPresenceSensorFound(object sender, PhilipsHuePresenceSensor e)
-        {
-            lock (_devicesLock)
-            {
-                if (_devices.Cast<PhilipsHueDevice>().Any(d => d.Id.Equals(e.Id, StringComparison.OrdinalIgnoreCase)))
-                {
-                    return;
-                }
-
-                _devices.Add(e);
+                _devices.Add(device);
             }
         }
 
@@ -378,7 +413,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             return device.Id.Equals(lightId, StringComparison.OrdinalIgnoreCase);
         }
 
-        private bool IsEqual(PhilipsHuePresenceSensor device, Sensor sensor)
+        private bool IsEqual(PhilipsHueDevice device, Sensor sensor)
         {
             if (sensor.UniqueId == null)
             {

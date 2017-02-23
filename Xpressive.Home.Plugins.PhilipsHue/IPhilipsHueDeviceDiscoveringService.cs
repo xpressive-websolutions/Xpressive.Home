@@ -9,5 +9,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
         event EventHandler<PhilipsHueBulb> BulbFound;
 
         event EventHandler<PhilipsHuePresenceSensor> PresenceSensorFound;
+
+        event EventHandler<PhilipsHueButtonSensor> ButtonSensorFound;
     }
 }

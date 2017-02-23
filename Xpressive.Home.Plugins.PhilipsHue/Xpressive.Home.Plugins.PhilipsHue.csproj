@@ -77,6 +77,7 @@
     <Compile Include="LightCommandStrategies\SwitchOffLightCommandStrategy.cs" />
     <Compile Include="LightCommandStrategies\SwitchOnLightCommandStrategy.cs" />
     <Compile Include="PhilipsHueBulb.cs" />
+    <Compile Include="PhilipsHueButtonSensor.cs" />
     <Compile Include="PhilipsHueModule.cs" />
     <Compile Include="IPhilipsHueBridgeDiscoveringService.cs" />
     <Compile Include="IPhilipsHueDeviceDiscoveringService.cs" />

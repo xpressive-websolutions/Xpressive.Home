@@ -1,6 +1,8 @@
 using System;
-using System.Linq;
+using System.Diagnostics;
+using System.Threading.Tasks;
 using Q42.HueApi;
+using Q42.HueApi.Models;
 using Xpressive.Home.Contracts.Variables;
 
 namespace Xpressive.Home.Plugins.PhilipsHue
@@ -20,6 +22,8 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 
         public event EventHandler<PhilipsHuePresenceSensor> PresenceSensorFound;
 
+        public event EventHandler<PhilipsHueButtonSensor> ButtonSensorFound;
+
         public void Start()
         {
             _bridgeDiscoveringService.BridgeFound += OnBridgeFound;
@@ -32,8 +36,14 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             var apiKey = _variableRepository.Get<StringVariable>(variableName).Value;
 
             var client = new LocalHueClient(bridge.IpAddress, apiKey);
+
+            await FindBulbsAsync(client, bridge);
+            await FindSensorsAsync(client, bridge);
+        }
+
+        private async Task FindBulbsAsync(LocalHueClient client, PhilipsHueBridge bridge)
+        {
             var bulbs = await client.GetLightsAsync();
-            var sensors = await client.GetSensorsAsync();
 
             if (bulbs != null)
             {
@@ -49,26 +59,75 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                     OnBulbFound(bulb);
                 }
             }
+        }
+
+        private async Task FindSensorsAsync(LocalHueClient client, PhilipsHueBridge bridge)
+        {
+            var sensors = await client.GetSensorsAsync();
 
             if (sensors != null)
             {
-                var presenceSensors = sensors
-                    .Where(s => s.ModelId == "SML001" && s.Type == "ZLLPresence")
-                    .ToList();
-
-                foreach (var presenceSensor in presenceSensors)
+                foreach (var sensor in sensors)
                 {
-                    var id = presenceSensor.UniqueId.Replace(":", string.Empty).Replace("-", string.Empty);
-                    var sensor = new PhilipsHuePresenceSensor(presenceSensor.Id, id, presenceSensor.Name, bridge)
+                    switch (sensor.Type.ToLowerInvariant())
                     {
-                        Model = presenceSensor.ModelId,
-                        Icon = "PhilipsHueIcon PhilipsHueIcon_PresenceSensor",
-                        Battery = presenceSensor.Config.Battery ?? 100
-                    };
-
-                    OnPresenceSensorFound(sensor);
+                        case "zllpresence":
+                            HandleZllPresenceSensor(sensor, bridge);
+                            break;
+                        case "zgpswitch":
+                            HandleZgpSwitch(sensor, bridge);
+                            break;
+                        case "zllswitch":
+                            HandleZllSwitch(sensor, bridge);
+                            break;
+                        default:
+                            Debug.WriteLine(sensor.Type);
+                            break;
+                    }
                 }
             }
+        }
+
+        private void HandleZllPresenceSensor(Sensor sensor, PhilipsHueBridge bridge)
+        {
+            var id = sensor.UniqueId.Replace(":", string.Empty).Replace("-", string.Empty);
+            var sensorDevice = new PhilipsHuePresenceSensor(sensor.Id, id, sensor.Name, bridge)
+            {
+                Model = sensor.ModelId,
+                Type = sensor.Type,
+                Icon = "PhilipsHueIcon PhilipsHueIcon_PresenceSensor",
+                Battery = sensor.Config.Battery ?? 100
+            };
+
+            OnPresenceSensorFound(sensorDevice);
+        }
+
+        private void HandleZgpSwitch(Sensor sensor, PhilipsHueBridge bridge)
+        {
+            var id = sensor.UniqueId.Replace(":", string.Empty).Replace("-", string.Empty);
+            var button = new PhilipsHueButtonSensor(sensor.Id, id, sensor.Name, bridge)
+            {
+                Model = sensor.ModelId,
+                Type = sensor.Type,
+                Icon = "PhilipsHueIcon PhilipsHueIcon_ZgpSwitch",
+                Battery = sensor.Config.Battery ?? 100
+            };
+
+            OnButtonSensorFound(button);
+        }
+
+        private void HandleZllSwitch(Sensor sensor, PhilipsHueBridge bridge)
+        {
+            var id = sensor.UniqueId.Replace(":", string.Empty).Replace("-", string.Empty);
+            var button = new PhilipsHueButtonSensor(sensor.Id, id, sensor.Name, bridge)
+            {
+                Model = sensor.ModelId,
+                Type = sensor.Type,
+                Icon = "PhilipsHueIcon PhilipsHueIcon_ZllSwitch",
+                Battery = sensor.Config.Battery ?? 100
+            };
+
+            OnButtonSensorFound(button);
         }
 
         protected virtual void OnBulbFound(PhilipsHueBulb e)
@@ -79,6 +138,11 @@ namespace Xpressive.Home.Plugins.PhilipsHue
         protected virtual void OnPresenceSensorFound(PhilipsHuePresenceSensor e)
         {
             PresenceSensorFound?.Invoke(this, e);
+        }
+
+        protected virtual void OnButtonSensorFound(PhilipsHueButtonSensor e)
+        {
+            ButtonSensorFound?.Invoke(this, e);
         }
     }
 }

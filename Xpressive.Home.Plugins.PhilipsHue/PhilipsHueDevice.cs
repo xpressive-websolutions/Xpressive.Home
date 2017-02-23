@@ -18,5 +18,6 @@ namespace Xpressive.Home.Plugins.PhilipsHue
         public PhilipsHueBridge Bridge => _bridge;
         public string Index => _index;
         public string Model { get; set; }
+        public string Type { get; set; }
     }
 }
