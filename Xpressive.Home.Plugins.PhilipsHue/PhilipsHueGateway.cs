@@ -137,7 +137,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
         {
             await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(t => { });
 
-            _deviceDiscoveringService.Start();
+            _deviceDiscoveringService.Start(cancellationToken);
 
             var _ = Task.Factory.StartNew(() => StartCommandQueueWorker(cancellationToken), TaskCreationOptions.LongRunning);
 

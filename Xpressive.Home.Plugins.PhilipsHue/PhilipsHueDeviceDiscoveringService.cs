@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
+using log4net;
 using Q42.HueApi;
 using Q42.HueApi.Models;
 using Xpressive.Home.Contracts.Variables;
@@ -9,13 +12,16 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 {
     internal class PhilipsHueDeviceDiscoveringService : IPhilipsHueDeviceDiscoveringService
     {
+        private static readonly ILog _log = LogManager.GetLogger(typeof(PhilipsHueDeviceDiscoveringService));
         private readonly IVariableRepository _variableRepository;
         private readonly IPhilipsHueBridgeDiscoveringService _bridgeDiscoveringService;
+        private readonly IList<PhilipsHueBridge> _bridges;
 
         public PhilipsHueDeviceDiscoveringService(IVariableRepository variableRepository, IPhilipsHueBridgeDiscoveringService bridgeDiscoveringService)
         {
             _variableRepository = variableRepository;
             _bridgeDiscoveringService = bridgeDiscoveringService;
+            _bridges = new List<PhilipsHueBridge>();
         }
 
         public event EventHandler<PhilipsHueBulb> BulbFound;
@@ -24,21 +30,51 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 
         public event EventHandler<PhilipsHueButtonSensor> ButtonSensorFound;
 
-        public void Start()
+        public void Start(CancellationToken cancellationToken)
         {
             _bridgeDiscoveringService.BridgeFound += OnBridgeFound;
             _bridgeDiscoveringService.Start();
+
+            Task.Factory.StartNew(async () => await FindDevices(cancellationToken));
         }
 
         private async void OnBridgeFound(object sender, PhilipsHueBridge bridge)
         {
-            var variableName = $"PhilipsHue.{bridge.Id}.ApiKey";
-            var apiKey = _variableRepository.Get<StringVariable>(variableName).Value;
+            _bridges.Add(bridge);
+            await FindDevices(bridge);
+        }
 
-            var client = new LocalHueClient(bridge.IpAddress, apiKey);
+        private async Task FindDevices(CancellationToken cancellationToken)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(t => { });
 
-            await FindBulbsAsync(client, bridge);
-            await FindSensorsAsync(client, bridge);
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                foreach (var bridge in _bridges)
+                {
+                    await FindDevices(bridge);
+                }
+
+                await Task.Delay(TimeSpan.FromMinutes(10), cancellationToken).ContinueWith(t => { });
+            }
+        }
+
+        private async Task FindDevices(PhilipsHueBridge bridge)
+        {
+            try
+            {
+                var variableName = $"PhilipsHue.{bridge.Id}.ApiKey";
+                var apiKey = _variableRepository.Get<StringVariable>(variableName).Value;
+
+                var client = new LocalHueClient(bridge.IpAddress, apiKey);
+
+                await FindBulbsAsync(client, bridge);
+                await FindSensorsAsync(client, bridge);
+            }
+            catch (Exception e)
+            {
+                _log.Error($"Unable to get devices ({e.GetType().Name}) {e.Message}");
+            }
         }
 
         private async Task FindBulbsAsync(LocalHueClient client, PhilipsHueBridge bridge)
