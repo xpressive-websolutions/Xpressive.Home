@@ -30,7 +30,7 @@ namespace Xpressive.Home.Plugins.Lifx
                 Hue = Color.Hue,
                 Saturation = Color.Saturation,
                 Brightness = Brightness,
-                Kelvin = Color.Kelvin
+                Kelvin = (ushort)Color.Kelvin
             };
         }
 

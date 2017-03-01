@@ -10,6 +10,7 @@ using log4net;
 using Polly;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
+using Xpressive.Home.Contracts.Services;
 using Action = Xpressive.Home.Contracts.Gateway.Action;
 
 namespace Xpressive.Home.Plugins.Lifx
@@ -18,20 +19,21 @@ namespace Xpressive.Home.Plugins.Lifx
     {
         private static readonly ILog _log = LogManager.GetLogger(typeof(LifxGateway));
         private readonly IMessageQueue _messageQueue;
+        private readonly IDeviceConfigurationBackupService _deviceConfigurationBackupService;
         private readonly string _token;
         private readonly object _deviceLock = new object();
         private readonly LifxLocalClient _localClient = new LifxLocalClient();
 
-        public LifxGateway(IMessageQueue messageQueue) : base("Lifx")
+        public LifxGateway(IMessageQueue messageQueue, IDeviceConfigurationBackupService deviceConfigurationBackupService) : base("Lifx")
         {
             _messageQueue = messageQueue;
+            _deviceConfigurationBackupService = deviceConfigurationBackupService;
             _canCreateDevices = false;
             _token = ConfigurationManager.AppSettings["lifx.token"];
 
-            _localClient.DeviceDiscovered += async (s, e) =>
+            _localClient.DeviceDiscovered += (s, e) =>
             {
                 AddLifxDevice(e.Id, () => new LifxDevice(e));
-                await _localClient.GetLightStateAsync(e);
             };
 
             _localClient.VariableChanged += (s, e) =>
@@ -115,14 +117,28 @@ namespace Xpressive.Home.Plugins.Lifx
             StartActionInNewTask(device, action, parameters);
         }
 
-        public override Task StartAsync(CancellationToken cancellationToken)
+        public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            Task.WaitAll(Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { }));
+            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
 
-            FindLocalBulbsAsync(cancellationToken).ConfigureAwait(false);
+            FindLocalBulbs(cancellationToken);
             FindCloudBulbsAsync(cancellationToken).ConfigureAwait(false);
 
-            return Task.CompletedTask;
+            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
+
+            var backupDto = _deviceConfigurationBackupService.Get<LocalLifxLightConfigurationBackupDto>(Name);
+            if (backupDto != null)
+            {
+                foreach (var ipAddress in backupDto.LocalIpAddresses)
+                {
+                    var temporaryDevice = new LifxLocalLight
+                    {
+                        Endpoint = new IPEndPoint(IPAddress.Parse(ipAddress), 56700)
+                    };
+
+                    await _localClient.GetLightStateAsync(temporaryDevice);
+                }
+            }
         }
 
         private async Task FindCloudBulbsAsync(CancellationToken cancellationToken)
@@ -141,11 +157,11 @@ namespace Xpressive.Home.Plugins.Lifx
             }
         }
 
-        private async Task FindLocalBulbsAsync(CancellationToken cancellationToken)
+        private void FindLocalBulbs(CancellationToken cancellationToken)
         {
             try
             {
-                await _localClient.StartDeviceDiscoveryAsync(cancellationToken);
+                _localClient.StartLifxNetwork(cancellationToken);
             }
             catch (Exception e)
             {
@@ -243,56 +259,58 @@ namespace Xpressive.Home.Plugins.Lifx
                 return;
             }
 
+            var hsbk = light.Color;
+            if (hsbk == null)
+            {
+                hsbk = new HsbkColor
+                {
+                    Kelvin = 4500
+                };
+            }
+
             switch (action.ToLowerInvariant())
             {
                 case "switch on":
                     if (seconds == 0)
                     {
-                        await _localClient.SetDevicePowerStateAsync(light, true);
+                        await _localClient.SetPowerAsync(light, true);
                     }
                     else if (seconds > 0)
                     {
-                        await _localClient.SetLightPowerAsync(light, TimeSpan.FromSeconds(seconds), true);
+                        await _localClient.SetPowerAsync(light, TimeSpan.FromSeconds(seconds), true);
                     }
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", true));
+                    //_messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", true));
                     break;
                 case "switch off":
                     if (seconds == 0)
                     {
-                        await _localClient.SetDevicePowerStateAsync(light, false);
+                        await _localClient.SetPowerAsync(light, false);
                     }
                     else if (seconds > 0)
                     {
-                        await _localClient.SetLightPowerAsync(light, TimeSpan.FromSeconds(seconds), false);
+                        await _localClient.SetPowerAsync(light, TimeSpan.FromSeconds(seconds), false);
                     }
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", false));
+                    //_messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", false));
                     break;
                 case "change color":
                     var rgb = color.ParseRgb();
                     var hsb = rgb.ToHsbk();
-                    var hue = (ushort)(hsb.Hue * 65535 / 360);
-                    var saturation = (ushort) (hsb.Saturation*65535);
-                    b = (ushort) (hsb.Brightness*65535);
-                    ushort kelvin = 4500;
-                    await _localClient.SetColorAsync(light, hue, saturation, b, kelvin, TimeSpan.FromSeconds(seconds));
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", true));
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Color", rgb.ToString()));
+
+                    hsbk.Hue = hsb.Hue;
+                    hsbk.Saturation = hsb.Saturation;
+                    hsbk.Brightness = hsb.Brightness;
+
+                    await _localClient.SetColorAsync(light, hsbk, TimeSpan.FromSeconds(seconds));
+                    //_messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", true));
+                    //_messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Color", rgb.ToString()));
                     break;
                 case "change brightness":
-                    var hsbk = light.Color;
-                    if (hsbk == null)
-                    {
-                        hsbk = new HsbkColor();
-                        hsbk.Hue = 0;
-                        hsbk.Saturation = 0;
-                        hsbk.Kelvin = 4500;
-                    }
-                    hue = (ushort) (hsbk.Hue*65535/360);
-                    saturation = (ushort) (hsbk.Saturation*65535);
-                    await _localClient.SetColorAsync(light, hue, saturation, b, (ushort)hsbk.Kelvin, TimeSpan.FromSeconds(seconds));
-                    var db = Math.Round(brightness, 2);
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Brightness", db));
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", true));
+                    hsbk.Brightness = brightness;
+
+                    await _localClient.SetColorAsync(light, hsbk, TimeSpan.FromSeconds(seconds));
+                    //var db = Math.Round(brightness, 2);
+                    //_messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Brightness", db));
+                    //_messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", true));
                     break;
                 default:
                     return;
@@ -395,8 +413,29 @@ namespace Xpressive.Home.Plugins.Lifx
         {
             if (disposing)
             {
+                var ipAddresses = _localClient.Lights.Select(l => l.Endpoint.Address.ToString()).ToList();
+                var backupDto = new LocalLifxLightConfigurationBackupDto(ipAddresses);
+                _deviceConfigurationBackupService.Save(Name, backupDto);
+
                 _localClient.Dispose();
             }
+        }
+
+        private class LocalLifxLightConfigurationBackupDto
+        {
+            public LocalLifxLightConfigurationBackupDto(IEnumerable<string> ipAddresses)
+            {
+                if (ipAddresses == null)
+                {
+                    LocalIpAddresses = new List<string>(0);
+                }
+                else
+                {
+                    LocalIpAddresses = new List<string>(ipAddresses);
+                }
+            }
+
+            public List<string> LocalIpAddresses { get; }
         }
     }
 }

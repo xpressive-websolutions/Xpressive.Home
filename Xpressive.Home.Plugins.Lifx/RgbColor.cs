@@ -2,9 +2,9 @@ namespace Xpressive.Home.Plugins.Lifx
 {
     public sealed class RgbColor
     {
-        public int Red { get; set; }
-        public int Green { get; set; }
-        public int Blue { get; set; }
+        public byte Red { get; set; }
+        public byte Green { get; set; }
+        public byte Blue { get; set; }
 
         public override string ToString()
         {

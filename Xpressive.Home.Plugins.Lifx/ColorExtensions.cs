@@ -27,9 +27,9 @@ namespace Xpressive.Home.Plugins.Lifx
 
             return new RgbColor
             {
-                Red = (int)r,
-                Green = (int)g,
-                Blue = (int)b
+                Red = (byte)r,
+                Green = (byte)g,
+                Blue = (byte)b
             };
         }
 
@@ -47,9 +47,9 @@ namespace Xpressive.Home.Plugins.Lifx
                 throw new ArgumentException("Color should contains 6 characters");
             }
 
-            var red = int.Parse(hexColor.Substring(0, 2), NumberStyles.AllowHexSpecifier);
-            var green = int.Parse(hexColor.Substring(2, 2), NumberStyles.AllowHexSpecifier);
-            var blue = int.Parse(hexColor.Substring(4, 2), NumberStyles.AllowHexSpecifier);
+            var red = byte.Parse(hexColor.Substring(0, 2), NumberStyles.AllowHexSpecifier);
+            var green = byte.Parse(hexColor.Substring(2, 2), NumberStyles.AllowHexSpecifier);
+            var blue = byte.Parse(hexColor.Substring(4, 2), NumberStyles.AllowHexSpecifier);
 
             return new RgbColor
             {
