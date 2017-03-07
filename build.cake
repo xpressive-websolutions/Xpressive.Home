@@ -1,12 +1,12 @@
 
-var configuration = Argument("Configuration", "Release");
+var configuration = Argument("Configuration", "Build");
 
 Information(configuration);
 
 var build = (int)(DateTime.Now - new DateTime(2015, 1, 1)).TotalHours;
 var versionPrefix = "1.0.0";
 var version = string.Format("{0}.{1}", versionPrefix, build);
-var informationalVersion = versionPrefix + "-beta.7";
+var informationalVersion = versionPrefix + "-beta.8";
 
 Setup(context =>
 {
@@ -67,31 +67,33 @@ Task("Build").IsDependentOn("Pre-Build Clean Up").Does(() =>
 
 Task("Copy").IsDependentOn("Build").Does(() =>
 {
-    CreateDirectory("Build");
-    CreateDirectory("Build/Plugins");
+    // CreateDirectory("Build");
+    // CreateDirectory("Build/Plugins");
 
-    Func<IFileSystemInfo, bool> onlyPluginDirectories = fileSystemInfo =>
-        fileSystemInfo.Path.FullPath.Contains(".Plugins.") &&
-        !fileSystemInfo.Path.FullPath.EndsWith(".Tests", StringComparison.OrdinalIgnoreCase);
-            
-    var directories = GetDirectories("./*", onlyPluginDirectories);
+    // Func<IFileSystemInfo, bool> onlyPluginDirectories = fileSystemInfo =>
+    //     fileSystemInfo.Path.FullPath.Contains(".Plugins.") &&
+    //     !fileSystemInfo.Path.FullPath.EndsWith(".Tests", StringComparison.OrdinalIgnoreCase);
 
-    foreach(var directory in directories)
-    {
-        var binaries = GetFiles(directory + "/bin/" + configuration + "/*.*");
-        CopyFiles(binaries, "./Build/Plugins");
-    }
+    // var directories = GetDirectories("./*", onlyPluginDirectories);
 
-    CopyFiles(GetFiles("Xpressive.Home.ConsoleHost/bin/" + configuration + "/*.*"), "./Build");
-    CopyFiles(GetFiles("Xpressive.Home.Service/bin/" + configuration + "/*.*"), "./Build");
-    CopyFiles(GetFiles("Xpressive.Home.Services/bin/" + configuration + "/*.*"), "./Build");
-    CopyFiles(GetFiles("Xpressive.Home.WebApi/bin/" + configuration + "/*.*"), "./Build");
-    CopyFiles(GetFiles("Xpressive.Home.Deployment.Updater/bin/" + configuration + "/*.*"), "./Build");
+    // foreach(var directory in directories)
+    // {
+    //     var binaries = GetFiles(directory + "/bin/" + configuration + "/*.*");
+    //     CopyFiles(binaries, "./Build/Plugins");
+    // }
+
+    // CopyFiles(GetFiles("Xpressive.Home.ConsoleHost/bin/" + configuration + "/*.*"), "./Build");
+    // CopyFiles(GetFiles("Xpressive.Home.Service/bin/" + configuration + "/*.*"), "./Build");
+    // CopyFiles(GetFiles("Xpressive.Home.Services/bin/" + configuration + "/*.*"), "./Build");
+    // CopyFiles(GetFiles("Xpressive.Home.WebApi/bin/" + configuration + "/*.*"), "./Build");
+    // CopyFiles(GetFiles("Xpressive.Home.Deployment.Updater/bin/" + configuration + "/*.*"), "./Build");
 
     XmlPoke(File("./Build/Xpressive.Home.ConsoleHost.exe.config"), "/configuration/appSettings/add/@value", "");
     XmlPoke(File("./Build/Xpressive.Home.Service.exe.config"), "/configuration/appSettings/add/@value", "");
 
-    DeleteFiles("./Build/**/*.xml");
+    DeleteFiles("./Build/*.xml");
+    DeleteFiles("./Build/Plugins/*.xml");
+	DeleteDirectory("./Build/config", recursive:true);
 });
 
 Task("Copy Web").IsDependentOn("Copy").Does(() =>

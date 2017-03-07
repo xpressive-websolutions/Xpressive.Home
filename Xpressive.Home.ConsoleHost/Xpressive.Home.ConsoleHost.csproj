@@ -34,6 +34,15 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Build|AnyCPU'">
+    <OutputPath>..\Build\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="log4net, Version=1.2.15.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
       <HintPath>..\packages\log4net.2.0.5\lib\net45-full\log4net.dll</HintPath>
@@ -92,21 +101,8 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy "$(SolutionDir)Xpressive.Home.Plugins.Daylight\bin\$(ConfigurationName)" "$(TargetDir)Plugins\" /Y
-xcopy "$(SolutionDir)Xpressive.Home.Plugins.Denon\bin\$(ConfigurationName)" "$(TargetDir)Plugins\" /Y
-xcopy "$(SolutionDir)Xpressive.Home.Plugins.Email\bin\$(ConfigurationName)" "$(TargetDir)Plugins\" /Y
-xcopy "$(SolutionDir)Xpressive.Home.Plugins.Forecast\bin\$(ConfigurationName)" "$(TargetDir)Plugins\" /Y
-xcopy "$(SolutionDir)Xpressive.Home.Plugins.Lifx\bin\$(ConfigurationName)" "$(TargetDir)Plugins\" /Y
-xcopy "$(SolutionDir)Xpressive.Home.Plugins.MyStrom\bin\$(ConfigurationName)" "$(TargetDir)Plugins\" /Y
-xcopy "$(SolutionDir)Xpressive.Home.Plugins.Netatmo\bin\$(ConfigurationName)" "$(TargetDir)Plugins\" /Y
-xcopy "$(SolutionDir)Xpressive.Home.Plugins.PhilipsHue\bin\$(ConfigurationName)" "$(TargetDir)Plugins\" /Y
-xcopy "$(SolutionDir)Xpressive.Home.Plugins.Pushalot\bin\$(ConfigurationName)" "$(TargetDir)Plugins\" /Y
-xcopy "$(SolutionDir)Xpressive.Home.Plugins.Pushover\bin\$(ConfigurationName)" "$(TargetDir)Plugins\" /Y
-xcopy "$(SolutionDir)Xpressive.Home.Plugins.Sms\bin\$(ConfigurationName)" "$(TargetDir)Plugins\" /Y
-xcopy "$(SolutionDir)Xpressive.Home.Plugins.Sonos\bin\$(ConfigurationName)" "$(TargetDir)Plugins\" /Y
-xcopy "$(SolutionDir)Xpressive.Home.Plugins.Tado\bin\$(ConfigurationName)" "$(TargetDir)Plugins\" /Y
-xcopy "$(SolutionDir)Xpressive.Home.Plugins.Zwave\bin\$(ConfigurationName)" "$(TargetDir)Plugins\" /Y
-xcopy "$(SolutionDir)Xpressive.Home.WebApi\bin\$(ConfigurationName)" "$(TargetDir)" /Y</PostBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
   </PropertyGroup>
   <Import Project="..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets" Condition="Exists('..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
