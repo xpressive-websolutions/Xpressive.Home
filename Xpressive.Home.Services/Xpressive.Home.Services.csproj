@@ -86,12 +86,8 @@
       <HintPath>..\packages\RestSharp.105.2.3\lib\net46\RestSharp.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Rssdp.Native, Version=2.0.0.2, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Rssdp.2.0.0.5\lib\net40\Rssdp.Native.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Rssdp.Portable, Version=2.0.0.4, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Rssdp.2.0.0.5\lib\net40\Rssdp.Portable.dll</HintPath>
+    <Reference Include="Rssdp.Native, Version=2.0.9.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Rssdp.2.0.9\lib\net45\Rssdp.Native.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
