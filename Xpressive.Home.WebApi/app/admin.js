@@ -449,6 +449,8 @@
             _.each($scope.triggers, function(t) {
                 $http.get("/api/v1/variable/" + t.variable, { cache: false }).then(function(result) {
                     t.value = result.data.value;
+                    t.unit = result.data.unit;
+                    t.type = result.data.type;
                 });
             });
         }, 5000);

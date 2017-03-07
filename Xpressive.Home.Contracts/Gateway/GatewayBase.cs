@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -12,14 +13,14 @@ namespace Xpressive.Home.Contracts.Gateway
     {
         private readonly ILog _log;
         private readonly string _name;
-        protected readonly IList<DeviceBase> _devices;
+        protected readonly ConcurrentBag<DeviceBase> _devices;
         protected bool _canCreateDevices;
 
         protected GatewayBase(string name)
         {
             _log = LogManager.GetLogger(GetType());
             _name = name;
-            _devices = new List<DeviceBase>();
+            _devices = new ConcurrentBag<DeviceBase>();
         }
 
         public string Name => _name;

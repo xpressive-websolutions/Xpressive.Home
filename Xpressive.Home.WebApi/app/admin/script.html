@@ -72,6 +72,8 @@
                                 <th style="width: 35px"></th>
                                 <th>Variable name</th>
                                 <th>Current value</th>
+                                <th>Unit</th>
+                                <th>Type</th>
                             </tr>
                             <tr ng-repeat="trigger in triggers">
                                 <td>
@@ -81,6 +83,8 @@
                                 </td>
                                 <td>{{::trigger.variable }}</td>
                                 <td>{{ trigger.value }}</td>
+                                <td>{{::trigger.unit}}</td>
+                                <td>{{::trigger.type}}</td>
                             </tr>
                         </tbody>
                     </table>

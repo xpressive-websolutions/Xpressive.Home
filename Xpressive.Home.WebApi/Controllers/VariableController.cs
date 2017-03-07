@@ -35,7 +35,9 @@ namespace Xpressive.Home.WebApi.Controllers
             return variables.Select(v => new VariableDto
             {
                 Name = v.Name.Substring(prefix.Length),
-                Value = v.Value
+                Value = v.Value,
+                Type = v.Value?.GetType().Name,
+                Unit = v.Unit
             });
         }
 
@@ -48,7 +50,9 @@ namespace Xpressive.Home.WebApi.Controllers
                 return Ok(new VariableDto
                 {
                     Name = result.Name,
-                    Value = result.Value
+                    Value = result.Value,
+                    Type = result.Value?.GetType().Name,
+                    Unit = result.Unit
                 });
             }
 
@@ -59,6 +63,8 @@ namespace Xpressive.Home.WebApi.Controllers
         {
             public string Name { get; set; }
             public object Value { get; set; }
+            public string Type { get; set; }
+            public string Unit { get; set; }
         }
     }
 }

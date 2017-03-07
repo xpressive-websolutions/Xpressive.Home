@@ -5,5 +5,7 @@ namespace Xpressive.Home.Contracts.Variables
         string Name { get; set; }
 
         object Value { get; set; }
+
+        string Unit { get; set; }
     }
 }

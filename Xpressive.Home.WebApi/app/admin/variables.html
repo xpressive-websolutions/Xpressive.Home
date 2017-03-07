@@ -14,12 +14,16 @@
                         <tr>
                             <th>Variable</th>
                             <th>Value</th>
+                            <th>Unit</th>
+                            <th>Type</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr ng-repeat="variable in variables">
                             <td title="{{::gateway}}.{{::deviceId}}.{{::variable.name}}">{{::variable.name }}</td>
                             <td>{{::variable.value }}</td>
+                            <td>{{::variable.unit}}</td>
+                            <td>{{::variable.type}}</td>
                         </tr>
                     </tbody>
                 </table>

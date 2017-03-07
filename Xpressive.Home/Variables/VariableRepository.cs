@@ -53,13 +53,22 @@ namespace Xpressive.Home.Variables
                 IVariable variable;
                 if (_variables.TryGetValue(message.Name, out variable))
                 {
-                    variable.Value = message.Value;
+                    try
+                    {
+                        variable.Value = message.Value;
+                        variable.Unit = message.Unit;
+                    }
+                    catch (InvalidCastException)
+                    {
+                        _log.Error($"Unable to cast value {message.Value} of variable {message.Name}");
+                    }
                 }
                 else
                 {
                     variable = CreateVariableByType(message.Value);
                     variable.Name = message.Name;
                     variable.Value = message.Value;
+                    variable.Unit = message.Unit;
                     _variables.Add(message.Name, variable);
                 }
 
