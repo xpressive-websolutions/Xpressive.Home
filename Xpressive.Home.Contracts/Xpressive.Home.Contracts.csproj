@@ -72,7 +72,6 @@
     <Compile Include="Messaging\IMessageQueue.cs" />
     <Compile Include="Messaging\IMessageQueueListener.cs" />
     <Compile Include="Messaging\IMessageQueueMessage.cs" />
-    <Compile Include="Messaging\LowBatteryMessage.cs" />
     <Compile Include="Messaging\NotifyUserMessage.cs" />
     <Compile Include="Messaging\UpdateVariableMessage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

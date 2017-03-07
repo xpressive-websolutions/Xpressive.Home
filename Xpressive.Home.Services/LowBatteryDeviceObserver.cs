@@ -42,12 +42,12 @@ namespace Xpressive.Home.Services
                     {
                         if (device.BatteryStatus == DeviceBatteryStatus.Low)
                         {
-                            _messageQueue.Publish(new LowBatteryMessage(gateway.Name, device));
+                            _messageQueue.Publish(new NotifyUserMessage($"Low battery on device {gateway.Name}.{device.Id}"));
                         }
                     }
                 }
 
-                await Task.Delay(TimeSpan.FromMinutes(1), _cancellationToken.Token).ContinueWith(_ => { });
+                await Task.Delay(TimeSpan.FromHours(1), _cancellationToken.Token).ContinueWith(_ => { });
             }
         }
     }

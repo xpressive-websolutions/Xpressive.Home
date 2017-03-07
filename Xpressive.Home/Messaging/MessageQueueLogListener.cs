@@ -7,7 +7,6 @@ namespace Xpressive.Home.Messaging
         IMessageQueueListener<UpdateVariableMessage>,
         IMessageQueueListener<CommandMessage>,
         IMessageQueueListener<NotifyUserMessage>,
-        IMessageQueueListener<LowBatteryMessage>,
         IMessageQueueListener<ExecuteScriptMessage>
     {
         private static readonly ILog _log = LogManager.GetLogger(typeof(MessageQueueLogListener));
@@ -25,11 +24,6 @@ namespace Xpressive.Home.Messaging
         public void Notify(NotifyUserMessage message)
         {
             _log.Info($"{message.GetType().Name} received: {message.Notification}");
-        }
-
-        public void Notify(LowBatteryMessage message)
-        {
-            _log.Warn($"{message.GetType().Name} received for {message.GatewayName}.{message.DeviceId}.");
         }
 
         public void Notify(ExecuteScriptMessage message)
