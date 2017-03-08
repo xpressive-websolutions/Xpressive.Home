@@ -6,7 +6,8 @@
     margin-top: 21px;
 }
 
-.SonosIcon_S1 {
+.SonosIcon_S1,
+.SonosIcon_S12 {
     background: url("./Sonos/S1.png");
 }
 

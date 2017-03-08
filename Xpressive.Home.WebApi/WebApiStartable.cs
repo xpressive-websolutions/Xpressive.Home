@@ -1,10 +1,8 @@
 ﻿using System;
 using System.IO;
-using System.Reflection;
 using System.Web.Http;
 using Autofac;
 using Autofac.Integration.WebApi;
-using log4net;
 using Microsoft.Owin;
 using Microsoft.Owin.FileSystems;
 using Microsoft.Owin.Hosting;
@@ -17,7 +15,6 @@ namespace Xpressive.Home.WebApi
 {
     public class WebApiStartable : IStartable, IDisposable
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(WebApiStartable));
         private readonly IContainer _container;
         private IDisposable _webApp;
 
@@ -30,13 +27,6 @@ namespace Xpressive.Home.WebApi
         {
             var root = AppDomain.CurrentDomain.BaseDirectory;
             var webDirectory = Path.Combine(root, "Web");
-
-            if (Assembly.GetEntryAssembly().FullName.Contains("ConsoleHost"))
-            {
-                webDirectory = Path.Combine(root, @"..\..\..\Xpressive.Home.WebApi");
-            }
-
-            _log.Debug($"Start WebApi with directory {webDirectory}.");
 
             _webApp = WebApp.Start("http://+:8080", app =>
             {
