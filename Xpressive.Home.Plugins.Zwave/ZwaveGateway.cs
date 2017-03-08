@@ -1,42 +1,35 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.IO;
 using System.IO.Ports;
 using System.Linq;
-using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using log4net;
-using Polly;
+using OpenZWave;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
-using ZWave;
-using ZWave.CommandClasses;
 using Action = Xpressive.Home.Contracts.Gateway.Action;
-using Version = ZWave.CommandClasses.Version;
 
 namespace Xpressive.Home.Plugins.Zwave
 {
     public class ZwaveGateway : GatewayBase
     {
         private static readonly ILog _log = LogManager.GetLogger(typeof(ZwaveGateway));
+        private static readonly object _lock = new object();
         private readonly IMessageQueue _messageQueue;
-        private readonly IList<ICommandClassHandler> _commandClassHandlers;
         private readonly string _comPortName;
-        private readonly ZwaveDeviceLibrary _library;
-        private readonly Dictionary<byte, ZwaveCommandQueue> _nodeCommandQueues;
-        private ZWaveController _controller;
+        private readonly string _networkKey;
+        private readonly ZWManager _manager = ZWManager.Instance;
 
-        public ZwaveGateway(IMessageQueue messageQueue, IList<ICommandClassHandler> commandClassHandlers)
+        public ZwaveGateway(IMessageQueue messageQueue)
             : base("zwave")
         {
             _messageQueue = messageQueue;
-            _commandClassHandlers = commandClassHandlers;
             _canCreateDevices = false;
-
             _comPortName = ConfigurationManager.AppSettings["zwave.port"];
-            _library = new ZwaveDeviceLibrary();
-            _nodeCommandQueues = new Dictionary<byte, ZwaveCommandQueue>();
+            _networkKey = ConfigurationManager.AppSettings["zwave.networkkey"];
         }
 
         public override IDevice CreateEmptyDevice()
@@ -53,17 +46,18 @@ namespace Xpressive.Home.Plugins.Zwave
             }
 
             var d = (ZwaveDevice)device;
-            var nodes = await _controller.GetNodes();
-            var node = nodes[d.NodeId];
+            var valueId = new ZWValueID(d.HomeId, d.NodeId, ZWValueGenre.Basic, 0x20, 1, 0, ZWValueType.Byte, 0);
 
             if (d.IsSwitchBinary && action.Name.Equals("Switch On", StringComparison.Ordinal))
             {
-                await node.GetCommandClass<SwitchBinary>().Set(true);
+                _manager.SetValue(valueId, (byte)1);
             }
             else if (d.IsSwitchBinary && action.Name.Equals("Switch Off", StringComparison.Ordinal))
             {
-                await node.GetCommandClass<SwitchBinary>().Set(false);
+                _manager.SetValue(valueId, (byte)0);
             }
+
+            await Task.Delay(1);
         }
 
         public override IEnumerable<IAction> GetActions(IDevice device)
@@ -100,65 +94,111 @@ namespace Xpressive.Home.Plugins.Zwave
 
             try
             {
-                await Policy
-                    .Handle<WebException>()
-                    .Or<Exception>()
-                    .WaitAndRetryForeverAsync(_ => TimeSpan.FromSeconds(1))
-                    .ExecuteAsync(async () =>
-                    {
-                        if (cancellationToken.IsCancellationRequested)
-                        {
-                            return;
-                        }
-                        await _library.Load(cancellationToken);
-                    });
+                var configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins", "config");
+                var userPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ConfigurationBackup", Name);
+                var options = ZWOptions.Instance;
+                options.Initialize(configPath, userPath, string.Empty);
+                options.AddOptionInt("SaveLogLevel", (int)ZWLogLevel.Detail);
+                options.AddOptionInt("QueueLogLevel", (int)ZWLogLevel.Debug);
+                options.AddOptionInt("DumpTriggerLevel", (int)ZWLogLevel.Error);
 
-                if (cancellationToken.IsCancellationRequested)
+                if (!string.IsNullOrEmpty(_networkKey))
+                {
+                    options.AddOptionString("NetworkKey", _networkKey, false);
+                }
+
+                options.AddOptionBool("Associate", true);
+                options.Lock();
+
+                _manager.Initialize();
+                _manager.OnNotification += OnZwaveNotification;
+                _manager.AddDriver(_comPortName);
+            }
+            catch (Exception e)
+            {
+                _log.Error(e.Message, e);
+            }
+        }
+
+        private void OnZwaveNotification(ZWNotification notification)
+        {
+            try
+            {
+                if (notification.Code != NotificationCode.MsgComplete)
                 {
                     return;
                 }
 
-                _controller = new ZWaveController(_comPortName);
-                _controller.Open();
-                _controller.Channel.NodeEventReceived += (s, e) => ContinueNodeQueueWorker(e.NodeID);
-
-                while (!cancellationToken.IsCancellationRequested)
+                switch (notification.Type)
                 {
-                    _log.Debug("Discover Nodes");
-                    await DiscoverNodes(cancellationToken);
-                    await Task.Delay(TimeSpan.FromHours(1), cancellationToken).ContinueWith(_ => { });
-                }
-            }
-            catch (Exception e)
-            {
-                _log.Error(e.Message, e);
-            }
-        }
-
-        private async Task DiscoverNodes(CancellationToken cancellationToken)
-        {
-            try
-            {
-                var controllerNodeId = await _controller.GetNodeID();
-                var nodes = await _controller.DiscoverNodes();
-                var slaveNodes = nodes.Where(n => n.NodeID != controllerNodeId).ToList();
-
-                foreach (var node in slaveNodes)
-                {
-                    if (!_nodeCommandQueues.ContainsKey(node.NodeID))
+                    case NotificationType.ValueAdded:
+                    case NotificationType.ValueChanged:
+                    case NotificationType.ValueRefreshed:
                     {
-                        var device = new ZwaveDevice(node.NodeID);
-                        var queue = new ZwaveCommandQueue(node);
-                        _nodeCommandQueues.Add(node.NodeID, queue);
-                        _devices.Add(device);
-
-                        queue.Add("UpdateDeviceProtocolInfo", () => UpdateDeviceProtocolInfo(device, node));
-                        queue.Add("GetNodeVersion", () => GetNodeVersion(device, node));
-                        queue.Add("GetNodeProductInformation", () => GetNodeProductInformation(device, node));
-                        queue.Add("GetSupportedCommandClasses", () => GetSupportedCommandClasses(device, node, cancellationToken));
-
-                        queue.StartOrContinueWorker();
+                        var device = GetDevice(notification);
+                        HandleNodeValueNotification(device, notification.ValueID);
+                        break;
                     }
+                    case NotificationType.NodeNew:
+                    case NotificationType.NodeAdded:
+                        GetDevice(notification);
+                        break;
+                    case NotificationType.NodeProtocolInfo:
+                    {
+                        var device = GetDevice(notification);
+                        var label = _manager.GetNodeType(notification.HomeId, notification.NodeId);
+                        if (!string.IsNullOrEmpty(label) && string.IsNullOrEmpty(device.Name))
+                        {
+                            device.Name = label;
+                        }
+                        break;
+                    }
+                    case NotificationType.NodeNaming:
+                    {
+                        var device = GetDevice(notification);
+                        var manufacturer = _manager.GetNodeManufacturerName(notification.HomeId, notification.NodeId);
+                        var product = _manager.GetNodeProductName(notification.HomeId, notification.NodeId);
+                        var name = _manager.GetNodeName(notification.HomeId, notification.NodeId);
+
+                        if (!string.IsNullOrEmpty(name))
+                        {
+                            device.Name = name;
+                        }
+                        else if (!string.IsNullOrEmpty(manufacturer) && !string.IsNullOrEmpty(product))
+                        {
+                            device.Name = $"{manufacturer} {product}";
+                        }
+
+                        break;
+                    }
+                    case NotificationType.Group:
+                    case NotificationType.NodeRemoved:
+                    case NotificationType.ValueRemoved:
+                    case NotificationType.NodeEvent:
+                    case NotificationType.PollingDisabled:
+                    case NotificationType.PollingEnabled:
+                    case NotificationType.SceneEvent:
+                    case NotificationType.CreateButton:
+                    case NotificationType.DeleteButton:
+                    case NotificationType.ButtonOn:
+                    case NotificationType.ButtonOff:
+                    case NotificationType.DriverReady:
+                    case NotificationType.DriverFailed:
+                    case NotificationType.DriverReset:
+                    case NotificationType.EssentialNodeQueriesComplete:
+                    case NotificationType.NodeQueriesComplete:
+                    case NotificationType.AwakeNodesQueried:
+                    case NotificationType.AllNodesQueriedSomeDead:
+                    case NotificationType.AllNodesQueried:
+                    case NotificationType.Notification:
+                    case NotificationType.DriverRemoved:
+                    case NotificationType.ControllerCommand:
+                    case NotificationType.NodeReset:
+                    case NotificationType.UserAlerts:
+                    case NotificationType.ManufacturerSpecificDBReady:
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
                 }
             }
             catch (Exception e)
@@ -167,85 +207,133 @@ namespace Xpressive.Home.Plugins.Zwave
             }
         }
 
-        private async Task UpdateDeviceProtocolInfo(ZwaveDevice device, Node node)
+        private ZwaveDevice GetDevice(ZWNotification notification)
         {
-            var protocolInfo = await node.GetProtocolInfo();
-            device.BasicType = (byte)protocolInfo.BasicType;
-            device.GenericType = (byte)protocolInfo.GenericType;
-            device.SpecificType = protocolInfo.SpecificType;
-        }
-
-        private async Task GetNodeVersion(ZwaveDevice device, Node node)
-        {
-            var version = await node.GetCommandClass<Version>().Get();
-
-            device.Application = version.Application;
-            device.Library = version.Library;
-            device.Protocol = version.Protocol;
-
-            UpdateDeviceWithLibrary(device);
-        }
-
-        private async Task GetNodeProductInformation(ZwaveDevice device, Node node)
-        {
-            var specific = await node.GetCommandClass<ManufacturerSpecific>().Get();
-
-            device.ManufacturerId = specific.ManufacturerID;
-            device.ProductType = specific.ProductType;
-            device.ProductId = specific.ProductID;
-
-            UpdateDeviceWithLibrary(device);
-        }
-
-        private void UpdateDeviceWithLibrary(ZwaveDevice device)
-        {
-            if (device.Application == null ||
-                device.ManufacturerId == 0 ||
-                device.ProductType == 0 ||
-                device.ProductId == 0)
+            lock (_lock)
             {
+                var devices = _devices.Cast<ZwaveDevice>().ToDictionary(d => d.NodeId);
+                ZwaveDevice device;
+
+                if (devices.TryGetValue(notification.NodeId, out device))
+                {
+                    return device;
+                }
+
+                device = new ZwaveDevice(notification.NodeId, notification.HomeId);
+                _devices.Add(device);
+                return device;
+            }
+        }
+
+        private void OnVariableChanged(ZwaveDevice device, string name, object value, string unit)
+        {
+            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, name, value, unit));
+        }
+
+        private object GetValue(ZWValueID valueId)
+        {
+            string valueString;
+            bool valueBool;
+            byte valueByte;
+            double valueDouble;
+            int valueInt;
+            short valueShort;
+
+            if (valueId.Type == ZWValueType.Bool && _manager.GetValueAsBool(valueId, out valueBool))
+            {
+                return valueBool;
+            }
+
+            if (valueId.Type == ZWValueType.List && _manager.GetValueListSelection(valueId, out valueString))
+            {
+                return valueString;
+            }
+
+            if (valueId.Type == ZWValueType.Byte && _manager.GetValueAsByte(valueId, out valueByte))
+            {
+                return (double)valueByte;
+            }
+
+            if (valueId.Type == ZWValueType.Decimal && _manager.GetValueAsString(valueId, out valueString) && double.TryParse(valueString, out valueDouble))
+            {
+                return valueDouble;
+            }
+
+            if (valueId.Type == ZWValueType.Int && _manager.GetValueAsInt(valueId, out valueInt))
+            {
+                return (double)valueInt;
+            }
+
+            if (valueId.Type == ZWValueType.Short && _manager.GetValueAsShort(valueId, out valueShort))
+            {
+                return (double)valueShort;
+            }
+
+            if (_manager.GetValueAsString(valueId, out valueString))
+            {
+                if (!string.IsNullOrEmpty(valueString) && double.TryParse(valueString, out valueDouble))
+                {
+                    return valueDouble;
+                }
+
+                if (!string.IsNullOrEmpty(valueString) && bool.TryParse(valueString, out valueBool))
+                {
+                    return valueBool;
+                }
+
+                return valueString;
+            }
+
+            return null;
+        }
+
+        private void HandleNodeValueNotification(ZwaveDevice device, ZWValueID valueId)
+        {
+            if (valueId.CommandClassId == 112)
+            {
+                // command class configuration
                 return;
             }
 
-            ZwaveDeviceLibraryResolver.Resolve(_library, device);
-
-            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Manufacturer", device.Manufacturer));
-            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "ProductName", device.ProductName));
-            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Description", device.ProductDescription));
-
-            if (string.IsNullOrEmpty(device.Name))
+            if (valueId.CommandClassId == 134)
             {
-                device.Name = device.ProductName;
+                // command class version
+                return;
             }
-        }
 
-        private async Task GetSupportedCommandClasses(ZwaveDevice device, Node node, CancellationToken cancellationToken)
-        {
-            var commandClasses = await node.GetSupportedCommandClasses();
-            var handlers = _commandClassHandlers.ToDictionary(h => h.CommandClass);
-
-            _log.Debug($"Node {node.NodeID} supports {commandClasses.Length} command classes.");
-
-            foreach (var commandClassReport in commandClasses)
+            if (valueId.CommandClassId == 37)
             {
-                ICommandClassHandler handler;
-                if (handlers.TryGetValue(commandClassReport.Class, out handler))
+                // command class switch binary
+                device.IsSwitchBinary = true;
+            }
+
+            var valueUnit = _manager.GetValueUnits(valueId) ?? string.Empty;
+            var valueLabel = _manager.GetValueLabel(valueId);
+            var valueValue = GetValue(valueId);
+
+            if (valueId.CommandClassId == 128 && valueValue is double)
+            {
+                // command class battery
+                var battery = (double)valueValue;
+                if (battery > 90)
                 {
-                    handler.Handle(device, node, _nodeCommandQueues[node.NodeID], cancellationToken);
+                    device.BatteryStatus = DeviceBatteryStatus.Full;
+                }
+                else if (battery > 25)
+                {
+                    device.BatteryStatus = DeviceBatteryStatus.Good;
                 }
                 else
                 {
-                    _log.Warn($"No CommandClassHandler for CommandClass {commandClassReport.Class} found.");
+                    device.BatteryStatus = DeviceBatteryStatus.Low;
                 }
+                return;
             }
-        }
 
-        private void ContinueNodeQueueWorker(byte nodeId)
-        {
-            ZwaveCommandQueue queue;
-            if (_nodeCommandQueues.TryGetValue(nodeId, out queue))
+            if (valueValue != null)
             {
-                queue.StartOrContinueWorker();
+                valueLabel = valueLabel.Replace(' ', '_');
+                OnVariableChanged(device, valueLabel, valueValue, valueUnit);
             }
         }
 
@@ -253,17 +341,8 @@ namespace Xpressive.Home.Plugins.Zwave
         {
             if (disposing)
             {
-                foreach (var commandQueue in _nodeCommandQueues)
-                {
-                    commandQueue.Value.Dispose();
-                }
-
-                foreach (var commandClassHandler in _commandClassHandlers)
-                {
-                    commandClassHandler.Dispose();
-                }
-
-                _controller?.Close();
+                _manager.Destroy();
+                ZWOptions.Instance.Destroy();
             }
 
             base.Dispose(disposing);
