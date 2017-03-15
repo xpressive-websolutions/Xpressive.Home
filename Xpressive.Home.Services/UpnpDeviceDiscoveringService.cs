@@ -39,6 +39,11 @@ namespace Xpressive.Home.Services
                     {
                         searchTask = deviceLocator.SearchAsync("upnp:rootdevice", TimeSpan.FromSeconds(10));
                         await Task.WhenAny(runningTask, searchTask);
+
+                        if (searchTask.IsFaulted)
+                        {
+                            continue;
+                        }
                     }
                     catch (Exception e)
                     {
