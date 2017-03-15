@@ -80,12 +80,12 @@ namespace Xpressive.Home.Plugins.Tado
 
                         var state = await GetAsync<StateDto>($"api/v2/homes/{me.HomeId}/zones/{zone.Id}/state", token);
 
-                        _messageQueue.Publish(new UpdateVariableMessage(Name, deviceId, "Mode", state.TadoMode.ToString()));
-                        _messageQueue.Publish(new UpdateVariableMessage(Name, deviceId, "Temperature", Round(state.SensorDataPoints.InsideTemperature.Celsius)));
-                        _messageQueue.Publish(new UpdateVariableMessage(Name, deviceId, "Humidity", Round(state.SensorDataPoints.Humidity.Percentage)));
-                        _messageQueue.Publish(new UpdateVariableMessage(Name, deviceId, "TargetTemperature", Round(state.Setting.Temperature.Celsius)));
-                        _messageQueue.Publish(new UpdateVariableMessage(Name, deviceId, "Power", state.Setting.Power.ToString()));
-                        _messageQueue.Publish(new UpdateVariableMessage(Name, deviceId, "Type", state.Setting.Type));
+                        PublishIfNotNull(deviceId, "Mode", state?.TadoMode.ToString());
+                        PublishIfNotNull(deviceId, "Temperature", state?.SensorDataPoints?.InsideTemperature?.Celsius, "°C");
+                        PublishIfNotNull(deviceId, "Humidity", state?.SensorDataPoints?.Humidity?.Percentage, "%");
+                        PublishIfNotNull(deviceId, "TargetTemperature", state?.Setting?.Temperature?.Celsius, "°C");
+                        PublishIfNotNull(deviceId, "Power", state?.Setting?.Power.ToString());
+                        PublishIfNotNull(deviceId, "Type", state?.Setting?.Type);
                     }
                 }
                 catch (Exception e)
@@ -94,6 +94,22 @@ namespace Xpressive.Home.Plugins.Tado
                 }
 
                 await Task.Delay(TimeSpan.FromSeconds(60), cancellationToken).ContinueWith(_ => { });
+            }
+        }
+
+        private void PublishIfNotNull(string deviceId, string variableName, string value, string unit = null)
+        {
+            if (value != null)
+            {
+                _messageQueue.Publish(new UpdateVariableMessage(Name, deviceId, variableName, value, unit));
+            }
+        }
+
+        private void PublishIfNotNull(string deviceId, string variableName, double? value, string unit = null)
+        {
+            if (value.HasValue)
+            {
+                _messageQueue.Publish(new UpdateVariableMessage(Name, deviceId, variableName, Round(value.Value), unit));
             }
         }
 
