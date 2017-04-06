@@ -90,6 +90,7 @@
     <Compile Include="Rooms\RoomScript.cs" />
     <Compile Include="Rooms\RoomScriptGroup.cs" />
     <Compile Include="Services\FavoriteRadioStation.cs" />
+    <Compile Include="Services\IBase62Converter.cs" />
     <Compile Include="Services\IDeviceConfigurationBackupService.cs" />
     <Compile Include="Services\IFavoriteRadioStationService.cs" />
     <Compile Include="Services\IIpAddressService.cs" />
@@ -97,6 +98,7 @@
     <Compile Include="Services\ITuneInRadioStationService.cs" />
     <Compile Include="Services\IUpnpDeviceDiscoveringService.cs" />
     <Compile Include="Services\IUpnpDeviceResponse.cs" />
+    <Compile Include="Services\IWebHookService.cs" />
     <Compile Include="Variables\BooleanVariable.cs" />
     <Compile Include="Variables\DoubleVariable.cs" />
     <Compile Include="Variables\IVariableRepository.cs" />

@@ -141,6 +141,7 @@
     <Compile Include="Controllers\SoftwareUpdateController.cs" />
     <Compile Include="Controllers\UserNotificationHub.cs" />
     <Compile Include="Controllers\VariableController.cs" />
+    <Compile Include="Controllers\WebHookController.cs" />
     <Compile Include="WebApiStartable.cs" />
     <Compile Include="Controllers\GatewayController.cs" />
     <Compile Include="Controllers\NotifyUserHub.cs" />

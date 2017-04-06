@@ -124,6 +124,7 @@
     <Compile Include="..\Xpressive.Home\Properties\AssemblyInfo.shared.cs">
       <Link>Properties\AssemblyInfo.shared.cs</Link>
     </Compile>
+    <Compile Include="Base62Converter.cs" />
     <Compile Include="DeviceConfigurationBackupService.cs" />
     <Compile Include="DevicePersistingService.cs" />
     <Compile Include="FavoriteRadioStationService.cs" />
@@ -139,6 +140,7 @@
     <Compile Include="TuneInRadioStationService.cs" />
     <Compile Include="UpnpDeviceDiscoveringService.cs" />
     <Compile Include="UpnpDeviceResponse.cs" />
+    <Compile Include="WebHookService.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
