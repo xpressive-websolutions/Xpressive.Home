@@ -31,23 +31,36 @@
         </div>
     </div>
 
-    <h4>Actions</h4>
-    <div class="row">
+    <h4 ng-show="actions.length">Actions</h4>
+    <div ng-show="actions.length" class="row">
         <div class="col-md-12">
             <div class="box">
                 <table class="table table-striped">
                     <thead>
-                        <tr>
-                            <th>Action</th>
-                            <th>Fields</th>
-                        </tr>
+                    <tr>
+                        <th>Action</th>
+                        <th>Fields</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        <tr ng-repeat="action in actions">
-                            <td title="{{::gateway}}.{{::deviceId}}.{{::action.name}}">{{::action.name }}</td>
-                            <td>{{::action.fields }}</td>
-                        </tr>
+                    <tr ng-repeat="action in actions">
+                        <td title="{{::gateway}}.{{::deviceId}}.{{::action.name}}">{{::action.name }}</td>
+                        <td>{{::action.fields }}</td>
+                    </tr>
                     </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <h4 ng-show="webHooks.length">Web hooks</h4>
+    <div ng-show="webHooks.length" class="row">
+        <div class="col-md-12">
+            <div class="box">
+                <table class="table table-striped">
+                    <tr ng-repeat="url in webHooks">
+                        <td>{{::url}}</td>
+                    </tr>
                 </table>
             </div>
         </div>

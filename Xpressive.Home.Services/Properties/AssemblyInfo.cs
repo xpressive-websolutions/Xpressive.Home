@@ -9,3 +9,4 @@ using System.Runtime.InteropServices;
 
 [assembly: InternalsVisibleTo("Xpressive.Home.Plugins.PhilipsHue.Tests")]
 [assembly: InternalsVisibleTo("Xpressive.Home.Plugins.Sonos.Tests")]
+[assembly: InternalsVisibleTo("Xpressive.Home.Services.Tests")]
