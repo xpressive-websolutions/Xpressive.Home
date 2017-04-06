@@ -105,6 +105,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xpressive.Home.Plugins.Tado
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xpressive.Home.Plugins.Pushover", "Xpressive.Home.Plugins.Pushover\Xpressive.Home.Plugins.Pushover.csproj", "{C7744D36-69EB-47A4-8F3B-A05C1F8BC683}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xpressive.Home.Services.Tests", "Xpressive.Home.Services.Tests\Xpressive.Home.Services.Tests.csproj", "{05DB5880-CDD4-4345-803F-B85C7B622F0C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Build|Any CPU = Build|Any CPU
@@ -265,6 +267,12 @@ Global
 		{C7744D36-69EB-47A4-8F3B-A05C1F8BC683}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C7744D36-69EB-47A4-8F3B-A05C1F8BC683}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C7744D36-69EB-47A4-8F3B-A05C1F8BC683}.Release|Any CPU.Build.0 = Release|Any CPU
+		{05DB5880-CDD4-4345-803F-B85C7B622F0C}.Build|Any CPU.ActiveCfg = Release|Any CPU
+		{05DB5880-CDD4-4345-803F-B85C7B622F0C}.Build|Any CPU.Build.0 = Release|Any CPU
+		{05DB5880-CDD4-4345-803F-B85C7B622F0C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{05DB5880-CDD4-4345-803F-B85C7B622F0C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{05DB5880-CDD4-4345-803F-B85C7B622F0C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{05DB5880-CDD4-4345-803F-B85C7B622F0C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
