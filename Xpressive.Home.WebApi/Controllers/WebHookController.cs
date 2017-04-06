@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web.Http;
@@ -18,6 +19,7 @@ namespace Xpressive.Home.WebApi.Controllers
             _messageQueue = messageQueue;
         }
 
+        [HttpPost, Route("{id}")]
         public async Task<IHttpActionResult> ExecuteAsync(string id)
         {
             var webHook = await _webHookService.GetWebHookAsync(id);
@@ -40,6 +42,21 @@ namespace Xpressive.Home.WebApi.Controllers
             }
 
             return Ok();
+        }
+
+        [HttpGet, Route("{gatewayName}/{deviceId}")]
+        public async Task<IHttpActionResult> GetUrls(string gatewayName, string deviceId)
+        {
+            var webHooks = await _webHookService.GetWebHooksAsync(gatewayName, deviceId);
+            var urls = new List<string>();
+            var prefix = $"http://{Request.RequestUri.Authority}/api/v1/webhook/";
+
+            foreach (var webHook in webHooks)
+            {
+                urls.Add(prefix + webHook.Id);
+            }
+
+            return Ok(urls);
         }
     }
 }

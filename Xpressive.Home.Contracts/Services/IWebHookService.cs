@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Xpressive.Home.Contracts.Gateway;
 
 namespace Xpressive.Home.Contracts.Services
@@ -7,7 +8,13 @@ namespace Xpressive.Home.Contracts.Services
     {
         Task<IWebHook> RegisterNewWebHookAsync(string gatewayName, IDevice device);
 
+        Task<IWebHook> RegisterNewWebHookAsync(string gatewayName, string id, IDevice device);
+
         Task<IWebHook> GetWebHookAsync(string id);
+
+        Task<IEnumerable<IWebHook>> GetWebHooksAsync(string gatewayName, string deviceId);
+
+        string GenerateId();
     }
 
     public interface IWebHook

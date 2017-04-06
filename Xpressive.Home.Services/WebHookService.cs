@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using NPoco;
@@ -16,11 +17,11 @@ namespace Xpressive.Home.Services
             _base62Converter = base62Converter;
         }
 
-        public async Task<IWebHook> RegisterNewWebHookAsync(string gatewayName, IDevice device)
+        public async Task<IWebHook> RegisterNewWebHookAsync(string gatewayName, string id, IDevice device)
         {
             var webhook = new WebHook
             {
-                Id = GenerateId(),
+                Id = id,
                 GatewayName = gatewayName,
                 DeviceId = device.Id
             };
@@ -33,6 +34,11 @@ namespace Xpressive.Home.Services
             return webhook;
         }
 
+        public async Task<IWebHook> RegisterNewWebHookAsync(string gatewayName, IDevice device)
+        {
+            return await RegisterNewWebHookAsync(gatewayName, GenerateId(), device);
+        }
+
         public async Task<IWebHook> GetWebHookAsync(string id)
         {
             using (var database = new Database("ConnectionString"))
@@ -42,13 +48,21 @@ namespace Xpressive.Home.Services
             }
         }
 
-        private string GenerateId()
+        public async Task<IEnumerable<IWebHook>> GetWebHooksAsync(string gatewayName, string deviceId)
+        {
+            using (var database = new Database("ConnectionString"))
+            {
+                return await database.FetchAsync<WebHook>("select * from WebHook where GatewayName = @0 and DeviceId = @1", gatewayName, deviceId);
+            }
+        }
+
+        public string GenerateId()
         {
             using (var cryptoServiceProvider = new RNGCryptoServiceProvider())
             {
-                var binary = new byte[16];
-                cryptoServiceProvider.GetBytes(binary);
-                return _base62Converter.ToBase62(binary);
+                var binary = new byte[14];
+                cryptoServiceProvider.GetNonZeroBytes(binary);
+                return _base62Converter.ToBase62(binary).Substring(0, 16);
             }
         }
     }

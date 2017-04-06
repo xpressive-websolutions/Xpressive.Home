@@ -95,7 +95,7 @@ namespace Xpressive.Home.Contracts.Gateway
             Task.Factory.StartNew(async () => await ExecuteInternalAsync(device, action, values));
         }
 
-        private bool AddDeviceInternal(DeviceBase device)
+        protected virtual bool AddDeviceInternal(DeviceBase device)
         {
             if (!_canCreateDevices || device == null || !device.IsConfigurationValid())
             {

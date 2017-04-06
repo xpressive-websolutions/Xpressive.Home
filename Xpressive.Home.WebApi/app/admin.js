@@ -202,6 +202,7 @@
         var deviceId = $routeParams.device;
         var deviceIdEncoded = encodeURIComponent(deviceId);
         $scope.actions = [];
+        $scope.webHooks = [];
 
         $http.get("/api/v1/variable/" + gateway + "?deviceId=" + deviceIdEncoded, { cache: false }).then(function(result) {
             $scope.variables = result.data;
@@ -224,6 +225,10 @@
                     fields: a.fields.join(", ")
                 });
             });
+        });
+
+        $http.get("/api/v1/webhook/" + gateway + "/" + deviceId, { cache: false }).then(function(result) {
+            $scope.webHooks = result.data;
         });
     }]);
 
