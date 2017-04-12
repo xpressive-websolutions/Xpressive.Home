@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -27,10 +26,12 @@ namespace Xpressive.Home.Services
             new ConcurrentDictionary<string, Task<string>>(StringComparer.Ordinal);
 
         private readonly IBase62Converter _base62Converter;
+        private readonly IHttpClientProvider _httpClientProvider;
 
-        public TuneInRadioStationService(IBase62Converter base62Converter)
+        public TuneInRadioStationService(IBase62Converter base62Converter, IHttpClientProvider httpClientProvider)
         {
             _base62Converter = base62Converter;
+            _httpClientProvider = httpClientProvider;
         }
 
         public async Task<IEnumerable<TuneInRadioStationCategory>> GetCategoriesAsync(string parentId = null)
@@ -103,24 +104,21 @@ namespace Xpressive.Home.Services
             };
         }
 
-        private static async Task<string> GetStationCallSignAsync(string stationId)
+        private async Task<string> GetStationCallSignAsync(string stationId)
         {
-            using (var client = new HttpClient())
+            var result = await _httpClientProvider.Get().GetStringAsync("http://opml.radiotime.com/Describe.ashx?id=" + stationId);
+            var document = new XmlDocument();
+            document.LoadXml(result);
+
+            var status = document.SelectSingleNode("/opml/head/status")?.InnerText;
+
+            if (string.IsNullOrEmpty(status) || status != "200")
             {
-                var result = await client.GetStringAsync("http://opml.radiotime.com/Describe.ashx?id=" + stationId);
-                var document = new XmlDocument();
-                document.LoadXml(result);
-
-                var status = document.SelectSingleNode("/opml/head/status")?.InnerText;
-
-                if (string.IsNullOrEmpty(status) || status != "200")
-                {
-                    return null;
-                }
-
-                var callSign = document.SelectSingleNode("/opml/body/outline/station/call_sign")?.InnerText;
-                return WebUtility.UrlEncode(callSign).Replace("+", "%20");
+                return null;
             }
+
+            var callSign = document.SelectSingleNode("/opml/body/outline/station/call_sign")?.InnerText;
+            return Uri.EscapeDataString(callSign);
         }
 
         private async Task<IEnumerable<TuneInRadioStationCategory>> GetCategoriesInternalAsync(string url)
@@ -212,13 +210,10 @@ namespace Xpressive.Home.Services
             return result;
         }
 
-        private static async Task<OpmlDocument> GetDocumentAsync(string url)
+        private async Task<OpmlDocument> GetDocumentAsync(string url)
         {
-            using (var client = new HttpClient())
-            {
-                var stream = await client.GetStreamAsync(url);
-                return _serializer.Deserialize(stream) as OpmlDocument;
-            }
+            var stream = await _httpClientProvider.Get().GetStreamAsync(url);
+            return _serializer.Deserialize(stream) as OpmlDocument;
         }
 
         private string GetHash(string url)

@@ -49,6 +49,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Net.Http" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Xpressive.Home\Properties\AssemblyInfo.shared.cs">
@@ -93,6 +94,7 @@
     <Compile Include="Services\IBase62Converter.cs" />
     <Compile Include="Services\IDeviceConfigurationBackupService.cs" />
     <Compile Include="Services\IFavoriteRadioStationService.cs" />
+    <Compile Include="Services\IHttpClientProvider.cs" />
     <Compile Include="Services\IIpAddressService.cs" />
     <Compile Include="Services\ISoftwareUpdateDownloadService.cs" />
     <Compile Include="Services\ITuneInRadioStationService.cs" />

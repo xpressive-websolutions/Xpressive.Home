@@ -128,6 +128,7 @@
     <Compile Include="DeviceConfigurationBackupService.cs" />
     <Compile Include="DevicePersistingService.cs" />
     <Compile Include="FavoriteRadioStationService.cs" />
+    <Compile Include="HttpClientProvider.cs" />
     <Compile Include="LowBatteryDeviceObserver.cs" />
     <Compile Include="RoomDeviceService.cs" />
     <Compile Include="RoomRepository.cs" />
