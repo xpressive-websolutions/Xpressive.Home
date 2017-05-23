@@ -106,7 +106,10 @@ namespace Xpressive.Home.Plugins.Lifx
 
             public void on(int transitionTimeInSeconds)
             {
-                _gateway.SwitchOn(_device, transitionTimeInSeconds);
+                if (_device != null)
+                {
+                    _gateway.SwitchOn(_device, transitionTimeInSeconds);
+                }
             }
 
             public void off()
@@ -116,7 +119,10 @@ namespace Xpressive.Home.Plugins.Lifx
 
             public void off(int transitionTimeInSeconds)
             {
-                _gateway.SwitchOff(_device, transitionTimeInSeconds);
+                if (_device != null)
+                {
+                    _gateway.SwitchOff(_device, transitionTimeInSeconds);
+                }
             }
 
             public void color(string hexColor)
@@ -126,7 +132,10 @@ namespace Xpressive.Home.Plugins.Lifx
 
             public void color(string hexColor, int transitionTimeInSeconds)
             {
-                _gateway.ChangeColor(_device, hexColor, transitionTimeInSeconds);
+                if (_device != null)
+                {
+                    _gateway.ChangeColor(_device, hexColor, transitionTimeInSeconds);
+                }
             }
 
             public void brightness(double b)
@@ -136,7 +145,10 @@ namespace Xpressive.Home.Plugins.Lifx
 
             public void brightness(double b, int transitionTimeInSeconds)
             {
-                _gateway.ChangeBrightness(_device, b, transitionTimeInSeconds);
+                if (_device != null)
+                {
+                    _gateway.ChangeBrightness(_device, b, transitionTimeInSeconds);
+                }
             }
         }
     }
