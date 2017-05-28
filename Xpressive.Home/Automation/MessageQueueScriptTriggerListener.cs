@@ -69,7 +69,7 @@ namespace Xpressive.Home.Automation
                 foreach (var script in result.Result)
                 {
                     _log.Debug($"Execute script with id {script.ScriptId}");
-                    await _scriptEngine.ExecuteAsync(script.ScriptId);
+                    await _scriptEngine.ExecuteAsync(script.ScriptId, variable, value);
                 }
             });
         }

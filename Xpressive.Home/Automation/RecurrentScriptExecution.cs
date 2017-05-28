@@ -18,7 +18,7 @@ namespace Xpressive.Home.Automation
         public void Execute(IJobExecutionContext context)
         {
             var scriptContext = new ScriptExecutionContext(_script, _scriptObjectProviders);
-            scriptContext.Execute();
+            scriptContext.Execute("scheduler", context.ScheduledFireTimeUtc?.DateTime.ToString("s"));
         }
     }
 }

@@ -22,22 +22,22 @@ namespace Xpressive.Home.Automation
             _objectProviders = objectProviders;
         }
 
-        public void Execute()
+        public void Execute(string triggerVariable, object triggerValue)
         {
             if (!_script.IsEnabled)
             {
                 return;
             }
 
-            ExecuteEvenIfDisabled();
+            ExecuteEvenIfDisabled(triggerVariable, triggerValue);
         }
 
-        public void ExecuteEvenIfDisabled()
+        public void ExecuteEvenIfDisabled(string triggerVariable, object triggerValue)
         {
-            Task.Run(() => ExecuteAsTask());
+            Task.Run(() => ExecuteAsTask(triggerVariable, triggerValue));
         }
 
-        private void ExecuteAsTask()
+        private void ExecuteAsTask(string triggerVariable, object triggerValue)
         {
             lock (_lock)
             {
@@ -52,7 +52,7 @@ namespace Xpressive.Home.Automation
 
             try
             {
-                var engine = SetupScriptEngine();
+                var engine = SetupScriptEngine(triggerVariable, triggerValue);
                 engine.Execute(_script.JavaScript);
             }
             catch (JavaScriptException e)
@@ -70,7 +70,7 @@ namespace Xpressive.Home.Automation
             }
         }
 
-        private Engine SetupScriptEngine()
+        private Engine SetupScriptEngine(string triggerVariable, object triggerValue)
         {
             var engine = new Engine(cfg => cfg.TimeoutInterval(TimeSpan.FromMinutes(1)));
 
@@ -87,7 +87,20 @@ namespace Xpressive.Home.Automation
                 }
             }
 
+            engine.SetValue("trigger", new ScriptTrigger
+            {
+                variable = triggerVariable ?? string.Empty,
+                value = triggerValue
+            });
+
             return engine;
+        }
+
+        private class ScriptTrigger
+        {
+            public string variable { get; set; }
+
+            public object value { get; set; }
         }
     }
 }
