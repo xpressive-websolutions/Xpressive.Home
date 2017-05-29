@@ -6,7 +6,7 @@ Information(configuration);
 var build = (int)(DateTime.Now - new DateTime(2015, 1, 1)).TotalHours;
 var versionPrefix = "1.0.0";
 var version = string.Format("{0}.{1}", versionPrefix, build);
-var informationalVersion = versionPrefix + "-beta.8";
+var informationalVersion = versionPrefix + "-beta.9";
 
 Setup(context =>
 {
