@@ -20,6 +20,9 @@ namespace Xpressive.Home.Services
             builder.RegisterType<FavoriteRadioStationService>().As<IFavoriteRadioStationService>();
             builder.RegisterType<RoomDeviceService>().As<IRoomDeviceService>();
             builder.RegisterType<DeviceConfigurationBackupService>().As<IDeviceConfigurationBackupService>();
+            builder.RegisterType<WebHookService>().As<IWebHookService>();
+            builder.RegisterType<Base62Converter>().As<IBase62Converter>();
+            builder.RegisterType<HttpClientProvider>().As<IHttpClientProvider>().SingleInstance();
 
             builder.RegisterType<SoftwareUpdateDownloadService>()
                 .As<ISoftwareUpdateDownloadService>()

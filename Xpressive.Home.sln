@@ -105,6 +105,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xpressive.Home.Plugins.Tado
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xpressive.Home.Plugins.Pushover", "Xpressive.Home.Plugins.Pushover\Xpressive.Home.Plugins.Pushover.csproj", "{C7744D36-69EB-47A4-8F3B-A05C1F8BC683}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xpressive.Home.Services.Tests", "Xpressive.Home.Services.Tests\Xpressive.Home.Services.Tests.csproj", "{05DB5880-CDD4-4345-803F-B85C7B622F0C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xpressive.Home.Plugins.WebHook", "Xpressive.Home.Plugins.WebHook\Xpressive.Home.Plugins.WebHook.csproj", "{BAE935AE-D604-4931-A0B3-0187A6CB9E7E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Build|Any CPU = Build|Any CPU
@@ -265,6 +269,17 @@ Global
 		{C7744D36-69EB-47A4-8F3B-A05C1F8BC683}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C7744D36-69EB-47A4-8F3B-A05C1F8BC683}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C7744D36-69EB-47A4-8F3B-A05C1F8BC683}.Release|Any CPU.Build.0 = Release|Any CPU
+		{05DB5880-CDD4-4345-803F-B85C7B622F0C}.Build|Any CPU.ActiveCfg = Release|Any CPU
+		{05DB5880-CDD4-4345-803F-B85C7B622F0C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{05DB5880-CDD4-4345-803F-B85C7B622F0C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{05DB5880-CDD4-4345-803F-B85C7B622F0C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{05DB5880-CDD4-4345-803F-B85C7B622F0C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BAE935AE-D604-4931-A0B3-0187A6CB9E7E}.Build|Any CPU.ActiveCfg = Build|Any CPU
+		{BAE935AE-D604-4931-A0B3-0187A6CB9E7E}.Build|Any CPU.Build.0 = Build|Any CPU
+		{BAE935AE-D604-4931-A0B3-0187A6CB9E7E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BAE935AE-D604-4931-A0B3-0187A6CB9E7E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BAE935AE-D604-4931-A0B3-0187A6CB9E7E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BAE935AE-D604-4931-A0B3-0187A6CB9E7E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -289,5 +304,6 @@ Global
 		{061ACF4D-C609-4E85-997C-5154562549DB} = {76420CFE-43A4-4E16-8AA5-8659E142AE4A}
 		{D8BE8949-53E4-47E2-A40F-6D9523E689C6} = {76420CFE-43A4-4E16-8AA5-8659E142AE4A}
 		{C7744D36-69EB-47A4-8F3B-A05C1F8BC683} = {76420CFE-43A4-4E16-8AA5-8659E142AE4A}
+		{BAE935AE-D604-4931-A0B3-0187A6CB9E7E} = {76420CFE-43A4-4E16-8AA5-8659E142AE4A}
 	EndGlobalSection
 EndGlobal

@@ -18,16 +18,16 @@ namespace Xpressive.Home.Automation
             _scriptObjectProviders = scriptObjectProviders.ToList();
         }
 
-        public async Task ExecuteAsync(Guid scriptId)
+        public async Task ExecuteAsync(Guid scriptId, string triggerVariable, object triggerValue)
         {
             var script = await _scriptRepository.GetAsync(scriptId);
-            Execute(script);
+            Execute(script, triggerVariable, triggerValue);
         }
 
         public async Task ExecuteEvenIfDisabledAsync(Guid scriptId)
         {
             var script = await _scriptRepository.GetAsync(scriptId);
-            Execute(script, true);
+            Execute(script, null, true);
         }
 
         public void Notify(ExecuteScriptMessage message)
@@ -39,11 +39,11 @@ namespace Xpressive.Home.Automation
                     await Task.Delay(TimeSpan.FromMilliseconds(message.DelayInMilliseconds));
                 }
 
-                await ExecuteAsync(message.ScriptId);
+                await ExecuteAsync(message.ScriptId, null, null);
             }, TaskCreationOptions.DenyChildAttach);
         }
 
-        private void Execute(Script script, bool evenIfDisabled = false)
+        private void Execute(Script script, string triggerVariable, object triggerValue, bool evenIfDisabled = false)
         {
             if (script == null)
             {
@@ -54,11 +54,11 @@ namespace Xpressive.Home.Automation
 
             if (evenIfDisabled)
             {
-                context.ExecuteEvenIfDisabled();
+                context.ExecuteEvenIfDisabled(triggerVariable, triggerValue);
             }
             else
             {
-                context.Execute();
+                context.Execute(triggerVariable, triggerValue);
             }
         }
     }
