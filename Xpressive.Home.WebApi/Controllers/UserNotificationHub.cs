@@ -25,7 +25,8 @@ namespace Xpressive.Home.WebApi.Controllers
                 _notifications.RemoveAll(n => n.Message.Equals(message.Notification, StringComparison.Ordinal));
                 _notifications.Add(dto);
 
-                Clients?.All?.onNotification(dto);
+                var context = GlobalHost.ConnectionManager.GetHubContext<UserNotificationHub>();
+                context.Clients?.All?.onNotification(dto);
             }
         }
 
