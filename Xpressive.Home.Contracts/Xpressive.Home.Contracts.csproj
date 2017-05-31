@@ -96,11 +96,14 @@
     <Compile Include="Services\IFavoriteRadioStationService.cs" />
     <Compile Include="Services\IHttpClientProvider.cs" />
     <Compile Include="Services\IIpAddressService.cs" />
+    <Compile Include="Services\INetworkDeviceScanner.cs" />
+    <Compile Include="Services\INetworkDeviceService.cs" />
     <Compile Include="Services\ISoftwareUpdateDownloadService.cs" />
     <Compile Include="Services\ITuneInRadioStationService.cs" />
     <Compile Include="Services\IUpnpDeviceDiscoveringService.cs" />
     <Compile Include="Services\IUpnpDeviceResponse.cs" />
     <Compile Include="Services\IWebHookService.cs" />
+    <Compile Include="Services\NetworkDevice.cs" />
     <Compile Include="Variables\BooleanVariable.cs" />
     <Compile Include="Variables\DoubleVariable.cs" />
     <Compile Include="Variables\IVariableRepository.cs" />

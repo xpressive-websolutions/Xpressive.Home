@@ -21,18 +21,21 @@ namespace Xpressive.Home.Plugins.MyStrom
         private readonly IMyStromDeviceNameService _myStromDeviceNameService;
         private readonly IUpnpDeviceDiscoveringService _upnpDeviceDiscoveringService;
         private readonly IDeviceConfigurationBackupService _deviceConfigurationBackupService;
+        private readonly INetworkDeviceService _networkDeviceService;
         private readonly object _deviceListLock = new object();
 
         public MyStromGateway(
             IMessageQueue messageQueue,
             IMyStromDeviceNameService myStromDeviceNameService,
             IUpnpDeviceDiscoveringService upnpDeviceDiscoveringService,
-            IDeviceConfigurationBackupService deviceConfigurationBackupService) : base("myStrom")
+            IDeviceConfigurationBackupService deviceConfigurationBackupService,
+            INetworkDeviceService networkDeviceService) : base("myStrom")
         {
             _messageQueue = messageQueue;
             _myStromDeviceNameService = myStromDeviceNameService;
             _upnpDeviceDiscoveringService = upnpDeviceDiscoveringService;
             _deviceConfigurationBackupService = deviceConfigurationBackupService;
+            _networkDeviceService = networkDeviceService;
             _canCreateDevices = false;
 
             _upnpDeviceDiscoveringService.DeviceFound += OnUpnpDeviceFound;
@@ -69,6 +72,7 @@ namespace Xpressive.Home.Plugins.MyStrom
             await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
 
             var previousPowers = new Dictionary<string, double>();
+            var counter = 100;
 
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -105,6 +109,24 @@ namespace Xpressive.Home.Plugins.MyStrom
                 }
 
                 await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken).ContinueWith(_ => { });
+                counter++;
+
+                if (counter >= 60)
+                {
+                    counter = 0;
+
+                    var networkDevices = await _networkDeviceService.GetAvailableNetworkDevicesAsync(cancellationToken);
+
+                    foreach (var networkDevice in networkDevices)
+                    {
+                        var test = await GetReport(networkDevice.IpAddress);
+
+                        if (test != null)
+                        {
+                            await RegisterDeviceWithRetry(networkDevice.IpAddress);
+                        }
+                    }
+                }
             }
         }
 
