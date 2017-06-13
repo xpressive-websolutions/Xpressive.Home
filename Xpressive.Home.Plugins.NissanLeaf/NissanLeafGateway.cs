@@ -10,7 +10,7 @@ using Action = Xpressive.Home.Contracts.Gateway.Action;
 
 namespace Xpressive.Home.Plugins.NissanLeaf
 {
-    internal sealed class NissanLeafGateway : GatewayBase
+    internal sealed class NissanLeafGateway : GatewayBase, INissanLeafGateway
     {
         private readonly INissanLeafClient _nissanLeafClient;
         private readonly IMessageQueue _messageQueue;
@@ -24,6 +24,29 @@ namespace Xpressive.Home.Plugins.NissanLeaf
             _canCreateDevices = false;
             _username = ConfigurationManager.AppSettings["nissanleaf.username"];
             _password = ConfigurationManager.AppSettings["nissanleaf.password"];
+        }
+
+        public IEnumerable<NissanLeafDevice> GetDevices()
+        {
+            return _devices.Cast<NissanLeafDevice>();
+        }
+
+        public void StartCharging(NissanLeafDevice device)
+        {
+            var action = GetActions(device).Single(a => a.Name.Equals("Start charging", StringComparison.Ordinal));
+            StartActionInNewTask(device, action, new Dictionary<string, string>());
+        }
+
+        public void StartClimateControl(NissanLeafDevice device)
+        {
+            var action = GetActions(device).Single(a => a.Name.Equals("Start climate contro", StringComparison.Ordinal));
+            StartActionInNewTask(device, action, new Dictionary<string, string>());
+        }
+
+        public void StopClimateControl(NissanLeafDevice device)
+        {
+            var action = GetActions(device).Single(a => a.Name.Equals("Stop climate control", StringComparison.Ordinal));
+            StartActionInNewTask(device, action, new Dictionary<string, string>());
         }
 
         public override IEnumerable<IAction> GetActions(IDevice device)
@@ -75,11 +98,17 @@ namespace Xpressive.Home.Plugins.NissanLeaf
                         continue;
                     }
 
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "ChargingState", batteryStatus.ChargingState));
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "PluginState", batteryStatus.PluginState));
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Power", Math.Round(batteryStatus.Power, 2), "Percent"));
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "CruisingRangeAcOff", Math.Round(batteryStatus.CruisingRangeAcOff), "Meter"));
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "CruisingRangeAcOn", Math.Round(batteryStatus.CruisingRangeAcOn), "Meter"));
+                    device.ChargingState = batteryStatus.ChargingState;
+                    device.PluginState = batteryStatus.PluginState;
+                    device.Power = Math.Round(batteryStatus.Power, 2);
+                    device.CruisingRangeAcOn = Math.Round(batteryStatus.CruisingRangeAcOn);
+                    device.CruisingRangeAcOff = Math.Round(batteryStatus.CruisingRangeAcOff);
+
+                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "ChargingState", device.ChargingState));
+                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "PluginState", device.PluginState));
+                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Power", device.Power, "Percent"));
+                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "CruisingRangeAcOff", device.CruisingRangeAcOff, "Meter"));
+                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "CruisingRangeAcOn", device.CruisingRangeAcOn, "Meter"));
                 }
             }
 

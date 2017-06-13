@@ -63,7 +63,16 @@
     <Compile Include="..\Xpressive.Home\Properties\AssemblyInfo.shared.cs">
       <Link>Properties\AssemblyInfo.shared.cs</Link>
     </Compile>
-    <Compile Include="Class1.cs" />
+    <Compile Include="BatteryStatus.cs" />
+    <Compile Include="BlowfishEncryptionService.cs" />
+    <Compile Include="INissanLeafGateway.cs" />
+    <Compile Include="NissanLeafGateway.cs" />
+    <Compile Include="IBlowfishEncryptionService.cs" />
+    <Compile Include="INissanLeafClient.cs" />
+    <Compile Include="NissanLeafClient.cs" />
+    <Compile Include="NissanLeafDevice.cs" />
+    <Compile Include="NissanLeafModule.cs" />
+    <Compile Include="NissanLeafScriptObjectProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

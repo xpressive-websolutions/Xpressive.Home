@@ -17,5 +17,11 @@ namespace Xpressive.Home.Plugins.NissanLeaf
         public string Nickname => Name;
         public string ModelYear { get; }
         public string CustomSessionId { get; set; }
+
+        public string ChargingState { get; set; }
+        public string PluginState { get; set; }
+        public double Power { get; set; }
+        public double CruisingRangeAcOff { get; set; }
+        public double CruisingRangeAcOn { get; set; }
     }
 }
