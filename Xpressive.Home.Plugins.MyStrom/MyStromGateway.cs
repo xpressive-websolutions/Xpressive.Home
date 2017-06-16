@@ -115,16 +115,23 @@ namespace Xpressive.Home.Plugins.MyStrom
                 {
                     counter = 0;
 
-                    var networkDevices = await _networkDeviceService.GetAvailableNetworkDevicesAsync(cancellationToken);
-
-                    foreach (var networkDevice in networkDevices)
+                    try
                     {
-                        var test = await GetReport(networkDevice.IpAddress);
+                        var networkDevices = await _networkDeviceService.GetAvailableNetworkDevicesAsync(cancellationToken);
 
-                        if (test != null)
+                        foreach (var networkDevice in networkDevices)
                         {
-                            await RegisterDeviceWithRetry(networkDevice.IpAddress);
+                            var test = await GetReport(networkDevice.IpAddress);
+
+                            if (test != null)
+                            {
+                                await RegisterDeviceWithRetry(networkDevice.IpAddress);
+                            }
                         }
+                    }
+                    catch (Exception e)
+                    {
+                        _log.Error(e.Message, e);
                     }
                 }
             }

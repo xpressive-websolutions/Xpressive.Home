@@ -4,6 +4,7 @@ using System.Configuration;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using log4net;
 using PrimS.Telnet;
 using Xpressive.Home.Contracts.Messaging;
 using Xpressive.Home.Contracts.Services;
@@ -12,6 +13,8 @@ namespace Xpressive.Home.Plugins.ZyxelUsg
 {
     internal sealed class ZyxelUsgDeviceScanner : INetworkDeviceScanner
     {
+        private static readonly ILog _log = LogManager.GetLogger(typeof(ZyxelUsgDeviceScanner));
+
         private readonly Regex _ipAndMacExtractor = new Regex(
             @"(?<ip>[0-9\.]+)\s+[a-z]+\s+(?<mac>([0-9a-f\:]){17})",
             RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Singleline);
@@ -56,40 +59,48 @@ namespace Xpressive.Home.Plugins.ZyxelUsg
 
         public async Task<IList<NetworkDevice>> GetAvailableNetworkDevicesAsync(CancellationToken cancellationToken)
         {
-            if (!_isValidConfiguration)
+            try
             {
-                return new List<NetworkDevice>(0);
-            }
-
-            using (var client = new Client(_ipAddress, _port, cancellationToken))
-            {
-                await ReadAsync(client).ConfigureAwait(false);
-                await client.WriteLine(_username).ConfigureAwait(false);
-                await ReadAsync(client).ConfigureAwait(false);
-                await client.WriteLine(_password).ConfigureAwait(false);
-                await ReadAsync(client).ConfigureAwait(false);
-                await client.WriteLine("show arp-table").ConfigureAwait(false);
-
-                var text = await ReadAsync(client).ConfigureAwait(false);
-                var lines = text.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                var result = new List<NetworkDevice>();
-
-                foreach (var line in lines)
+                if (!_isValidConfiguration)
                 {
-                    var match = _ipAndMacExtractor.Match(line);
-
-                    if (match.Success)
-                    {
-                        var ip = match.Groups["ip"].Value;
-                        var mac = match.Groups["mac"].Value;
-
-                        result.Add(NetworkDevice.Create(ip, mac));
-                    }
+                    return new List<NetworkDevice>(0);
                 }
 
-                await client.WriteLine("exit").ConfigureAwait(false);
+                using (var client = new Client(_ipAddress, _port, cancellationToken))
+                {
+                    await ReadAsync(client).ConfigureAwait(false);
+                    await client.WriteLine(_username).ConfigureAwait(false);
+                    await ReadAsync(client).ConfigureAwait(false);
+                    await client.WriteLine(_password).ConfigureAwait(false);
+                    await ReadAsync(client).ConfigureAwait(false);
+                    await client.WriteLine("show arp-table").ConfigureAwait(false);
 
-                return result;
+                    var text = await ReadAsync(client).ConfigureAwait(false);
+                    var lines = text.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                    var result = new List<NetworkDevice>();
+
+                    foreach (var line in lines)
+                    {
+                        var match = _ipAndMacExtractor.Match(line);
+
+                        if (match.Success)
+                        {
+                            var ip = match.Groups["ip"].Value;
+                            var mac = match.Groups["mac"].Value;
+
+                            result.Add(NetworkDevice.Create(ip, mac));
+                        }
+                    }
+
+                    await client.WriteLine("exit").ConfigureAwait(false);
+
+                    return result;
+                }
+            }
+            catch (Exception e)
+            {
+                _log.Error(e.Message, e);
+                throw;
             }
         }
 
