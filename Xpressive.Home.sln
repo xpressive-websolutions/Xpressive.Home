@@ -124,6 +124,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xpressive.Home.Plugins.Niss
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xpressive.Home.Plugins.Workday", "Xpressive.Home.Plugins.Workday\Xpressive.Home.Plugins.Workday.csproj", "{4DFADF7A-B1FB-4092-910E-B9586902BC44}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xpressive.Home.Plugins.Workday.Tests", "Xpressive.Home.Plugins.Workday.Tests\Xpressive.Home.Plugins.Workday.Tests.csproj", "{772D7411-7EFF-4CEA-B31F-B1FFDDA5CA7C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Build|Any CPU = Build|Any CPU
@@ -319,6 +321,12 @@ Global
 		{4DFADF7A-B1FB-4092-910E-B9586902BC44}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4DFADF7A-B1FB-4092-910E-B9586902BC44}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4DFADF7A-B1FB-4092-910E-B9586902BC44}.Release|Any CPU.Build.0 = Release|Any CPU
+		{772D7411-7EFF-4CEA-B31F-B1FFDDA5CA7C}.Build|Any CPU.ActiveCfg = Release|Any CPU
+		{772D7411-7EFF-4CEA-B31F-B1FFDDA5CA7C}.Build|Any CPU.Build.0 = Release|Any CPU
+		{772D7411-7EFF-4CEA-B31F-B1FFDDA5CA7C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{772D7411-7EFF-4CEA-B31F-B1FFDDA5CA7C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{772D7411-7EFF-4CEA-B31F-B1FFDDA5CA7C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{772D7411-7EFF-4CEA-B31F-B1FFDDA5CA7C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -348,5 +356,6 @@ Global
 		{F9747696-9647-4F4E-80DA-F325699425AA} = {76420CFE-43A4-4E16-8AA5-8659E142AE4A}
 		{D7584247-4B62-41D2-9171-20ABC8B0945B} = {76420CFE-43A4-4E16-8AA5-8659E142AE4A}
 		{4DFADF7A-B1FB-4092-910E-B9586902BC44} = {76420CFE-43A4-4E16-8AA5-8659E142AE4A}
+		{772D7411-7EFF-4CEA-B31F-B1FFDDA5CA7C} = {76420CFE-43A4-4E16-8AA5-8659E142AE4A}
 	EndGlobalSection
 EndGlobal
