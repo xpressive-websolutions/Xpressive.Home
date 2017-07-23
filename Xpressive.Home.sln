@@ -122,6 +122,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xpressive.Home.Plugins.Netw
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xpressive.Home.Plugins.NissanLeaf", "Xpressive.Home.Plugins.NissanLeaf\Xpressive.Home.Plugins.NissanLeaf.csproj", "{D7584247-4B62-41D2-9171-20ABC8B0945B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xpressive.Home.Plugins.Workday", "Xpressive.Home.Plugins.Workday\Xpressive.Home.Plugins.Workday.csproj", "{4DFADF7A-B1FB-4092-910E-B9586902BC44}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Build|Any CPU = Build|Any CPU
@@ -311,6 +313,12 @@ Global
 		{D7584247-4B62-41D2-9171-20ABC8B0945B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D7584247-4B62-41D2-9171-20ABC8B0945B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D7584247-4B62-41D2-9171-20ABC8B0945B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4DFADF7A-B1FB-4092-910E-B9586902BC44}.Build|Any CPU.ActiveCfg = Release|Any CPU
+		{4DFADF7A-B1FB-4092-910E-B9586902BC44}.Build|Any CPU.Build.0 = Release|Any CPU
+		{4DFADF7A-B1FB-4092-910E-B9586902BC44}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4DFADF7A-B1FB-4092-910E-B9586902BC44}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4DFADF7A-B1FB-4092-910E-B9586902BC44}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4DFADF7A-B1FB-4092-910E-B9586902BC44}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -339,5 +347,6 @@ Global
 		{5B7FC0D6-C321-49DA-8E2B-82E01AC62CA6} = {76420CFE-43A4-4E16-8AA5-8659E142AE4A}
 		{F9747696-9647-4F4E-80DA-F325699425AA} = {76420CFE-43A4-4E16-8AA5-8659E142AE4A}
 		{D7584247-4B62-41D2-9171-20ABC8B0945B} = {76420CFE-43A4-4E16-8AA5-8659E142AE4A}
+		{4DFADF7A-B1FB-4092-910E-B9586902BC44} = {76420CFE-43A4-4E16-8AA5-8659E142AE4A}
 	EndGlobalSection
 EndGlobal
