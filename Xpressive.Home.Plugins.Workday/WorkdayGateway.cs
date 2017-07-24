@@ -17,6 +17,7 @@ namespace Xpressive.Home.Plugins.Workday
         {
             _messageQueue = messageQueue;
             _calculator = calculator;
+            _canCreateDevices = true;
         }
 
         public override IDevice CreateEmptyDevice()

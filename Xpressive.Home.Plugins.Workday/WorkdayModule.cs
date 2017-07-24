@@ -9,6 +9,7 @@ namespace Xpressive.Home.Plugins.Workday
         {
             builder.RegisterType<WorkdayGateway>()
                 .As<IGateway>()
+                .PropertiesAutowired()
                 .SingleInstance();
 
             builder.RegisterType<WorkdayCalculator>().As<IWorkdayCalculator>();
