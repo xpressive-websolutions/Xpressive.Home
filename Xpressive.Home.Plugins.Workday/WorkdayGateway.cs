@@ -8,7 +8,7 @@ using Xpressive.Home.Contracts.Messaging;
 
 namespace Xpressive.Home.Plugins.Workday
 {
-    internal class WorkdayGateway : GatewayBase
+    internal sealed class WorkdayGateway : GatewayBase, IWorkdayGateway
     {
         private readonly IMessageQueue _messageQueue;
         private readonly IWorkdayCalculator _calculator;
