@@ -106,6 +106,8 @@
     <Compile Include="Services\NetworkDevice.cs" />
     <Compile Include="Variables\BooleanVariable.cs" />
     <Compile Include="Variables\DoubleVariable.cs" />
+    <Compile Include="Variables\IVariableHistoryService.cs" />
+    <Compile Include="Variables\IVariableHistoryValue.cs" />
     <Compile Include="Variables\IVariableRepository.cs" />
     <Compile Include="Variables\IVariable.cs" />
     <Compile Include="Variables\StringVariable.cs" />
