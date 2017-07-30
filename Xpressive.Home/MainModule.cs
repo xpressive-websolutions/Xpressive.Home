@@ -46,6 +46,11 @@ namespace Xpressive.Home
                 .As<IStartable>()
                 .SingleInstance();
 
+            builder.RegisterType<VariableHistoryService>()
+                .As<IVariableHistoryService>()
+                .As<IMessageQueueListener<UpdateVariableMessage>>()
+                .SingleInstance();
+
             builder.RegisterType<CronService>()
                 .As<ICronService>()
                 .As<IStartable>()

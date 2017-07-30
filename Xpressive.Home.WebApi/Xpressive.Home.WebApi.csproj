@@ -212,6 +212,10 @@
     <Content Include="app\admin\singleInputDialog.min.html">
       <DependentUpon>singleInputDialog.html</DependentUpon>
     </Content>
+    <Content Include="app\admin\variableHistory.html" />
+    <Content Include="app\admin\variableHistory.min.html">
+      <DependentUpon>variableHistory.html</DependentUpon>
+    </Content>
     <Content Include="app\admin\variables.html" />
     <Content Include="app\admin\variables.min.html">
       <DependentUpon>variables.html</DependentUpon>
