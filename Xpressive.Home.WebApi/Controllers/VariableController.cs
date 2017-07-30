@@ -11,11 +11,13 @@ namespace Xpressive.Home.WebApi.Controllers
     public class VariableController : ApiController
     {
         private readonly IVariableRepository _variableRepository;
+        private readonly IVariableHistoryService _variableHistoryService;
         private readonly IDictionary<string, IGateway> _gateways;
 
-        public VariableController(IVariableRepository variableRepository, IEnumerable<IGateway> gateways)
+        public VariableController(IVariableRepository variableRepository, IVariableHistoryService variableHistoryService, IEnumerable<IGateway> gateways)
         {
             _variableRepository = variableRepository;
+            _variableHistoryService = variableHistoryService;
             _gateways = gateways.ToDictionary(g => g.Name);
         }
 
@@ -44,7 +46,7 @@ namespace Xpressive.Home.WebApi.Controllers
         [HttpGet, Route("{variable}")]
         public IHttpActionResult Get(string variable)
         {
-            var result = _variableRepository.Get().SingleOrDefault(v => v.Name.Equals(variable, StringComparison.OrdinalIgnoreCase));
+            var result = _variableRepository.Get<IVariable>(variable);
             if (result != null)
             {
                 return Ok(new VariableDto
@@ -59,12 +61,37 @@ namespace Xpressive.Home.WebApi.Controllers
             return NotFound();
         }
 
+        [HttpGet, Route("history")]
+        public IEnumerable<VariableHistoryDto> GetHistory([FromUri]string variable)
+        {
+            var result = _variableRepository.Get<IVariable>(variable);
+
+            if (result == null)
+            {
+                return new List<VariableHistoryDto>(0);
+            }
+
+            return _variableHistoryService
+                .Get(result.Name)
+                .Select(h => new VariableHistoryDto
+                {
+                    EffectiveDate = h.EffectiveDate,
+                    Value = h.Value
+                });
+        }
+
         public class VariableDto
         {
             public string Name { get; set; }
             public object Value { get; set; }
             public string Type { get; set; }
             public string Unit { get; set; }
+        }
+
+        public class VariableHistoryDto
+        {
+            public DateTime EffectiveDate { get; set; }
+            public object Value { get; set; }
         }
     }
 }
