@@ -1,11 +1,11 @@
 using System;
-using System.Collections.Generic;
 using System.Configuration;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using log4net;
 using PrimS.Telnet;
+using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Messaging;
 using Xpressive.Home.Contracts.Services;
 
@@ -15,10 +15,12 @@ namespace Xpressive.Home.Plugins.ZyxelUsg
     {
         private static readonly ILog _log = LogManager.GetLogger(typeof(ZyxelUsgDeviceScanner));
 
-        private readonly Regex _ipAndMacExtractor = new Regex(
+        private static readonly Regex _ipAndMacExtractor = new Regex(
             @"(?<ip>[0-9\.]+)\s+[a-z]+\s+(?<mac>([0-9a-f\:]){17})",
-            RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Singleline);
+            RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Singleline,
+            TimeSpan.FromSeconds(1));
 
+        private readonly IMessageQueue _messageQueue;
         private readonly string _ipAddress;
         private readonly int _port;
         private readonly string _username;
@@ -27,6 +29,7 @@ namespace Xpressive.Home.Plugins.ZyxelUsg
 
         public ZyxelUsgDeviceScanner(IMessageQueue messageQueue)
         {
+            _messageQueue = messageQueue;
             _ipAddress = ConfigurationManager.AppSettings["zyxelusg.ipaddress"];
             _username = ConfigurationManager.AppSettings["zyxelusg.username"];
             _password = ConfigurationManager.AppSettings["zyxelusg.password"];
@@ -57,15 +60,26 @@ namespace Xpressive.Home.Plugins.ZyxelUsg
             }
         }
 
-        public async Task<IList<NetworkDevice>> GetAvailableNetworkDevicesAsync(CancellationToken cancellationToken)
+        public async Task StartAsync(CancellationToken cancellationToken)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { }).ConfigureAwait(false);
+
+            if (!_isValidConfiguration)
+            {
+                return;
+            }
+
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                await ScanNetworkAsync(cancellationToken).ConfigureAwait(false);
+                await Task.Delay(TimeSpan.FromMinutes(1), cancellationToken).ContinueWith(_ => { }).ConfigureAwait(false);
+            }
+        }
+
+        private async Task ScanNetworkAsync(CancellationToken cancellationToken)
         {
             try
             {
-                if (!_isValidConfiguration)
-                {
-                    return new List<NetworkDevice>(0);
-                }
-
                 using (var client = new Client(_ipAddress, _port, cancellationToken))
                 {
                     await ReadAsync(client).ConfigureAwait(false);
@@ -77,7 +91,6 @@ namespace Xpressive.Home.Plugins.ZyxelUsg
 
                     var text = await ReadAsync(client).ConfigureAwait(false);
                     var lines = text.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                    var result = new List<NetworkDevice>();
 
                     foreach (var line in lines)
                     {
@@ -87,24 +100,22 @@ namespace Xpressive.Home.Plugins.ZyxelUsg
                         {
                             var ip = match.Groups["ip"].Value;
                             var mac = match.Groups["mac"].Value;
+                            var macAddress = mac.MacAddressToBytes();
 
-                            result.Add(NetworkDevice.Create(ip, mac));
+                            _messageQueue.Publish(new NetworkDeviceFoundMessage("Telnet", ip, macAddress));
                         }
                     }
 
                     await client.WriteLine("exit").ConfigureAwait(false);
-
-                    return result;
                 }
             }
             catch (Exception e)
             {
                 _log.Error(e.Message, e);
-                throw;
             }
         }
 
-        private async Task<string> ReadAsync(Client client)
+        private static async Task<string> ReadAsync(Client client)
         {
             string previous, text = null;
 

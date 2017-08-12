@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using log4net;
 using Q42.HueApi;
 using Q42.HueApi.Models;
+using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Variables;
 
 namespace Xpressive.Home.Plugins.PhilipsHue
@@ -85,7 +86,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             {
                 foreach (var light in bulbs)
                 {
-                    var id = light.UniqueId.Replace(":", string.Empty).Replace("-", string.Empty);
+                    var id = light.UniqueId.RemoveMacAddressDelimiters();
                     var bulb = new PhilipsHueBulb(light.Id, id, light.Name, bridge)
                     {
                         Icon = "PhilipsHueIcon PhilipsHueIcon_" + light.ModelId,
@@ -126,7 +127,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 
         private void HandleZllPresenceSensor(Sensor sensor, PhilipsHueBridge bridge)
         {
-            var id = sensor.UniqueId.Replace(":", string.Empty).Replace("-", string.Empty);
+            var id = sensor.UniqueId.RemoveMacAddressDelimiters();
             var sensorDevice = new PhilipsHuePresenceSensor(sensor.Id, id, sensor.Name, bridge)
             {
                 Model = sensor.ModelId,
@@ -140,7 +141,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 
         private void HandleZgpSwitch(Sensor sensor, PhilipsHueBridge bridge)
         {
-            var id = sensor.UniqueId.Replace(":", string.Empty).Replace("-", string.Empty);
+            var id = sensor.UniqueId.RemoveMacAddressDelimiters();
             var button = new PhilipsHueButtonSensor(sensor.Id, id, sensor.Name, bridge)
             {
                 Model = sensor.ModelId,
@@ -154,7 +155,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 
         private void HandleZllSwitch(Sensor sensor, PhilipsHueBridge bridge)
         {
-            var id = sensor.UniqueId.Replace(":", string.Empty).Replace("-", string.Empty);
+            var id = sensor.UniqueId.RemoveMacAddressDelimiters();
             var button = new PhilipsHueButtonSensor(sensor.Id, id, sensor.Name, bridge)
             {
                 Model = sensor.ModelId,

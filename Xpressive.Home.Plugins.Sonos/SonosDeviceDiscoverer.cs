@@ -4,27 +4,24 @@ using System.Linq;
 using System.Net;
 using System.Xml;
 using Polly;
-using Xpressive.Home.Contracts.Services;
+using Xpressive.Home.Contracts.Messaging;
 
 namespace Xpressive.Home.Plugins.Sonos
 {
-    internal sealed class SonosDeviceDiscoverer : ISonosDeviceDiscoverer, IDisposable
+    internal sealed class SonosDeviceDiscoverer : ISonosDeviceDiscoverer, IMessageQueueListener<NetworkDeviceFoundMessage>
     {
-        private readonly IUpnpDeviceDiscoveringService _upnpDeviceDiscoveringService;
         private readonly object _lock = new object();
         private readonly HashSet<string> _detectedSonosIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        public SonosDeviceDiscoverer(IUpnpDeviceDiscoveringService upnpDeviceDiscoveringService)
-        {
-            _upnpDeviceDiscoveringService = upnpDeviceDiscoveringService;
-            _upnpDeviceDiscoveringService.DeviceFound += OnUpnpDeviceFound;
-        }
-
         public event EventHandler<SonosDevice> DeviceFound;
 
-        private void OnUpnpDeviceFound(object sender, IUpnpDeviceResponse e)
+        public void Notify(NetworkDeviceFoundMessage message)
         {
-            if (e.Server.IndexOf("sonos", StringComparison.OrdinalIgnoreCase) < 0)
+            string server;
+            string location;
+            if (!message.Values.TryGetValue("Server", out server) ||
+                !message.Values.TryGetValue("Location", out location) ||
+                server.IndexOf("sonos", StringComparison.OrdinalIgnoreCase) < 0)
             {
                 return;
             }
@@ -38,7 +35,7 @@ namespace Xpressive.Home.Plugins.Sonos
                     TimeSpan.FromSeconds(5),
                 });
 
-            policy.Execute(() => CreateDevice(e.Location));
+            policy.Execute(() => CreateDevice(location));
         }
 
         private void CreateDevice(string deviceDescriptionXmlPath)
@@ -154,11 +151,6 @@ namespace Xpressive.Home.Plugins.Sonos
         private void OnDeviceFound(SonosDevice e)
         {
             DeviceFound?.Invoke(this, e);
-        }
-
-        public void Dispose()
-        {
-            _upnpDeviceDiscoveringService.DeviceFound -= OnUpnpDeviceFound;
         }
     }
 }

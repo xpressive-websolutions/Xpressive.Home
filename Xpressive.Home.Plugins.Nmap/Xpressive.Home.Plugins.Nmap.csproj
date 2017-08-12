@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{F9747696-9647-4F4E-80DA-F325699425AA}</ProjectGuid>
+    <ProjectGuid>{55DF4395-A925-449A-986B-DE5B02F74EA8}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Xpressive.Home.Plugins.NetworkDeviceAvailability</RootNamespace>
-    <AssemblyName>Xpressive.Home.Plugins.NetworkDeviceAvailability</AssemblyName>
+    <RootNamespace>Xpressive.Home.Plugins.Nmap</RootNamespace>
+    <AssemblyName>Xpressive.Home.Plugins.Nmap</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -48,15 +48,15 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Xpressive.Home\Properties\AssemblyInfo.shared.cs">
       <Link>Properties\AssemblyInfo.shared.cs</Link>
     </Compile>
-    <Compile Include="AvailableNetworkDevice.cs" />
-    <Compile Include="NetworkDeviceAvailabilityGateway.cs" />
-    <Compile Include="NetworkDeviceAvailabilityModule.cs" />
+    <Compile Include="NmapDeviceScanner.cs" />
+    <Compile Include="NmapModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -64,7 +64,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Xpressive.Home.Contracts\Xpressive.Home.Contracts.csproj">
-      <Project>{d19262be-03d6-415f-b442-eddf9da2d435}</Project>
+      <Project>{D19262BE-03D6-415F-B442-EDDF9DA2D435}</Project>
       <Name>Xpressive.Home.Contracts</Name>
       <Private>False</Private>
     </ProjectReference>

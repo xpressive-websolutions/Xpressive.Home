@@ -14,31 +14,23 @@ using Action = Xpressive.Home.Contracts.Gateway.Action;
 
 namespace Xpressive.Home.Plugins.MyStrom
 {
-    internal class MyStromGateway : GatewayBase, IMyStromGateway
+    internal class MyStromGateway : GatewayBase, IMyStromGateway, IMessageQueueListener<NetworkDeviceFoundMessage>
     {
         private static readonly ILog _log = LogManager.GetLogger(typeof(MyStromGateway));
         private readonly IMessageQueue _messageQueue;
         private readonly IMyStromDeviceNameService _myStromDeviceNameService;
-        private readonly IUpnpDeviceDiscoveringService _upnpDeviceDiscoveringService;
         private readonly IDeviceConfigurationBackupService _deviceConfigurationBackupService;
-        private readonly INetworkDeviceService _networkDeviceService;
         private readonly object _deviceListLock = new object();
 
         public MyStromGateway(
             IMessageQueue messageQueue,
             IMyStromDeviceNameService myStromDeviceNameService,
-            IUpnpDeviceDiscoveringService upnpDeviceDiscoveringService,
-            IDeviceConfigurationBackupService deviceConfigurationBackupService,
-            INetworkDeviceService networkDeviceService) : base("myStrom")
+            IDeviceConfigurationBackupService deviceConfigurationBackupService) : base("myStrom")
         {
             _messageQueue = messageQueue;
             _myStromDeviceNameService = myStromDeviceNameService;
-            _upnpDeviceDiscoveringService = upnpDeviceDiscoveringService;
             _deviceConfigurationBackupService = deviceConfigurationBackupService;
-            _networkDeviceService = networkDeviceService;
             _canCreateDevices = false;
-
-            _upnpDeviceDiscoveringService.DeviceFound += OnUpnpDeviceFound;
         }
 
         public IEnumerable<MyStromDevice> GetDevices()
@@ -72,7 +64,6 @@ namespace Xpressive.Home.Plugins.MyStrom
             await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
 
             var previousPowers = new Dictionary<string, double>();
-            var counter = 100;
 
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -109,37 +100,29 @@ namespace Xpressive.Home.Plugins.MyStrom
                 }
 
                 await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken).ContinueWith(_ => { });
-                counter++;
-
-                if (counter >= 60)
-                {
-                    counter = 0;
-
-                    try
-                    {
-                        var networkDevices = await _networkDeviceService.GetAvailableNetworkDevicesAsync(cancellationToken);
-
-                        foreach (var networkDevice in networkDevices)
-                        {
-                            var test = await GetReport(networkDevice.IpAddress);
-
-                            if (test != null)
-                            {
-                                await RegisterDeviceWithRetry(networkDevice.IpAddress);
-                            }
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        _log.Error(e.Message, e);
-                    }
-                }
             }
         }
 
         public override IDevice CreateEmptyDevice()
         {
             throw new NotSupportedException();
+        }
+
+        public async void Notify(NetworkDeviceFoundMessage message)
+        {
+            try
+            {
+                var test = await GetReport(message.IpAddress);
+
+                if (test != null)
+                {
+                    await RegisterDeviceWithRetry(message.IpAddress);
+                }
+            }
+            catch (Exception e)
+            {
+                _log.Error(e.Message, e);
+            }
         }
 
         protected override async Task ExecuteInternalAsync(IDevice device, IAction action, IDictionary<string, string> values)
@@ -173,7 +156,6 @@ namespace Xpressive.Home.Plugins.MyStrom
         {
             if (disposing)
             {
-                _upnpDeviceDiscoveringService.DeviceFound -= OnUpnpDeviceFound;
                 var ipAddresses = _devices.OfType<MyStromDevice>().Select(d => d.IpAddress).ToList();
                 _deviceConfigurationBackupService.Save(Name, new DeviceConfigurationBackupDto(ipAddresses));
             }
@@ -182,13 +164,9 @@ namespace Xpressive.Home.Plugins.MyStrom
 
         private async void OnUpnpDeviceFound(object sender, IUpnpDeviceResponse e)
         {
-            if (e.Usn.IndexOf("wifi-switch", StringComparison.OrdinalIgnoreCase) < 0 &&
-                !e.FriendlyName.Equals("mystrom wifi switch", StringComparison.OrdinalIgnoreCase))
-            {
-                return;
-            }
-
-            await RegisterDeviceWithRetry(e.IpAddress);
+            if (e.Usn.IndexOf("wifi-switch", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                e.FriendlyName.Equals("mystrom wifi switch", StringComparison.OrdinalIgnoreCase))
+                await RegisterDeviceWithRetry(e.IpAddress);
         }
 
         private async Task LoadDevicesFromBackup()

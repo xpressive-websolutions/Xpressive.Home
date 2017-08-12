@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
+using Xpressive.Home.Contracts.Services;
 using Xpressive.Home.DatabaseMigrator;
 
 namespace Xpressive.Home
@@ -18,6 +19,7 @@ namespace Xpressive.Home
             RegisterMessageQueueListeners();
 
             var gateways = IocContainer.Resolve<IList<IGateway>>();
+            var networkScanners = IocContainer.Resolve<IList<INetworkDeviceScanner>>();
             var cancellationToken = new CancellationTokenSource();
 
             foreach (var gateway in gateways)
@@ -25,21 +27,28 @@ namespace Xpressive.Home
                 Task.Factory.StartNew(() => gateway.StartAsync(cancellationToken.Token), TaskCreationOptions.LongRunning);
             }
 
+            foreach (var networkDeviceScanner in networkScanners)
+            {
+                Task.Factory.StartNew(() => networkDeviceScanner.StartAsync(cancellationToken.Token), TaskCreationOptions.LongRunning);
+            }
+
             return new Disposer(cancellationToken);
         }
 
         private static void RegisterMessageQueueListeners()
         {
-            var updateVariableListener = IocContainer.Resolve<IList<IMessageQueueListener<UpdateVariableMessage>>>().ToList();
-            var commandMessageListener = IocContainer.Resolve<IList<IMessageQueueListener<CommandMessage>>>().ToList();
-            var notifyUserListener = IocContainer.Resolve<IList<IMessageQueueListener<NotifyUserMessage>>>().ToList();
-            var executeScriptListener = IocContainer.Resolve<IList<IMessageQueueListener<ExecuteScriptMessage>>>().ToList();
             var messageQueue = IocContainer.Resolve<IMessageQueue>();
+            RegisterMessageQueueListeners<UpdateVariableMessage>(messageQueue);
+            RegisterMessageQueueListeners<CommandMessage>(messageQueue);
+            RegisterMessageQueueListeners<NotifyUserMessage>(messageQueue);
+            RegisterMessageQueueListeners<ExecuteScriptMessage>(messageQueue);
+            RegisterMessageQueueListeners<NetworkDeviceFoundMessage>(messageQueue);
+        }
 
-            updateVariableListener.ForEach(l => messageQueue.Subscribe<UpdateVariableMessage>(l.Notify));
-            commandMessageListener.ForEach(l => messageQueue.Subscribe<CommandMessage>(l.Notify));
-            notifyUserListener.ForEach(l => messageQueue.Subscribe<NotifyUserMessage>(l.Notify));
-            executeScriptListener.ForEach(l => messageQueue.Subscribe<ExecuteScriptMessage>(l.Notify));
+        private static void RegisterMessageQueueListeners<T>(IMessageQueue messageQueue) where T : IMessageQueueMessage
+        {
+            var listener = IocContainer.Resolve<IList<IMessageQueueListener<T>>>().ToList();
+            listener.ForEach(l => messageQueue.Subscribe<T>(l.Notify));
         }
 
         private class Disposer : IDisposable

@@ -9,11 +9,10 @@ using Xpressive.Home.Contracts.Variables;
 
 namespace Xpressive.Home.Plugins.PhilipsHue
 {
-    internal class PhilipsHueBridgeDiscoveringService : IPhilipsHueBridgeDiscoveringService, IDisposable
+    internal class PhilipsHueBridgeDiscoveringService : IPhilipsHueBridgeDiscoveringService, IDisposable, IMessageQueueListener<NetworkDeviceFoundMessage>
     {
         private readonly IMessageQueue _messageQueue;
         private readonly IVariableRepository _variableRepository;
-        private readonly IUpnpDeviceDiscoveringService _upnpDeviceDiscoveringService;
         private readonly IDeviceConfigurationBackupService _deviceConfigurationBackupService;
         private readonly object _lock;
         private readonly Dictionary<string, PhilipsHueBridge> _bridges;
@@ -21,14 +20,12 @@ namespace Xpressive.Home.Plugins.PhilipsHue
         public PhilipsHueBridgeDiscoveringService(
             IMessageQueue messageQueue,
             IVariableRepository variableRepository,
-            IUpnpDeviceDiscoveringService upnpDeviceDiscoveringService,
             IDeviceConfigurationBackupService deviceConfigurationBackupService)
         {
             _lock = new object();
             _bridges = new Dictionary<string, PhilipsHueBridge>(StringComparer.OrdinalIgnoreCase);
             _messageQueue = messageQueue;
             _variableRepository = variableRepository;
-            _upnpDeviceDiscoveringService = upnpDeviceDiscoveringService;
             _deviceConfigurationBackupService = deviceConfigurationBackupService;
         }
 
@@ -37,14 +34,12 @@ namespace Xpressive.Home.Plugins.PhilipsHue
         public void Start()
         {
             LoadBridgesFromBackup();
-
-            _upnpDeviceDiscoveringService.DeviceFound += OnUpnpDeviceFound;
         }
 
-        private void OnUpnpDeviceFound(object sender, IUpnpDeviceResponse e)
+        public void Notify(NetworkDeviceFoundMessage message)
         {
             string bridgeId;
-            if (!e.OtherHeaders.TryGetValue("hue-bridgeid", out bridgeId))
+            if (!message.Values.TryGetValue("hue-bridgeid", out bridgeId))
             {
                 return;
             }
@@ -58,7 +53,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                 {
                     return;
                 }
-                bridge = new PhilipsHueBridge(bridgeId, e.IpAddress);
+                bridge = new PhilipsHueBridge(bridgeId, message.IpAddress);
                 _bridges[bridgeId] = bridge;
             }
 
@@ -140,8 +135,6 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 
         public void Dispose()
         {
-            _upnpDeviceDiscoveringService.DeviceFound -= OnUpnpDeviceFound;
-
             var backup = _bridges.Select(p => new BridgeConfigurationBackupDto(p.Key, p.Value.IpAddress)).ToArray();
             _deviceConfigurationBackupService.Save("PhilipsHue", backup);
         }

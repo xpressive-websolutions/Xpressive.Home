@@ -38,6 +38,7 @@ namespace Xpressive.Home
                 .As<IMessageQueueListener<NotifyUserMessage>>()
                 .As<IMessageQueueListener<CommandMessage>>()
                 .As<IMessageQueueListener<ExecuteScriptMessage>>()
+                .As<IMessageQueueListener<NetworkDeviceFoundMessage>>()
                 .SingleInstance();
 
             builder.RegisterType<VariableRepository>()

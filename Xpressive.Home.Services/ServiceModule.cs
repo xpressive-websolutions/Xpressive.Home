@@ -23,7 +23,6 @@ namespace Xpressive.Home.Services
             builder.RegisterType<WebHookService>().As<IWebHookService>();
             builder.RegisterType<Base62Converter>().As<IBase62Converter>();
             builder.RegisterType<HttpClientProvider>().As<IHttpClientProvider>().SingleInstance();
-            builder.RegisterType<NetworkDeviceService>().As<INetworkDeviceService>().SingleInstance();
 
             builder.RegisterType<SoftwareUpdateDownloadService>()
                 .As<ISoftwareUpdateDownloadService>()
@@ -31,8 +30,7 @@ namespace Xpressive.Home.Services
                 .SingleInstance();
 
             builder.RegisterType<UpnpDeviceDiscoveringService>()
-                .As<IUpnpDeviceDiscoveringService>()
-                .OnActivated(async a => await a.Instance.StartDiscoveringAsync())
+                .As<INetworkDeviceScanner>()
                 .SingleInstance();
 
             base.Load(builder);
