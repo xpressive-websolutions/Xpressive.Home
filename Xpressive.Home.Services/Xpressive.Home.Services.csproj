@@ -130,7 +130,6 @@
     <Compile Include="FavoriteRadioStationService.cs" />
     <Compile Include="HttpClientProvider.cs" />
     <Compile Include="LowBatteryDeviceObserver.cs" />
-    <Compile Include="NetworkDeviceService.cs" />
     <Compile Include="RoomDeviceService.cs" />
     <Compile Include="RoomRepository.cs" />
     <Compile Include="RoomScriptGroupRepository.cs" />

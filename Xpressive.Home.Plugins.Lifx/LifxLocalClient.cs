@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using Xpressive.Home.Contracts;
 
 namespace Xpressive.Home.Plugins.Lifx
 {
@@ -19,7 +19,7 @@ namespace Xpressive.Home.Plugins.Lifx
         {
             ReceivedPacket += async (sender, message) =>
             {
-                var bulbId = string.Join("", message.Address.Target.Select(b => b.ToString("x2")));
+                var bulbId = message.Address.Target.MacAddressToString();
                 var isNew = false;
                 var bulb = _bulbs.AddOrUpdate(
                     bulbId,

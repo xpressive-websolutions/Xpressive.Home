@@ -10,6 +10,7 @@ using Polly;
 using Polly.Retry;
 using Q42.HueApi;
 using Q42.HueApi.Models;
+using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 using Xpressive.Home.Contracts.Variables;
@@ -409,7 +410,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 
         private bool IsEqual(PhilipsHueBulb device, Light light)
         {
-            var lightId = light.UniqueId.Replace(":", string.Empty).Replace("-", string.Empty);
+            var lightId = light.UniqueId.RemoveMacAddressDelimiters();
             return device.Id.Equals(lightId, StringComparison.OrdinalIgnoreCase);
         }
 
@@ -420,7 +421,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                 return false;
             }
 
-            var sensorId = sensor.UniqueId.Replace(":", string.Empty).Replace("-", string.Empty);
+            var sensorId = sensor.UniqueId.RemoveMacAddressDelimiters();
             return device.Id.Equals(sensorId, StringComparison.OrdinalIgnoreCase);
         }
 

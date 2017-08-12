@@ -4,22 +4,22 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using log4net;
+using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
-using Xpressive.Home.Contracts.Services;
 
 namespace Xpressive.Home.Plugins.NetworkDeviceAvailability
 {
-    internal sealed class NetworkDeviceAvailabilityGateway : GatewayBase
+    internal sealed class NetworkDeviceAvailabilityGateway : GatewayBase, IMessageQueueListener<NetworkDeviceFoundMessage>
     {
         private static readonly ILog _log = LogManager.GetLogger(typeof(NetworkDeviceAvailabilityGateway));
+        private readonly IDictionary<string, DateTime> _lastSeenMacAddresses;
         private readonly IMessageQueue _messageQueue;
-        private readonly INetworkDeviceService _networkDeviceService;
 
-        public NetworkDeviceAvailabilityGateway(IMessageQueue messageQueue, INetworkDeviceService networkDeviceService) : base("AvailableNetworkDevices")
+        public NetworkDeviceAvailabilityGateway(IMessageQueue messageQueue) : base("AvailableNetworkDevices")
         {
             _messageQueue = messageQueue;
-            _networkDeviceService = networkDeviceService;
+            _lastSeenMacAddresses = new Dictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
             _canCreateDevices = true;
         }
 
@@ -40,13 +40,15 @@ namespace Xpressive.Home.Plugins.NetworkDeviceAvailability
                 {
                     try
                     {
-                        var networkDevices = await _networkDeviceService.GetAvailableNetworkDevicesAsync(cancellationToken).ConfigureAwait(false);
-                        var macAddresses = networkDevices.Select(d => string.Join(string.Empty, d.MacAddress.Select(b => b.ToString("x2")))).ToList();
-
                         foreach (var device in devices)
                         {
-                            var isAvailable = macAddresses.Contains(device.Id, StringComparer.OrdinalIgnoreCase);
-                            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsAvailable", isAvailable, "Boolean"));
+                            DateTime lastSeen;
+                            var id = device.Id.RemoveMacAddressDelimiters();
+                            var isAvailable =
+                                _lastSeenMacAddresses.TryGetValue(id, out lastSeen) &&
+                                DateTime.UtcNow - lastSeen < TimeSpan.FromMinutes(5);
+
+                            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsAvailable", isAvailable));
                         }
                     }
                     catch (Exception e)
@@ -67,6 +69,20 @@ namespace Xpressive.Home.Plugins.NetworkDeviceAvailability
             };
         }
 
+        public void Notify(NetworkDeviceFoundMessage message)
+        {
+            var macAddress = message.MacAddress.MacAddressToString();
+            _lastSeenMacAddresses[macAddress] = DateTime.UtcNow;
+
+            AvailableNetworkDevice device;
+            if (TryGetDevice(macAddress, out device))
+            {
+                device.LastSeen = DateTime.UtcNow.ToString("R");
+                device.IpAddress = message.IpAddress;
+                device.Manufacturer = message.Manufacturer;
+            }
+        }
+
         protected override bool AddDeviceInternal(DeviceBase device)
         {
             if (string.IsNullOrEmpty(device?.Id))
@@ -74,7 +90,7 @@ namespace Xpressive.Home.Plugins.NetworkDeviceAvailability
                 return false;
             }
 
-            device.Id = device.Id.Replace(":", string.Empty).Replace("-", string.Empty);
+            device.Id = device.Id.RemoveMacAddressDelimiters();
 
             return base.AddDeviceInternal(device);
         }
@@ -82,6 +98,12 @@ namespace Xpressive.Home.Plugins.NetworkDeviceAvailability
         protected override Task ExecuteInternalAsync(IDevice device, IAction action, IDictionary<string, string> values)
         {
             throw new NotSupportedException();
+        }
+
+        private bool TryGetDevice(string id, out AvailableNetworkDevice device)
+        {
+            device = _devices.SingleOrDefault(d => d.Id.Equals(id, StringComparison.OrdinalIgnoreCase)) as AvailableNetworkDevice;
+            return device != null;
         }
     }
 }
