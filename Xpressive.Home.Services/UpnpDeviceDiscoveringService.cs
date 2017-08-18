@@ -10,28 +10,32 @@ using System.Xml;
 using log4net;
 using Nito.AsyncEx;
 using Rssdp;
+using Xpressive.Home.Contracts.Messaging;
 using Xpressive.Home.Contracts.Services;
 
 namespace Xpressive.Home.Services
 {
-    internal sealed class UpnpDeviceDiscoveringService : IUpnpDeviceDiscoveringService
+    internal sealed class UpnpDeviceDiscoveringService : INetworkDeviceScanner
     {
         private static readonly ILog _log = LogManager.GetLogger(typeof(UpnpDeviceDiscoveringService));
         private static readonly ConcurrentDictionary<string, DateTime> _occurrences = new ConcurrentDictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
         private static readonly AsyncLock _lock = new AsyncLock();
-        private readonly CancellationTokenSource _cancellationToken = new CancellationTokenSource();
+        private readonly IMessageQueue _messageQueue;
 
-        public event EventHandler<IUpnpDeviceResponse> DeviceFound;
-
-        public async Task StartDiscoveringAsync()
+        public UpnpDeviceDiscoveringService(IMessageQueue messageQueue)
         {
-            var runningTask = Task.Run(async () => { await Task.Delay(TimeSpan.MaxValue, _cancellationToken.Token).ContinueWith(_ => { }); });
+            _messageQueue = messageQueue;
+        }
 
-            await Task.Delay(TimeSpan.FromSeconds(5), _cancellationToken.Token).ContinueWith(_ => { });
+        public async Task StartAsync(CancellationToken token)
+        {
+            var runningTask = Task.Run(async () => { await Task.Delay(TimeSpan.MaxValue, token).ContinueWith(_ => { }); });
+
+            await Task.Delay(TimeSpan.FromSeconds(5), token).ContinueWith(_ => { });
 
             using (var deviceLocator = new SsdpDeviceLocator())
             {
-                while (!_cancellationToken.IsCancellationRequested)
+                while (!token.IsCancellationRequested)
                 {
                     Task<IEnumerable<DiscoveredSsdpDevice>> searchTask;
 
@@ -51,7 +55,7 @@ namespace Xpressive.Home.Services
                         continue;
                     }
 
-                    if (_cancellationToken.IsCancellationRequested)
+                    if (token.IsCancellationRequested)
                     {
                         break;
                     }
@@ -68,7 +72,7 @@ namespace Xpressive.Home.Services
                         await UpnpDeviceFound(device);
                     }
 
-                    await Task.Delay(TimeSpan.FromSeconds(60), _cancellationToken.Token).ContinueWith(_ => { });
+                    await Task.Delay(TimeSpan.FromSeconds(60), token).ContinueWith(_ => { });
                 }
             }
         }
@@ -102,7 +106,22 @@ namespace Xpressive.Home.Services
                     _occurrences.AddOrUpdate(key, DateTime.UtcNow, (k, v) => DateTime.UtcNow);
                 }
 
-                OnDeviceFound(response);
+                var message = new NetworkDeviceFoundMessage("UPNP", response.IpAddress, new byte[0], response.FriendlyName);
+                message.Values.Add("Location", response.Location);
+                message.Values.Add("Manufacturer", response.Manufacturer);
+                message.Values.Add("ModelName", response.ModelName);
+                message.Values.Add("Server", response.Server);
+                message.Values.Add("USN", response.Usn);
+
+                foreach (var pair in response.OtherHeaders)
+                {
+                    if (!message.Values.ContainsKey(pair.Key))
+                    {
+                        message.Values.Add(pair);
+                    }
+                }
+
+                _messageQueue.Publish(message);
             }
             catch (HttpRequestException)
             {
@@ -128,7 +147,9 @@ namespace Xpressive.Home.Services
         {
             var info = await device.GetDeviceInfo();
             var headers = device.ResponseHeaders?.ToDictionary(
-                h => h.Key, h => string.Join(" ", h.Value), StringComparer.OrdinalIgnoreCase);
+                h => h.Key,
+                h => string.Join(" ", h.Value),
+                StringComparer.OrdinalIgnoreCase);
 
             headers = headers ?? new Dictionary<string, string>(0);
 
@@ -159,17 +180,6 @@ namespace Xpressive.Home.Services
             }
 
             return response;
-        }
-
-        private void OnDeviceFound(IUpnpDeviceResponse device)
-        {
-            DeviceFound?.Invoke(this, device);
-        }
-
-        public void Dispose()
-        {
-            _cancellationToken.Cancel();
-            _cancellationToken.Dispose();
         }
     }
 }

@@ -74,7 +74,7 @@ namespace Xpressive.Home.WebApi.Controllers
             Message = loggingEventData.Message;
             Properties = loggingEventData.Properties;
             ThreadName = loggingEventData.ThreadName;
-            TimeStamp = loggingEventData.TimeStamp.ToString("u");
+            TimeStamp = loggingEventData.TimeStampUtc.ToString("u");
         }
 
         public string Domain { get; set; }

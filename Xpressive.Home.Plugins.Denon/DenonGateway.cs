@@ -12,27 +12,20 @@ using Polly;
 using RestSharp;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
-using Xpressive.Home.Contracts.Services;
 using Action = Xpressive.Home.Contracts.Gateway.Action;
 
 namespace Xpressive.Home.Plugins.Denon
 {
-    internal class DenonGateway : GatewayBase, IDenonGateway
+    internal class DenonGateway : GatewayBase, IDenonGateway, IMessageQueueListener<NetworkDeviceFoundMessage>
     {
         private static readonly ILog _log = LogManager.GetLogger(typeof(DenonGateway));
         private readonly IMessageQueue _messageQueue;
-        private readonly IUpnpDeviceDiscoveringService _upnpDeviceDiscoveringService;
         private readonly object _deviceLock = new object();
 
-        public DenonGateway(
-            IMessageQueue messageQueue,
-            IUpnpDeviceDiscoveringService upnpDeviceDiscoveringService) : base("Denon")
+        public DenonGateway(IMessageQueue messageQueue) : base("Denon")
         {
             _messageQueue = messageQueue;
-            _upnpDeviceDiscoveringService = upnpDeviceDiscoveringService;
             _canCreateDevices = false;
-
-            upnpDeviceDiscoveringService.DeviceFound += OnUpnpDeviceFound;
         }
 
         public override IDevice CreateEmptyDevice()
@@ -188,19 +181,14 @@ namespace Xpressive.Home.Plugins.Denon
             }
         }
 
-        protected override void Dispose(bool disposing)
+        public async void Notify(NetworkDeviceFoundMessage message)
         {
-            if (disposing)
-            {
-                _upnpDeviceDiscoveringService.DeviceFound -= OnUpnpDeviceFound;
-            }
-            base.Dispose(disposing);
-        }
-
-        private async void OnUpnpDeviceFound(object sender, IUpnpDeviceResponse e)
-        {
-            if (e.Location.IndexOf(":8080/description.xml", StringComparison.OrdinalIgnoreCase) < 0 &&
-                e.Server.IndexOf("knos/", StringComparison.OrdinalIgnoreCase) < 0)
+            string server;
+            string location;
+            if (!message.Values.TryGetValue("Server", out server) ||
+                !message.Values.TryGetValue("Location", out location) ||
+                location.IndexOf(":8080/description.xml", StringComparison.OrdinalIgnoreCase) < 0 ||
+                server.IndexOf("knos/", StringComparison.OrdinalIgnoreCase) < 0)
             {
                 return;
             }
@@ -217,7 +205,7 @@ namespace Xpressive.Home.Plugins.Denon
 
             await policy.ExecuteAsync(async () =>
             {
-                var device = RegisterDevice(e.Location, e.IpAddress);
+                var device = RegisterDevice(location, message.IpAddress);
 
                 if (device == null)
                 {

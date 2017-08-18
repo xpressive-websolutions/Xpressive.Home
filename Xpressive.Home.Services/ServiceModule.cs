@@ -30,8 +30,7 @@ namespace Xpressive.Home.Services
                 .SingleInstance();
 
             builder.RegisterType<UpnpDeviceDiscoveringService>()
-                .As<IUpnpDeviceDiscoveringService>()
-                .OnActivated(async a => await a.Instance.StartDiscoveringAsync())
+                .As<INetworkDeviceScanner>()
                 .SingleInstance();
 
             base.Load(builder);

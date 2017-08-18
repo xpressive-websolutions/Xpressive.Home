@@ -1,4 +1,5 @@
 ﻿using log4net;
+using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Messaging;
 
 namespace Xpressive.Home.Messaging
@@ -7,7 +8,8 @@ namespace Xpressive.Home.Messaging
         IMessageQueueListener<UpdateVariableMessage>,
         IMessageQueueListener<CommandMessage>,
         IMessageQueueListener<NotifyUserMessage>,
-        IMessageQueueListener<ExecuteScriptMessage>
+        IMessageQueueListener<ExecuteScriptMessage>,
+        IMessageQueueListener<NetworkDeviceFoundMessage>
     {
         private static readonly ILog _log = LogManager.GetLogger(typeof(MessageQueueLogListener));
 
@@ -28,7 +30,12 @@ namespace Xpressive.Home.Messaging
 
         public void Notify(ExecuteScriptMessage message)
         {
-            _log.Info($"{message.GetType().Namespace} received for script {message.ScriptId} with {message.DelayInMilliseconds}ms delay.");
+            _log.Info($"{message.GetType().Name} received for script {message.ScriptId} with {message.DelayInMilliseconds}ms delay.");
+        }
+
+        public void Notify(NetworkDeviceFoundMessage message)
+        {
+            _log.Info($"{message.GetType().Name} received with {message.Protocol}: IP={message.IpAddress} MAC={message.MacAddress.MacAddressToString()}");
         }
     }
 }

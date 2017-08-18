@@ -45,12 +45,19 @@ namespace Xpressive.Home.Plugins.Pushalot
                     return;
                 }
 
-                using (var client = new WebClient())
+                try
                 {
-                    var data = new NameValueCollection();
-                    data["AuthorizationToken"] = _token;
-                    data["Body"] = body;
-                    await client.UploadValuesTaskAsync("https://pushalot.com/api/sendmessage", data);
+                    using (var client = new WebClient())
+                    {
+                        var data = new NameValueCollection();
+                        data["AuthorizationToken"] = _token;
+                        data["Body"] = body;
+                        await client.UploadValuesTaskAsync("https://pushalot.com/api/sendmessage", data);
+                    }
+                }
+                catch (Exception e)
+                {
+                    _log.Error(e.Message, e);
                 }
             }
         }

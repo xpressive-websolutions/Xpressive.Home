@@ -38,12 +38,18 @@ namespace Xpressive.Home
                 .As<IMessageQueueListener<NotifyUserMessage>>()
                 .As<IMessageQueueListener<CommandMessage>>()
                 .As<IMessageQueueListener<ExecuteScriptMessage>>()
+                .As<IMessageQueueListener<NetworkDeviceFoundMessage>>()
                 .SingleInstance();
 
             builder.RegisterType<VariableRepository>()
                 .As<IVariableRepository>()
                 .As<IMessageQueueListener<UpdateVariableMessage>>()
                 .As<IStartable>()
+                .SingleInstance();
+
+            builder.RegisterType<VariableHistoryService>()
+                .As<IVariableHistoryService>()
+                .As<IMessageQueueListener<UpdateVariableMessage>>()
                 .SingleInstance();
 
             builder.RegisterType<CronService>()
