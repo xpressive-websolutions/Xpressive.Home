@@ -45,13 +45,20 @@ namespace Xpressive.Home.Plugins.Pushover
                     return;
                 }
 
-                using (var client = new WebClient())
+                try
                 {
-                    var data = new NameValueCollection();
-                    data["token"] = _token;
-                    data["user"] = userKey;
-                    data["message"] = body;
-                    await client.UploadValuesTaskAsync("https://api.pushover.net/1/messages.json", data);
+                    using (var client = new WebClient())
+                    {
+                        var data = new NameValueCollection();
+                        data["token"] = _token;
+                        data["user"] = userKey;
+                        data["message"] = body;
+                        await client.UploadValuesTaskAsync("https://api.pushover.net/1/messages.json", data);
+                    }
+                }
+                catch (Exception e)
+                {
+                    _log.Error(e.Message, e);
                 }
             }
         }
