@@ -257,10 +257,39 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 
                 var state = sensor.State;
 
-                presenceSensor.HasPresence = state.Presence ?? false;
-                presenceSensor.Battery = sensor.Config.Battery ?? 100;
+                if (sensor.Config?.Battery != null)
+                {
+                    presenceSensor.Battery = sensor.Config.Battery.Value;
+                }
 
-                UpdateVariable($"{Name}.{presenceSensor.Id}.Presence", state.Presence);
+                UpdateSensorVariable(presenceSensor, "IsDark", state.Dark);
+                UpdateSensorVariable(presenceSensor, "IsDaylight", state.Daylight);
+                UpdateSensorVariable(presenceSensor, "Presence", state.Presence);
+                UpdateSensorVariable(presenceSensor, "LightLevel", state.LightLevel);
+                UpdateSensorVariable(presenceSensor, "Temperature", state.Temperature, "°C", i => i / 100d);
+            }
+        }
+
+        private void UpdateSensorVariable(PhilipsHuePresenceSensor sensor, string variableName, double? value, string unit = null, Func<double, double> convert = null)
+        {
+            if (value.HasValue)
+            {
+                var v = value.Value;
+
+                if (convert != null)
+                {
+                    v = convert(v);
+                }
+
+                UpdateVariable($"{Name}.{sensor.Id}.{variableName}", v, unit);
+            }
+        }
+
+        private void UpdateSensorVariable(PhilipsHuePresenceSensor sensor, string variableName, bool? value)
+        {
+            if (value.HasValue)
+            {
+                UpdateVariable($"{Name}.{sensor.Id}.{variableName}", value.Value);
             }
         }
 
@@ -403,9 +432,9 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             }
         }
 
-        private void UpdateVariable(string name, object value)
+        private void UpdateVariable(string name, object value, string unit = null)
         {
-            _messageQueue.Publish(new UpdateVariableMessage(name, value));
+            _messageQueue.Publish(new UpdateVariableMessage(name, value, unit));
         }
 
         private bool IsEqual(PhilipsHueBulb device, Light light)
@@ -421,7 +450,12 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                 return false;
             }
 
-            var sensorId = sensor.UniqueId.RemoveMacAddressDelimiters();
+            if (sensor.UniqueId.Length < 23)
+            {
+                return false;
+            }
+
+            var sensorId = sensor.UniqueId.Substring(0, 23).RemoveMacAddressDelimiters();
             return device.Id.Equals(sensorId, StringComparison.OrdinalIgnoreCase);
         }
 
