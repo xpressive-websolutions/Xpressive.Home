@@ -236,7 +236,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 
                 bulb.IsOn = state.On;
 
-                UpdateVariable($"{Name}.{bulb.Id}.Brightness", Math.Round(brightness, 2));
+                UpdateVariable($"{Name}.{bulb.Id}.Brightness", Math.Round(brightness, 2), "%");
                 UpdateVariable($"{Name}.{bulb.Id}.IsOn", state.On);
                 UpdateVariable($"{Name}.{bulb.Id}.IsReachable", state.IsReachable);
                 UpdateVariable($"{Name}.{bulb.Id}.Name", light.Name);
@@ -262,6 +262,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                     presenceSensor.Battery = sensor.Config.Battery.Value;
                 }
 
+                UpdateVariable($"{Name}.{presenceSensor.Id}.Name", presenceSensor.Name);
                 UpdateSensorVariable(presenceSensor, "IsDark", state.Dark);
                 UpdateSensorVariable(presenceSensor, "IsDaylight", state.Daylight);
                 UpdateSensorVariable(presenceSensor, "Presence", state.Presence);
