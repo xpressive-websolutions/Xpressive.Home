@@ -54,9 +54,26 @@ namespace Xpressive.Home.Plugins.Nmap
 
         private async Task ScanNetworkAsync(CancellationToken cancellationToken)
         {
+            var addresses = _ipAddressService
+                .GetIpAddresses()
+                .Select(ip => string.Join(".", ip.Split('.').Take(3)) + ".1")
+                .ToList();
+
+            foreach (var address in addresses)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
+                await ScanNetworkAsync(address, cancellationToken);
+            }
+        }
+
+        private async Task ScanNetworkAsync(string ipAddress, CancellationToken cancellationToken)
+        {
             try
             {
-                var ipAddress = string.Join(".", _ipAddressService.GetIpAddress().Split('.').Take(3)) + ".1";
                 var lines = await Task.Run(() => GetNmapOutput(_nmapLocation, ipAddress), cancellationToken).ConfigureAwait(false);
 
                 while (lines.Count > 0 && !cancellationToken.IsCancellationRequested)
