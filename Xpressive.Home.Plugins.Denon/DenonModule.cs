@@ -15,6 +15,7 @@ namespace Xpressive.Home.Plugins.Denon
                 .As<IGateway>()
                 .As<IDenonGateway>()
                 .As<IMessageQueueListener<CommandMessage>>()
+                .As<IMessageQueueListener<NetworkDeviceFoundMessage>>()
                 .SingleInstance();
 
             base.Load(builder);

@@ -11,7 +11,10 @@ namespace Xpressive.Home.Plugins.Sonos
         {
             builder.RegisterType<SonosScriptObjectProvider>().As<IScriptObjectProvider>();
             builder.RegisterType<SonosSoapClient>().As<ISonosSoapClient>();
-            builder.RegisterType<SonosDeviceDiscoverer>().As<ISonosDeviceDiscoverer>();
+
+            builder.RegisterType<SonosDeviceDiscoverer>()
+                .As<ISonosDeviceDiscoverer>()
+                .As<IMessageQueueListener<NetworkDeviceFoundMessage>>();
 
             builder.RegisterType<SonosGateway>()
                 .As<IGateway>()

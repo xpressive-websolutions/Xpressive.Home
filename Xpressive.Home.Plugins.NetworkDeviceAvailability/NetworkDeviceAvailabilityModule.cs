@@ -1,5 +1,6 @@
 using Autofac;
 using Xpressive.Home.Contracts.Gateway;
+using Xpressive.Home.Contracts.Messaging;
 
 namespace Xpressive.Home.Plugins.NetworkDeviceAvailability
 {
@@ -9,6 +10,7 @@ namespace Xpressive.Home.Plugins.NetworkDeviceAvailability
         {
             builder.RegisterType<NetworkDeviceAvailabilityGateway>()
                 .As<IGateway>()
+                .As<IMessageQueueListener<NetworkDeviceFoundMessage>>()
                 .SingleInstance();
 
             base.Load(builder);
