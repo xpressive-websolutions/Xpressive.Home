@@ -104,6 +104,7 @@
     <Compile Include="Services\ITuneInRadioStationService.cs" />
     <Compile Include="Services\IUpnpDeviceResponse.cs" />
     <Compile Include="Services\IWebHookService.cs" />
+    <Compile Include="Variables\BinaryVariable.cs" />
     <Compile Include="Variables\BooleanVariable.cs" />
     <Compile Include="Variables\DoubleVariable.cs" />
     <Compile Include="Variables\IVariableHistoryService.cs" />

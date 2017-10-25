@@ -110,6 +110,7 @@ namespace Xpressive.Home.Variables
                 case "boolean": return bool.Parse(value);
                 case "double": return double.Parse(value);
                 case "string": return value;
+                case "binary": return value;
             }
 
             throw new NotSupportedException(dataType);
@@ -122,6 +123,7 @@ namespace Xpressive.Home.Variables
                 case "boolean": return new BooleanVariable();
                 case "double": return new DoubleVariable();
                 case "string": return new StringVariable();
+                case "binary": return new BinaryVariable();
             }
 
             throw new NotSupportedException(dataType);
