@@ -41,6 +41,10 @@ namespace Xpressive.Home
                 .As<IMessageQueueListener<NetworkDeviceFoundMessage>>()
                 .SingleInstance();
 
+            builder.RegisterType<RenameDeviceListener>()
+                .As<IMessageQueueListener<UpdateVariableMessage>>()
+                .SingleInstance();
+
             builder.RegisterType<VariableRepository>()
                 .As<IVariableRepository>()
                 .As<IMessageQueueListener<UpdateVariableMessage>>()
