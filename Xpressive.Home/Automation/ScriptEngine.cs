@@ -21,13 +21,13 @@ namespace Xpressive.Home.Automation
         public async Task ExecuteAsync(Guid scriptId, string triggerVariable, object triggerValue)
         {
             var script = await _scriptRepository.GetAsync(scriptId);
-            Execute(script, triggerVariable, triggerValue);
+            Execute(script, triggerVariable, triggerValue, false);
         }
 
         public async Task ExecuteEvenIfDisabledAsync(Guid scriptId)
         {
             var script = await _scriptRepository.GetAsync(scriptId);
-            Execute(script, null, true);
+            Execute(script, null, null, true);
         }
 
         public void Notify(ExecuteScriptMessage message)
@@ -43,7 +43,7 @@ namespace Xpressive.Home.Automation
             }, TaskCreationOptions.DenyChildAttach);
         }
 
-        private void Execute(Script script, string triggerVariable, object triggerValue, bool evenIfDisabled = false)
+        private void Execute(Script script, string triggerVariable, object triggerValue, bool evenIfDisabled)
         {
             if (script == null)
             {

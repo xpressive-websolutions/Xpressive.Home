@@ -127,7 +127,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 
         private void HandleZllPresenceSensor(Sensor sensor, PhilipsHueBridge bridge)
         {
-            var id = sensor.UniqueId.RemoveMacAddressDelimiters();
+            var id = GetUniqueId(sensor);
             var sensorDevice = new PhilipsHuePresenceSensor(sensor.Id, id, sensor.Name, bridge)
             {
                 Model = sensor.ModelId,
@@ -141,7 +141,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 
         private void HandleZgpSwitch(Sensor sensor, PhilipsHueBridge bridge)
         {
-            var id = sensor.UniqueId.RemoveMacAddressDelimiters();
+            var id = GetUniqueId(sensor);
             var button = new PhilipsHueButtonSensor(sensor.Id, id, sensor.Name, bridge)
             {
                 Model = sensor.ModelId,
@@ -155,7 +155,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 
         private void HandleZllSwitch(Sensor sensor, PhilipsHueBridge bridge)
         {
-            var id = sensor.UniqueId.RemoveMacAddressDelimiters();
+            var id = GetUniqueId(sensor);
             var button = new PhilipsHueButtonSensor(sensor.Id, id, sensor.Name, bridge)
             {
                 Model = sensor.ModelId,
@@ -165,6 +165,12 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             };
 
             OnButtonSensorFound(button);
+        }
+
+        private string GetUniqueId(Sensor sensor)
+        {
+            var uniqueId = sensor.UniqueId.Substring(0, 23).RemoveMacAddressDelimiters();
+            return uniqueId;
         }
 
         protected virtual void OnBulbFound(PhilipsHueBulb e)

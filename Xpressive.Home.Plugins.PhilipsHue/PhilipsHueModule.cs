@@ -23,6 +23,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 
             builder.RegisterType<PhilipsHueBridgeDiscoveringService>()
                 .As<IPhilipsHueBridgeDiscoveringService>()
+                .As<IMessageQueueListener<NetworkDeviceFoundMessage>>()
                 .SingleInstance();
 
             base.Load(builder);

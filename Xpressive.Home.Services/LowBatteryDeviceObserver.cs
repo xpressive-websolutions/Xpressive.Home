@@ -42,7 +42,7 @@ namespace Xpressive.Home.Services
                     {
                         if (device.BatteryStatus == DeviceBatteryStatus.Low)
                         {
-                            _messageQueue.Publish(new NotifyUserMessage($"Low battery on device {gateway.Name}.{device.Id}"));
+                            _messageQueue.Publish(new NotifyUserMessage($"Low battery on device {device.Name} ({gateway.Name}.{device.Id})"));
                         }
                     }
                 }

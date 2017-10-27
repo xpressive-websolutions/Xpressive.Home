@@ -4,7 +4,7 @@ namespace Xpressive.Home.Contracts.Services
 {
     public interface IIpAddressService
     {
-        string GetIpAddress();
+        IEnumerable<string> GetIpAddresses();
 
         IEnumerable<string> GetOtherIpAddresses();
         IEnumerable<string> GetOtherIpAddresses(string ipAddress);

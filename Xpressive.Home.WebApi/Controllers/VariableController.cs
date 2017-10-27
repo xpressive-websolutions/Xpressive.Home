@@ -34,13 +34,17 @@ namespace Xpressive.Home.WebApi.Controllers
             var prefix = $"{gatewayName}.{deviceId}.";
             var variables = _variableRepository.Get().Where(v => v.Name.StartsWith(prefix, StringComparison.Ordinal));
 
-            return variables.Select(v => new VariableDto
+            var dtos = variables.Select(v => new VariableDto
             {
                 Name = v.Name.Substring(prefix.Length),
                 Value = v.Value,
                 Type = v.Value?.GetType().Name,
                 Unit = v.Unit
-            });
+            })
+            .Where(dto => !dto.Name.Equals("Name", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+            return dtos;
         }
 
         [HttpGet, Route("{variable}")]

@@ -2,15 +2,16 @@ using Autofac;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 
-namespace Xpressive.Home.Plugins.NetworkDeviceAvailability
+namespace Xpressive.Home.Plugins.CloudTwin
 {
-    public class NetworkDeviceAvailabilityModule : Module
+    public class CloudTwinModule : Module
     {
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterType<NetworkDeviceAvailabilityGateway>()
+            builder.RegisterType<CloudTwinGateway>()
                 .As<IGateway>()
-                .As<IMessageQueueListener<NetworkDeviceFoundMessage>>()
+                .As<IMessageQueueListener<UpdateVariableMessage>>()
+                .PropertiesAutowired()
                 .SingleInstance();
 
             base.Load(builder);

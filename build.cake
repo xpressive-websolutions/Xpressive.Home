@@ -6,7 +6,7 @@ Information(configuration);
 var build = (int)(DateTime.Now - new DateTime(2015, 1, 1)).TotalHours;
 var versionPrefix = "1.0.0";
 var version = string.Format("{0}.{1}", versionPrefix, build);
-var informationalVersion = versionPrefix + "-beta.10";
+var informationalVersion = versionPrefix + "-beta.11";
 
 Setup(context =>
 {
@@ -96,7 +96,13 @@ Task("Sign").IsDependentOn("Zip").Does(() =>
     StartProcess("./Xpressive.Home.Deployment.Sign/bin/" + configuration + "/Xpressive.Home.Deployment.Sign.exe", "\"" + file + "\"");
 });
 
-Task("Clean Up").IsDependentOn("Sign").Does(() =>
+Task("Package").IsDependentOn("Sign").Does(() =>
+{
+	var files = GetFiles("./build.z*");
+	Zip("./", informationalVersion + ".zip", files);
+});
+
+Task("Clean Up").IsDependentOn("Package").Does(() =>
 {
     //CleanDirectory("Build");
     //DeleteDirectory("Build", true);

@@ -11,8 +11,10 @@ namespace Xpressive.Home.Services
     {
         public IEnumerable<string> GetOtherIpAddresses()
         {
-            var ipAddress = GetIpAddress();
-            return GetOtherIpAddresses(ipAddress);
+            return GetIpAddresses()
+                .SelectMany(GetOtherIpAddresses)
+                .Distinct()
+                .ToList();
         }
 
         public IEnumerable<string> GetOtherIpAddresses(string ipAddress)
@@ -31,19 +33,15 @@ namespace Xpressive.Home.Services
             }
         }
 
-        public string GetIpAddress()
+        public IEnumerable<string> GetIpAddresses()
         {
             var host = Dns.GetHostEntry(Dns.GetHostName());
+            var ips = host.AddressList
+                .Where(ip => ip.AddressFamily == AddressFamily.InterNetwork)
+                .Select(ip => ip.ToString())
+                .ToList();
 
-            foreach (var ip in host.AddressList)
-            {
-                if (ip.AddressFamily == AddressFamily.InterNetwork)
-                {
-                    return ip.ToString();
-                }
-            }
-
-            return string.Empty;
+            return ips;
         }
     }
 }

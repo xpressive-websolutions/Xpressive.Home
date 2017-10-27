@@ -16,6 +16,7 @@ namespace Xpressive.Home.Plugins.MyStrom
                 .As<IGateway>()
                 .As<IMyStromGateway>()
                 .As<IMessageQueueListener<CommandMessage>>()
+                .As<IMessageQueueListener<NetworkDeviceFoundMessage>>()
                 .SingleInstance();
 
             base.Load(builder);

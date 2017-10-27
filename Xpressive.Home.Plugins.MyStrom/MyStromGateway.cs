@@ -162,13 +162,6 @@ namespace Xpressive.Home.Plugins.MyStrom
             base.Dispose(disposing);
         }
 
-        private async void OnUpnpDeviceFound(object sender, IUpnpDeviceResponse e)
-        {
-            if (e.Usn.IndexOf("wifi-switch", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                e.FriendlyName.Equals("mystrom wifi switch", StringComparison.OrdinalIgnoreCase))
-                await RegisterDeviceWithRetry(e.IpAddress);
-        }
-
         private async Task LoadDevicesFromBackup()
         {
             var backup = _deviceConfigurationBackupService.Get<DeviceConfigurationBackupDto>(Name);
