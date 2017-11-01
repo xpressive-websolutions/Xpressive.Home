@@ -158,6 +158,7 @@
       <DependentUpon>compilerconfig.json</DependentUpon>
     </None>
     <None Include="packages.config" />
+    <Content Include="Styles\angular-dygraphs.css" />
     <None Include="Styles\Custom.less" />
   </ItemGroup>
   <ItemGroup>
@@ -220,6 +221,7 @@
     <Content Include="app\admin\variables.min.html">
       <DependentUpon>variables.html</DependentUpon>
     </Content>
+    <Content Include="app\angular-dygraphs.js" />
     <Content Include="app\dashboard.js" />
     <Content Include="app\dashboard.min.js">
       <DependentUpon>dashboard.js</DependentUpon>

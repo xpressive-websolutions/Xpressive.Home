@@ -9,7 +9,11 @@
     <div class="row">
         <div class="col-md-12">
             <div class="box">
-                <nvd3 options="options" data="data"></nvd3>
+                <ng-dygraphs ng-if="data.length"
+                             data="data"
+                             options="options"
+                >
+                </ng-dygraphs>
             </div>
         </div>
     </div>
