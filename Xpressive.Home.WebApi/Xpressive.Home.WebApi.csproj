@@ -247,6 +247,9 @@
     <Content Include="Styles\Custom.min.css">
       <DependentUpon>Custom.css</DependentUpon>
     </Content>
+    <Content Include="Styles\Icons\Gardena\sensor.png" />
+    <Content Include="Styles\Icons\Gardena\sprite.png" />
+    <Content Include="Styles\Icons\Gardena\water_computer.png" />
     <Content Include="Styles\Icons\icons.css" />
     <Content Include="Styles\Icons\icons.min.css">
       <DependentUpon>icons.css</DependentUpon>

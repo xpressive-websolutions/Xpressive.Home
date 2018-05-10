@@ -74,3 +74,12 @@
 .PhilipsHueIcon_ZgpSwitch {
     background: url("./PhilipsHue/tap.svg");
 }
+
+.gardena_mower {
+    background-image: url("./Gardena/sprite.png");
+    background-position-x: -341.5px;
+    background-position-y: -325.5px;
+    background-size: 469px 448px;
+    height: 30px;
+    width: 30px;
+}
