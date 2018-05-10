@@ -60,6 +60,9 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Xpressive.Home\Properties\AssemblyInfo.shared.cs">
+      <Link>Properties\AssemblyInfo.shared.cs</Link>
+    </Compile>
     <Compile Include="GardenaGateway.cs" />
     <Compile Include="DevicesResponseDto.cs" />
     <Compile Include="GardenaDevice.cs" />
