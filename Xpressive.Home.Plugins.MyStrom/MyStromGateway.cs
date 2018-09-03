@@ -223,7 +223,7 @@ namespace Xpressive.Home.Plugins.MyStrom
                     }
                 }
 
-                _devices.Add(new MyStromDevice(name, ipAddress, macAddress));
+                _devices.TryAdd(macAddress, new MyStromDevice(name, ipAddress, macAddress));
             }
         }
 

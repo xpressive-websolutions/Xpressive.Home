@@ -35,6 +35,11 @@ namespace Xpressive.Home.Plugins.Pushalot
             throw new NotSupportedException();
         }
 
+        public void RemoveDevice(IDevice device)
+        {
+            throw new NotImplementedException();
+        }
+
         public IEnumerable<IAction> GetActions(IDevice device)
         {
             yield break;

@@ -38,7 +38,7 @@ namespace Xpressive.Home.Plugins.Lifx
 
             _localClient.VariableChanged += (s, e) =>
             {
-                var device = _devices.ToArray().Cast<LifxDevice>().SingleOrDefault(d => d.Id.Equals(e.Item1.Id));
+                var device = _devices.Values.Cast<LifxDevice>().SingleOrDefault(d => d.Id.Equals(e.Item1.Id));
 
                 if (device != null)
                 {
@@ -385,7 +385,7 @@ namespace Xpressive.Home.Plugins.Lifx
                 if (device == null)
                 {
                     device = create();
-                    _devices.Add(device);
+                    _devices.TryAdd(device.Id, device);
                 }
 
                 return device;

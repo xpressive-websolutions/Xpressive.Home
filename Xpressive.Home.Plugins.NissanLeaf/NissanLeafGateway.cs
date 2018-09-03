@@ -81,7 +81,7 @@ namespace Xpressive.Home.Plugins.NissanLeaf
 
                     if (existingDevice == null)
                     {
-                        _devices.Add(foundDevice);
+                        _devices.TryAdd(foundDevice.Id, foundDevice);
                     }
                     else
                     {

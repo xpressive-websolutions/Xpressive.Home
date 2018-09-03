@@ -144,7 +144,7 @@ namespace Xpressive.Home.Plugins.Netatmo
             if (device == null)
             {
                 device = new NetatmoDevice(id, module.ModuleName);
-                _devices.Add(device);
+                _devices.TryAdd(id, device);
             }
 
             PublishVariables(device, module);

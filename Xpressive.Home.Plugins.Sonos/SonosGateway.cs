@@ -32,7 +32,7 @@ namespace Xpressive.Home.Plugins.Sonos
                     e.Icon = "SonosIcon SonosIcon_" + e.Type;
                 }
 
-                _devices.Add(e);
+                _devices.TryAdd(e.Id, e);
             };
         }
 

@@ -13,18 +13,18 @@ namespace Xpressive.Home.Contracts.Gateway
     {
         private readonly ILog _log;
         private readonly string _name;
-        protected readonly ConcurrentBag<DeviceBase> _devices;
+        protected readonly ConcurrentDictionary<string, DeviceBase> _devices;
         protected bool _canCreateDevices;
 
         protected GatewayBase(string name)
         {
             _log = LogManager.GetLogger(GetType());
             _name = name;
-            _devices = new ConcurrentBag<DeviceBase>();
+            _devices = new ConcurrentDictionary<string, DeviceBase>(StringComparer.Ordinal);
         }
 
         public string Name => _name;
-        public IEnumerable<IDevice> Devices => _devices.ToList();
+        public IEnumerable<IDevice> Devices => _devices.Values.ToList();
         public bool CanCreateDevices => _canCreateDevices;
         
         public IDevicePersistingService PersistingService { get; set; }
@@ -33,6 +33,20 @@ namespace Xpressive.Home.Contracts.Gateway
         {
             var d = device as DeviceBase;
             return AddDeviceInternal(d);
+        }
+
+        public void RemoveDevice(IDevice device)
+        {
+            if (!_canCreateDevices)
+            {
+                throw new InvalidOperationException("Unable to remove devices.");
+            }
+
+            DeviceBase d;
+            if (_devices.TryRemove(device.Id, out d))
+            {
+                PersistingService.DeleteAsync(Name, d);
+            }
         }
 
         public abstract IEnumerable<IAction> GetActions(IDevice device);
@@ -56,9 +70,8 @@ namespace Xpressive.Home.Contracts.Gateway
 
             var deviceId = parts[1];
             var actionName = parts[2];
-            var device = Devices.SingleOrDefault(d => d.Id.Equals(deviceId, StringComparison.Ordinal));
-
-            if (device == null)
+            DeviceBase device;
+            if (!_devices.TryGetValue(deviceId, out device))
             {
                 return;
             }
@@ -81,7 +94,7 @@ namespace Xpressive.Home.Contracts.Gateway
 
                 foreach (var device in devices)
                 {
-                    _devices.Add(device);
+                    _devices.AddOrUpdate(device.Id, device, (_, e) => device);
                 }
             }
             catch (Exception e)
@@ -102,7 +115,7 @@ namespace Xpressive.Home.Contracts.Gateway
                 return false;
             }
 
-            _devices.Add(device);
+            _devices.AddOrUpdate(device.Id, device, (_, e) => device);
             PersistingService.SaveAsync(Name, device);
             return true;
         }

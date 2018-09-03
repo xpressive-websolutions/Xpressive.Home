@@ -429,7 +429,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                     return;
                 }
 
-                _devices.Add(device);
+                _devices.TryAdd(device.Id, device);
             }
         }
 

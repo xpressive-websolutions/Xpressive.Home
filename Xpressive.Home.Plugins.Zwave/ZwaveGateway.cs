@@ -220,7 +220,7 @@ namespace Xpressive.Home.Plugins.Zwave
                 }
 
                 device = new ZwaveDevice(notification.NodeId, notification.HomeId);
-                _devices.Add(device);
+                _devices.TryAdd(notification.NodeId.ToString("D"), device);
                 return device;
             }
         }

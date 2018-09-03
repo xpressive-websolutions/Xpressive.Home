@@ -142,6 +142,12 @@
             $http.post("/api/v1/action/" + gateway + "/" + device + "/" + action, parameters);
         };
 
+        $scope.delete = function (gatewayName, deviceId) {
+            $http.delete("/api/v1/gateway/" + gatewayName + "?deviceId=" + deviceId).then(function() {
+                map[gatewayName].devices = _.filter(map[gatewayName].devices, function(d) { return d.id !== deviceId; });
+            });
+        };
+
         $scope.showVariables = function(gatewayName, deviceId) {
             $location.path("/variables/" + gatewayName + "/" + deviceId);
         };

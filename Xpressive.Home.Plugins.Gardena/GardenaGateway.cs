@@ -127,7 +127,7 @@ namespace Xpressive.Home.Plugins.Gardena
 
                         foreach (var device in devices.Devices)
                         {
-                            var gardenaDevice = _devices.SingleOrDefault(d => d.Id.Equals(device.Id, StringComparison.OrdinalIgnoreCase)) as GardenaDevice;
+                            var gardenaDevice = _devices.Values.SingleOrDefault(d => d.Id.Equals(device.Id, StringComparison.OrdinalIgnoreCase)) as GardenaDevice;
 
                             if (gardenaDevice == null)
                             {
@@ -136,7 +136,7 @@ namespace Xpressive.Home.Plugins.Gardena
                                     Id = device.Id,
                                     Name = device.Name
                                 };
-                                _devices.Add(gardenaDevice);
+                                _devices.TryAdd(device.Id, gardenaDevice);
                             }
 
                             foreach (var ability in device.Abilities)

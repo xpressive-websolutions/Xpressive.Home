@@ -13,6 +13,7 @@ namespace Xpressive.Home.Contracts.Gateway
         IEnumerable<IDevice> Devices { get; }
         IDevice CreateEmptyDevice();
         bool AddDevice(IDevice device);
+        void RemoveDevice(IDevice device);
 
         IEnumerable<IAction> GetActions(IDevice device);
 

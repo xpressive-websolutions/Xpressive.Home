@@ -58,6 +58,8 @@
                                     <li ng-if="gateway.name === 'Lifx' || gateway.name === 'PhilipsHue'" role="menuitem"><a ng-click="execute(gateway.name, device.id, 'Change Brightness', { Brightness: 0.2 })">20%</a></li>
                                     <li ng-if="gateway.name === 'Lifx' || gateway.name === 'PhilipsHue'" role="menuitem"><a ng-click="execute(gateway.name, device.id, 'Change Brightness', { Brightness: 0.5 })">50%</a></li>
                                     <li ng-if="gateway.name === 'Lifx' || gateway.name === 'PhilipsHue'" role="menuitem"><a ng-click="execute(gateway.name, device.id, 'Change Brightness', { Brightness: 1.0 })">100%</a></li>
+                                    <li ng-if="gateway.canCreateDevices" role="separator" class="divider"></li>
+                                    <li ng-if="gateway.canCreateDevices"><a ng-click="delete(gateway.name, device.id)">Delete</a></li>
                                 </ul>
                             </span>
                         </div>

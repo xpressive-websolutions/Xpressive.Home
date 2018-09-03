@@ -244,7 +244,7 @@ namespace Xpressive.Home.Plugins.Denon
                 {
                     Name = fn.InnerText.Replace("Denon", string.Empty).Trim()
                 };
-                _devices.Add(device);
+                _devices.TryAdd(sn.InnerText, device);
 
                 return device;
             }

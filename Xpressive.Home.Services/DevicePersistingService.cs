@@ -35,6 +35,15 @@ namespace Xpressive.Home.Services
             }
         }
 
+        public async Task DeleteAsync(string gatewayName, DeviceBase device)
+        {
+            using (var database = new Database("ConnectionString"))
+            {
+                var sql = "delete from Device where Gateway = @0 and Id = @1";
+                await database.ExecuteAsync(sql, gatewayName, device.Id);
+            }
+        }
+
         public async Task<IEnumerable<DeviceBase>> GetAsync(string gatewayName, Func<string, string, DeviceBase> emptyDevice)
         {
             var devices = new List<DeviceBase>();

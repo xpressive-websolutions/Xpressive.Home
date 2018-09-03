@@ -96,6 +96,26 @@ namespace Xpressive.Home.WebApi.Controllers
             return BadRequest();
         }
 
+        [HttpDelete, Route("{gatewayName}")]
+        public IHttpActionResult DeleteDevice(string gatewayName, string deviceId)
+        {
+            IGateway gateway;
+            if (_gateways.TryGetValue(gatewayName, out gateway) && gateway.CanCreateDevices)
+            {
+                var device = gateway.Devices.SingleOrDefault(d => d.Id.Equals(deviceId, StringComparison.Ordinal));
+
+                if (device == null)
+                {
+                    return NotFound();
+                }
+
+                gateway.RemoveDevice(device);
+                return Ok();
+            }
+
+            return BadRequest();
+        }
+
         [HttpPut, Route("{gatewayName}/{deviceId}/{actionName}")]
         public IHttpActionResult ExecuteAction(string gatewayName, string deviceId, string actionName, [FromBody]Dictionary<string, string> parameters)
         {

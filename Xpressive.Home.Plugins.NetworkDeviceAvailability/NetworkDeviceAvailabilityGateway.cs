@@ -102,7 +102,7 @@ namespace Xpressive.Home.Plugins.NetworkDeviceAvailability
 
         private bool TryGetDevice(string id, out AvailableNetworkDevice device)
         {
-            device = _devices.SingleOrDefault(d => d.Id.Equals(id, StringComparison.OrdinalIgnoreCase)) as AvailableNetworkDevice;
+            device = _devices.Values.SingleOrDefault(d => d.Id.Equals(id, StringComparison.OrdinalIgnoreCase)) as AvailableNetworkDevice;
             return device != null;
         }
     }
