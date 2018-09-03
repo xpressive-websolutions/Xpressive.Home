@@ -58,6 +58,11 @@
                                     <li ng-if="gateway.name === 'Lifx' || gateway.name === 'PhilipsHue'" role="menuitem"><a ng-click="execute(gateway.name, device.id, 'Change Brightness', { Brightness: 0.2 })">20%</a></li>
                                     <li ng-if="gateway.name === 'Lifx' || gateway.name === 'PhilipsHue'" role="menuitem"><a ng-click="execute(gateway.name, device.id, 'Change Brightness', { Brightness: 0.5 })">50%</a></li>
                                     <li ng-if="gateway.name === 'Lifx' || gateway.name === 'PhilipsHue'" role="menuitem"><a ng-click="execute(gateway.name, device.id, 'Change Brightness', { Brightness: 1.0 })">100%</a></li>
+                                    <li ng-if="gateway.name === 'tado'" role="menuitem"><a ng-click="execute(gateway.name, device.id, 'Set temperature', { Temperature: 18 })">Set temperature to 18°C</a></li>
+                                    <li ng-if="gateway.name === 'tado'" role="menuitem"><a ng-click="execute(gateway.name, device.id, 'Set temperature', { Temperature: 19 })">Set temperature to 19°C</a></li>
+                                    <li ng-if="gateway.name === 'tado'" role="menuitem"><a ng-click="execute(gateway.name, device.id, 'Set temperature', { Temperature: 20 })">Set temperature to 20°C</a></li>
+                                    <li ng-if="gateway.name === 'tado'" role="menuitem"><a ng-click="execute(gateway.name, device.id, 'Set temperature', { Temperature: 21 })">Set temperature to 21°C</a></li>
+                                    <li ng-if="gateway.name === 'tado'" role="menuitem"><a ng-click="execute(gateway.name, device.id, 'Set temperature', { Temperature: 22 })">Set temperature to 22°C</a></li>
                                     <li ng-if="gateway.canCreateDevices" role="separator" class="divider"></li>
                                     <li ng-if="gateway.canCreateDevices"><a ng-click="delete(gateway.name, device.id)">Delete</a></li>
                                 </ul>
