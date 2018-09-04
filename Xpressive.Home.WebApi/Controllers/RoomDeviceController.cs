@@ -1,13 +1,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Web.Http;
+using Microsoft.AspNetCore.Mvc;
 using Xpressive.Home.Contracts.Rooms;
 
 namespace Xpressive.Home.WebApi.Controllers
 {
-    [RoutePrefix("api/v1/roomdevice")]
-    public class RoomDeviceController : ApiController
+    [Route("api/v1/roomdevice")]
+    public class RoomDeviceController : Controller
     {
         private readonly IRoomDeviceService _service;
 

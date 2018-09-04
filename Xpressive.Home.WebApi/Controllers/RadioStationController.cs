@@ -2,14 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Web.Http;
+using Microsoft.AspNetCore.Mvc;
 using Xpressive.Home.Contracts.Messaging;
 using Xpressive.Home.Contracts.Services;
 
 namespace Xpressive.Home.WebApi.Controllers
 {
-    [RoutePrefix("api/v1/radio")]
-    public class RadioStationController : ApiController
+    [Route("api/v1/radio")]
+    public class RadioStationController : Controller
     {
         private readonly ITuneInRadioStationService _radioStationService;
         private readonly IFavoriteRadioStationService _favoriteRadioStationService;
@@ -26,7 +26,7 @@ namespace Xpressive.Home.WebApi.Controllers
         }
 
         [HttpGet, Route("category")]
-        public async Task<IEnumerable<object>> GetCategoriesAsync([FromUri] string parentId = null)
+        public async Task<IEnumerable<object>> GetCategoriesAsync([FromQuery] string parentId = null)
         {
             var categories = await _radioStationService.GetCategoriesAsync(parentId);
             var dtos = categories.Select(c => new
@@ -38,7 +38,7 @@ namespace Xpressive.Home.WebApi.Controllers
         }
 
         [HttpGet, Route("search")]
-        public async Task<object> SearchAsync([FromUri] string query)
+        public async Task<object> SearchAsync([FromQuery] string query)
         {
             var result = await _radioStationService.SearchStationsAsync(query);
 
@@ -50,7 +50,7 @@ namespace Xpressive.Home.WebApi.Controllers
         }
 
         [HttpGet, Route("station")]
-        public async Task<object> GetStationsAsync([FromUri] string categoryId)
+        public async Task<object> GetStationsAsync([FromQuery] string categoryId)
         {
             var stations = await _radioStationService.GetStationsAsync(categoryId);
 
@@ -62,25 +62,25 @@ namespace Xpressive.Home.WebApi.Controllers
         }
 
         [HttpGet, Route("playing")]
-        public async Task<object> GetPlaying([FromUri] string stationId)
+        public async Task<object> GetPlaying([FromQuery] string stationId)
         {
             return await _radioStationService.GetStationDetailAsync(stationId);
         }
 
         [HttpPost, Route("play")]
-        public void Play([FromUri] string deviceId)
+        public void Play([FromQuery] string deviceId)
         {
             _messageQueue.Publish(new CommandMessage("Sonos", deviceId, "Play", new Dictionary<string, string>()));
         }
 
         [HttpPost, Route("stop")]
-        public void Stop([FromUri] string deviceId)
+        public void Stop([FromQuery] string deviceId)
         {
             _messageQueue.Publish(new CommandMessage("Sonos", deviceId, "Stop", new Dictionary<string, string>()));
         }
 
         [HttpPost, Route("play/radio")]
-        public void PlayRadio([FromUri] string deviceId, [FromBody] RadioStationDto radioStation)
+        public void PlayRadio([FromQuery] string deviceId, [FromBody] RadioStationDto radioStation)
         {
             var url = _radioStationService.GetStreamUrl(radioStation.Id);
             var parameters = new Dictionary<string, string>
@@ -92,7 +92,7 @@ namespace Xpressive.Home.WebApi.Controllers
         }
 
         [HttpPost, Route("volume")]
-        public void ChangeVolume([FromUri] string deviceId, [FromUri] int volume)
+        public void ChangeVolume([FromQuery] string deviceId, [FromQuery] int volume)
         {
             var v = volume/100d;
             var parameters=new Dictionary<string, string>
@@ -123,7 +123,7 @@ namespace Xpressive.Home.WebApi.Controllers
         }
 
         [HttpPut, Route("unstar")]
-        public async Task<IHttpActionResult> Unstar([FromBody] RadioStationDto dto)
+        public async Task<IActionResult> Unstar([FromBody] RadioStationDto dto)
         {
             var favorites = await _favoriteRadioStationService.GetAsync();
             var favorite = favorites.SingleOrDefault(f => f.Id.Equals(dto.Id, StringComparison.Ordinal));

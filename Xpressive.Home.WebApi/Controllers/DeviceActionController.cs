@@ -1,11 +1,11 @@
 using System.Collections.Generic;
-using System.Web.Http;
+using Microsoft.AspNetCore.Mvc;
 using Xpressive.Home.Contracts.Messaging;
 
 namespace Xpressive.Home.WebApi.Controllers
 {
-    [RoutePrefix("api/v1/action")]
-    public class DeviceActionController : ApiController
+    [Route("api/v1/action")]
+    public class DeviceActionController : Controller
     {
         private readonly IMessageQueue _messageQueue;
 

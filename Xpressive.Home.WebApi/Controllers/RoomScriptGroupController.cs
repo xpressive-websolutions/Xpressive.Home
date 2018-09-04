@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Web.Http;
+using Microsoft.AspNetCore.Mvc;
 using Xpressive.Home.Contracts.Rooms;
 
 namespace Xpressive.Home.WebApi.Controllers
 {
-    [RoutePrefix("api/v1/roomscriptgroup")]
-    public class RoomScriptGroupController : ApiController
+    [Route("api/v1/roomscriptgroup")]
+    public class RoomScriptGroupController : Controller
     {
         private readonly IRoomRepository _roomRepository;
         private readonly IRoomScriptGroupRepository _repository;
@@ -20,7 +20,7 @@ namespace Xpressive.Home.WebApi.Controllers
         }
 
         [HttpGet, Route("{id}")]
-        public async Task<IHttpActionResult> Get(string id)
+        public async Task<IActionResult> Get(string id)
         {
             Guid guid;
             if (Guid.TryParse(id, out guid))
@@ -37,7 +37,7 @@ namespace Xpressive.Home.WebApi.Controllers
         }
 
         [HttpGet, Route("")]
-        public async Task<IEnumerable<RoomScriptGroup>> GetByRoom([FromUri] string roomId)
+        public async Task<IEnumerable<RoomScriptGroup>> GetByRoom([FromQuery] string roomId)
         {
             var rooms = await _roomRepository.GetAsync();
             var room = rooms.SingleOrDefault(r => r.Id.Equals(new Guid(roomId)));
@@ -75,7 +75,7 @@ namespace Xpressive.Home.WebApi.Controllers
         }
 
         [HttpPost, Route("")]
-        public async Task<IHttpActionResult> Save([FromBody] RoomScriptGroup group)
+        public async Task<IActionResult> Save([FromBody] RoomScriptGroup group)
         {
             if (group == null || group.Id == Guid.Empty)
             {

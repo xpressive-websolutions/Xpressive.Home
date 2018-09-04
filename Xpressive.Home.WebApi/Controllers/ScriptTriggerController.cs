@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Web.Http;
+using Microsoft.AspNetCore.Mvc;
 using Xpressive.Home.Contracts.Automation;
 
 namespace Xpressive.Home.WebApi.Controllers
 {
-    [RoutePrefix("api/v1/trigger")]
-    public class ScriptTriggerController : ApiController
+    [Route("api/v1/trigger")]
+    public class ScriptTriggerController : Controller
     {
         private readonly IScriptTriggerService _triggerService;
 

@@ -1,16 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Reflection;
-using System.Web.Http;
+using Microsoft.AspNetCore.Mvc;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 
 namespace Xpressive.Home.WebApi.Controllers
 {
-    [RoutePrefix("api/v1/gateway")]
-    public class GatewayController : ApiController
+    [Route("api/v1/gateway")]
+    public class GatewayController : Controller
     {
         private readonly IMessageQueue _messageQueue;
         private readonly IDictionary<string, IGateway> _gateways;
@@ -66,7 +65,7 @@ namespace Xpressive.Home.WebApi.Controllers
         }
 
         [HttpPost, Route("{gatewayName}")]
-        public IHttpActionResult CreateDevice(string gatewayName, [FromBody]Dictionary<string, object> dto)
+        public IActionResult CreateDevice(string gatewayName, [FromBody]Dictionary<string, object> dto)
         {
             IGateway gateway;
             if (_gateways.TryGetValue(gatewayName, out gateway) && gateway.CanCreateDevices)
@@ -97,7 +96,7 @@ namespace Xpressive.Home.WebApi.Controllers
         }
 
         [HttpDelete, Route("{gatewayName}")]
-        public IHttpActionResult DeleteDevice(string gatewayName, string deviceId)
+        public IActionResult DeleteDevice(string gatewayName, string deviceId)
         {
             IGateway gateway;
             if (_gateways.TryGetValue(gatewayName, out gateway) && gateway.CanCreateDevices)
@@ -117,7 +116,7 @@ namespace Xpressive.Home.WebApi.Controllers
         }
 
         [HttpPut, Route("{gatewayName}/{deviceId}/{actionName}")]
-        public IHttpActionResult ExecuteAction(string gatewayName, string deviceId, string actionName, [FromBody]Dictionary<string, string> parameters)
+        public IActionResult ExecuteAction(string gatewayName, string deviceId, string actionName, [FromBody]Dictionary<string, string> parameters)
         {
             IGateway gateway;
             if (!_gateways.TryGetValue(gatewayName, out gateway))
@@ -138,7 +137,7 @@ namespace Xpressive.Home.WebApi.Controllers
             }
 
             _messageQueue.Publish(new CommandMessage(gatewayName, deviceId, actionName, parameters));
-            return StatusCode(HttpStatusCode.NoContent);
+            return NoContent();
         }
 
         [HttpGet, Route("{gatewayName}/{deviceId}/actions")]

@@ -2,14 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Web.Http;
+using Microsoft.AspNetCore.Mvc;
 using Xpressive.Home.Contracts.Automation;
 using Xpressive.Home.Contracts.Rooms;
 
 namespace Xpressive.Home.WebApi.Controllers
 {
-    [RoutePrefix("api/v1/script")]
-    public class ScriptController : ApiController
+    [Route("api/v1/script")]
+    public class ScriptController : Controller
     {
         private readonly IScriptRepository _repository;
         private readonly IRoomScriptRepository _roomScriptRepository;
@@ -37,7 +37,7 @@ namespace Xpressive.Home.WebApi.Controllers
         }
 
         [HttpGet, Route("{id}")]
-        public async Task<IHttpActionResult> Get(string id)
+        public async Task<IActionResult> Get(string id)
         {
             Guid guid;
             if (Guid.TryParse(id, out guid))
@@ -56,7 +56,7 @@ namespace Xpressive.Home.WebApi.Controllers
         }
 
         [HttpPost, Route("{scriptId}/enable")]
-        public async Task<IHttpActionResult> Enable(string scriptId)
+        public async Task<IActionResult> Enable(string scriptId)
         {
             Guid id;
             if (Guid.TryParse(scriptId, out id))
@@ -74,7 +74,7 @@ namespace Xpressive.Home.WebApi.Controllers
         }
 
         [HttpPost, Route("{scriptId}/disable")]
-        public async Task<IHttpActionResult> Disable(string scriptId)
+        public async Task<IActionResult> Disable(string scriptId)
         {
             Guid id;
             if (Guid.TryParse(scriptId, out id))
@@ -112,7 +112,7 @@ namespace Xpressive.Home.WebApi.Controllers
         }
 
         [HttpPost, Route("")]
-        public async Task<IHttpActionResult> Create([FromBody] string name)
+        public async Task<IActionResult> Create([FromBody] string name)
         {
             if (string.IsNullOrEmpty(name))
             {

@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Web.Http;
+using Microsoft.AspNetCore.Mvc;
 using Xpressive.Home.Contracts.Rooms;
 
 namespace Xpressive.Home.WebApi.Controllers
 {
-    [RoutePrefix("api/v1/roomscript")]
-    public class RoomScriptController : ApiController
+    [Route("api/v1/roomscript")]
+    public class RoomScriptController : Controller
     {
         private readonly IRoomScriptRepository _repository;
 
@@ -18,7 +18,7 @@ namespace Xpressive.Home.WebApi.Controllers
         }
 
         [HttpGet, Route("")]
-        public async Task<IEnumerable<RoomScript>> Get([FromUri] string groupId)
+        public async Task<IEnumerable<RoomScript>> Get([FromQuery] string groupId)
         {
             return await _repository.GetAsync(new Guid(groupId));
         }

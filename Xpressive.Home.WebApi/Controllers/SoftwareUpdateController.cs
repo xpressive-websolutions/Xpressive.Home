@@ -2,13 +2,13 @@
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
-using System.Web.Http;
+using Microsoft.AspNetCore.Mvc;
 using Xpressive.Home.Contracts.Services;
 
 namespace Xpressive.Home.WebApi.Controllers
 {
-    [RoutePrefix("api/v1/softwareupdate")]
-    public class SoftwareUpdateController : ApiController
+    [Route("api/v1/softwareupdate")]
+    public class SoftwareUpdateController : Controller
     {
         private readonly ISoftwareUpdateDownloadService _service;
 

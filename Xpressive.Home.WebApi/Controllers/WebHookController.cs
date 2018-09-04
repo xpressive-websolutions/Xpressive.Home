@@ -1,14 +1,13 @@
 using System.Collections.Generic;
-using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web.Http;
+using Microsoft.AspNetCore.Mvc;
 using Xpressive.Home.Contracts.Messaging;
 using Xpressive.Home.Contracts.Services;
 
 namespace Xpressive.Home.WebApi.Controllers
 {
-    [RoutePrefix("api/v1/webhook")]
-    public class WebHookController : ApiController
+    [Route("api/v1/webhook")]
+    public class WebHookController : Controller
     {
         private readonly IWebHookService _webHookService;
         private readonly IMessageQueue _messageQueue;
@@ -20,7 +19,7 @@ namespace Xpressive.Home.WebApi.Controllers
         }
 
         [HttpPost, Route("{id}")]
-        public async Task<IHttpActionResult> ExecuteAsync(string id)
+        public async Task<IActionResult> ExecuteAsync(string id)
         {
             var webHook = await _webHookService.GetWebHookAsync(id);
 
@@ -29,11 +28,11 @@ namespace Xpressive.Home.WebApi.Controllers
                 return NotFound();
             }
 
-            if (Request.Content != null && Request.Content.IsFormData())
+            if (Request != null && Request.HasFormContentType)
             {
-                var formData = await Request.Content.ReadAsFormDataAsync();
+                var formData = await Request.ReadFormAsync();
 
-                foreach (var key in formData.AllKeys)
+                foreach (var key in formData.Keys)
                 {
                     var value = formData[key];
 
@@ -45,11 +44,11 @@ namespace Xpressive.Home.WebApi.Controllers
         }
 
         [HttpGet, Route("{gatewayName}/{deviceId}")]
-        public async Task<IHttpActionResult> GetUrls(string gatewayName, string deviceId)
+        public async Task<IActionResult> GetUrls(string gatewayName, string deviceId)
         {
             var webHooks = await _webHookService.GetWebHooksAsync(gatewayName, deviceId);
             var urls = new List<string>();
-            var prefix = $"http://{Request.RequestUri.Authority}/api/v1/webhook/";
+            var prefix = $"http://{Request.Host}/api/v1/webhook/";
 
             foreach (var webHook in webHooks)
             {

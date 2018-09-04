@@ -2,14 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Web.Http;
 using CronExpressionDescriptor;
+using Microsoft.AspNetCore.Mvc;
 using Xpressive.Home.Contracts.Automation;
 
 namespace Xpressive.Home.WebApi.Controllers
 {
-    [RoutePrefix("api/v1/schedule")]
-    public class ScriptSchedulerController : ApiController
+    [Route("api/v1/schedule")]
+    public class ScriptSchedulerController : Controller
     {
         private readonly ICronService _cronService;
         private readonly IScheduledScriptRepository _repository;
@@ -62,7 +62,6 @@ namespace Xpressive.Home.WebApi.Controllers
             {
                 var descriptionOptions = new Options
                 {
-                    CasingType = CasingTypeEnum.Sentence,
                     ThrowExceptionOnParseError = false,
                     Use24HourTimeFormat = true
                 };

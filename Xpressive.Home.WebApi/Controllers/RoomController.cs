@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Web.Http;
+using Microsoft.AspNetCore.Mvc;
 using Xpressive.Home.Contracts.Rooms;
 
 namespace Xpressive.Home.WebApi.Controllers
 {
-    [RoutePrefix("api/v1/room")]
-    public class RoomController : ApiController
+    [Route("api/v1/room")]
+    public class RoomController : Controller
     {
         private readonly IRoomRepository _repository;
 
@@ -24,7 +24,7 @@ namespace Xpressive.Home.WebApi.Controllers
         }
 
         [HttpGet, Route("{id}")]
-        public async Task<IHttpActionResult> Get(string id)
+        public async Task<IActionResult> Get(string id)
         {
             Guid guid;
             if (Guid.TryParse(id, out guid))

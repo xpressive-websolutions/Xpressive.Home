@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web.Http;
+using Microsoft.AspNetCore.Mvc;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Variables;
 
 namespace Xpressive.Home.WebApi.Controllers
 {
-    [RoutePrefix("api/v1/variable")]
-    public class VariableController : ApiController
+    [Route("api/v1/variable")]
+    public class VariableController : Controller
     {
         private readonly IVariableRepository _variableRepository;
         private readonly IVariableHistoryService _variableHistoryService;
@@ -22,10 +22,9 @@ namespace Xpressive.Home.WebApi.Controllers
         }
 
         [HttpGet, Route("{gatewayName}")]
-        public IEnumerable<VariableDto> Get(string gatewayName, [FromUri] string deviceId)
+        public IEnumerable<VariableDto> Get(string gatewayName, [FromQuery] string deviceId)
         {
-            IGateway gateway;
-            if (!_gateways.TryGetValue(gatewayName, out gateway) ||
+            if (!_gateways.TryGetValue(gatewayName, out var gateway) ||
                 !gateway.Devices.Any(d => d.Id.Equals(deviceId, StringComparison.Ordinal)))
             {
                 return Enumerable.Empty<VariableDto>();
@@ -48,7 +47,7 @@ namespace Xpressive.Home.WebApi.Controllers
         }
 
         [HttpGet, Route("{variable}")]
-        public IHttpActionResult Get(string variable)
+        public IActionResult Get(string variable)
         {
             var result = _variableRepository.Get<IVariable>(variable);
             if (result != null)
@@ -66,7 +65,7 @@ namespace Xpressive.Home.WebApi.Controllers
         }
 
         [HttpGet, Route("history")]
-        public IEnumerable<VariableHistoryDto> GetHistory([FromUri]string variable)
+        public IEnumerable<VariableHistoryDto> GetHistory([FromQuery]string variable)
         {
             var result = _variableRepository.Get<IVariable>(variable);
 
