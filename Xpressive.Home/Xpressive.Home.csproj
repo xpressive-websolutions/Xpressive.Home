@@ -7,6 +7,7 @@
   <ItemGroup>
     <PackageReference Include="Autofac" Version="4.8.1" />
     <PackageReference Include="Jint" Version="2.11.58" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="1.1.0" />
     <PackageReference Include="NPoco" Version="3.9.4" />
     <PackageReference Include="Quartz" Version="3.0.6" />
     <PackageReference Include="Serilog" Version="2.7.1" />

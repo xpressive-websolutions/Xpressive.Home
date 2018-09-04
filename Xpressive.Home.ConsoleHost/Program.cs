@@ -20,11 +20,9 @@ namespace Xpressive.Home.ConsoleHost
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
 
-            IConfigurationRoot configuration = builder.Build();
+            var configuration = builder.Build();
 
-            var connectionString = configuration.GetConnectionString("ConnectionString");
-
-            using (Setup.Run(connectionString))
+            using (Setup.Run(configuration))
             {
                 Console.ReadLine();
                 Log.Debug("Stopping Xpressive.Home");

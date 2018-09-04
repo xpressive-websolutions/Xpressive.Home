@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 using Xpressive.Home.Contracts.Services;
@@ -12,10 +13,10 @@ namespace Xpressive.Home
 {
     public static class Setup
     {
-        public static IDisposable Run(string connectionString)
+        public static IDisposable Run(IConfiguration configuration)
         {
-            DbMigrator.Run(connectionString);
-            IocContainer.Build(connectionString);
+            DbMigrator.Run(configuration.GetConnectionString("ConnectionString"));
+            IocContainer.Build(configuration);
             RegisterMessageQueueListeners();
 
             var gateways = IocContainer.Resolve<IList<IGateway>>();

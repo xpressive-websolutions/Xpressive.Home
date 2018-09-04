@@ -4,6 +4,7 @@ using System.Data.SqlClient;
 using System.IO;
 using System.Reflection;
 using Autofac;
+using Microsoft.Extensions.Configuration;
 
 namespace Xpressive.Home
 {
@@ -11,7 +12,7 @@ namespace Xpressive.Home
     {
         private static IContainer _container;
 
-        public static void Build(string connectionString)
+        public static void Build(IConfiguration configuration)
         {
             var builder = new ContainerBuilder();
             _container = builder.Build();
@@ -21,7 +22,7 @@ namespace Xpressive.Home
             builder.RegisterAssemblyModules(Assembly.Load("Xpressive.Home.Services"));
             builder.RegisterAssemblyModules(Assembly.Load("Xpressive.Home.WebApi"));
 
-            var directory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
+            var directory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "Plugins", "netstandard2.0");
             var plugins = Directory.GetFiles(directory, "Xpressive.Home.Plugins.*.dll", SearchOption.TopDirectoryOnly);
 
             foreach (var plugin in plugins)
@@ -36,9 +37,11 @@ namespace Xpressive.Home
                 builder.RegisterAssemblyModules(Assembly.LoadFile(plugin));
             }
 
+            builder.RegisterInstance(configuration);
+
             builder.Register(_ =>
             {
-                var connection = new SqlConnection(connectionString);
+                var connection = new SqlConnection(configuration.GetConnectionString("ConnectionString"));
                 connection.Open();
                 return (DbConnection)connection;
             });
