@@ -1,7 +1,7 @@
-﻿using System;
+﻿using Serilog;
+using System;
 using System.Collections.Generic;
 using System.Threading;
-using log4net;
 using Xpressive.Home.Contracts.Automation;
 
 namespace Xpressive.Home.Automation
@@ -20,26 +20,24 @@ namespace Xpressive.Home.Automation
 
         public class LogScriptObject
         {
-            private static readonly ILog _log = LogManager.GetLogger(typeof(LogScriptObject));
-
             public void error(string message)
             {
-                _log.Error(message);
+                Log.Error(message);
             }
 
             public void warning(string message)
             {
-                _log.Warn(message);
+                Log.Warning(message);
             }
 
             public void info(string message)
             {
-                _log.Info(message);
+                Log.Information(message);
             }
 
             public void debug(string message)
             {
-                _log.Debug(message);
+                Log.Debug(message);
             }
         }
     }

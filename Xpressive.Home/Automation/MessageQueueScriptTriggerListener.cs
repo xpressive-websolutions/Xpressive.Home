@@ -1,10 +1,10 @@
+using Autofac;
+using Serilog;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Autofac;
-using log4net;
 using Xpressive.Home.Contracts.Automation;
 using Xpressive.Home.Contracts.Messaging;
 using Xpressive.Home.Contracts.Variables;
@@ -13,7 +13,6 @@ namespace Xpressive.Home.Automation
 {
     internal class MessageQueueScriptTriggerListener : IMessageQueueListener<UpdateVariableMessage>, IStartable
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(MessageQueueScriptTriggerListener));
         private readonly IVariableRepository _variableRepository;
         private readonly IScriptTriggerService _scriptTriggerService;
         private readonly IScriptEngine _scriptEngine;
@@ -68,7 +67,7 @@ namespace Xpressive.Home.Automation
             {
                 foreach (var script in result.Result)
                 {
-                    _log.Debug($"Execute script with id {script.ScriptId}");
+                    Log.Debug("Execute script with id {scriptId}", script.ScriptId);
                     await _scriptEngine.ExecuteAsync(script.ScriptId, variable, value);
                 }
             });

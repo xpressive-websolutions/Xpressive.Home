@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
 using NPoco;
@@ -14,10 +15,12 @@ namespace Xpressive.Home.Variables
         private static readonly BlockingCollection<IVariable> _variablesToSave = new BlockingCollection<IVariable>();
         private static readonly SingleTaskRunner _taskRunner = new SingleTaskRunner();
         private static readonly HashSet<string> _persistedVariables = new HashSet<string>(StringComparer.Ordinal);
+        private readonly DbConnection _dbConnection;
         private readonly bool _isInMemory;
 
-        public VariablePersistingService()
+        public VariablePersistingService(DbConnection dbConnection)
         {
+            _dbConnection = dbConnection;
             _isInMemory = true;
 
             foreach (ConnectionStringSettings cs in ConfigurationManager.ConnectionStrings)
@@ -45,7 +48,7 @@ namespace Xpressive.Home.Variables
 
             List<PersistedVariable> persistedVariables;
 
-            using (var database = new Database("ConnectionString"))
+            using (var database = new Database(_dbConnection))
             {
                 var sql = "select * from Variable";
                 persistedVariables = await database.FetchAsync<PersistedVariable>(sql);
@@ -69,7 +72,7 @@ namespace Xpressive.Home.Variables
                 return;
             }
 
-            using (var database = new Database("ConnectionString"))
+            using (var database = new Database(_dbConnection))
             {
                 while (_variablesToSave.Count > 0)
                 {

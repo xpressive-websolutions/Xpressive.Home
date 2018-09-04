@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
 using NPoco;
@@ -11,16 +12,18 @@ namespace Xpressive.Home.Services
     {
         private readonly IRoomScriptGroupRepository _roomScriptGroupRepository;
         private readonly IRoomScriptRepository _roomScriptRepository;
+        private readonly DbConnection _dbConnection;
 
-        public RoomRepository(IRoomScriptGroupRepository roomScriptGroupRepository, IRoomScriptRepository roomScriptRepository)
+        public RoomRepository(IRoomScriptGroupRepository roomScriptGroupRepository, IRoomScriptRepository roomScriptRepository, DbConnection dbConnection)
         {
             _roomScriptGroupRepository = roomScriptGroupRepository;
             _roomScriptRepository = roomScriptRepository;
+            _dbConnection = dbConnection;
         }
 
         public async Task<IEnumerable<Room>> GetAsync()
         {
-            using (var database = new Database("ConnectionString"))
+            using (var database = new Database(_dbConnection))
             {
                 var rooms =  await database.FetchAsync<Room>("select * from Room");
                 return rooms
@@ -31,7 +34,7 @@ namespace Xpressive.Home.Services
 
         public async Task SaveAsync(Room room)
         {
-            using (var database = new Database("ConnectionString"))
+            using (var database = new Database(_dbConnection))
             {
                 if (room.Id == Guid.Empty)
                 {
@@ -55,7 +58,7 @@ namespace Xpressive.Home.Services
                 scripts.AddRange(await _roomScriptRepository.GetAsync(group.Id));
             }
 
-            using (var database = new Database("ConnectionString"))
+            using (var database = new Database(_dbConnection))
             {
                 using (var transaction = database.GetTransaction())
                 {

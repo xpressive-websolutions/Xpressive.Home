@@ -7,9 +7,8 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
-using log4net;
-using Nito.AsyncEx;
 using Rssdp;
+using Serilog;
 using Xpressive.Home.Contracts.Messaging;
 using Xpressive.Home.Contracts.Services;
 
@@ -17,9 +16,8 @@ namespace Xpressive.Home.Services
 {
     internal sealed class UpnpDeviceDiscoveringService : INetworkDeviceScanner
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(UpnpDeviceDiscoveringService));
         private static readonly ConcurrentDictionary<string, DateTime> _occurrences = new ConcurrentDictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
-        private static readonly AsyncLock _lock = new AsyncLock();
+        private static readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
         private readonly IMessageQueue _messageQueue;
 
         public UpnpDeviceDiscoveringService(IMessageQueue messageQueue)
@@ -51,7 +49,7 @@ namespace Xpressive.Home.Services
                     }
                     catch (Exception e)
                     {
-                        _log.Error(e.Message, e);
+                        Log.Error(e, e.Message);
                         continue;
                     }
 
@@ -83,8 +81,9 @@ namespace Xpressive.Home.Services
             {
                 UpnpDeviceResponse response;
 
-                using (await _lock.LockAsync())
+                try
                 {
+                    await _lock.WaitAsync();
                     response = await CreateUpnpDeviceAsync(device);
 
                     if (response == null)
@@ -104,6 +103,10 @@ namespace Xpressive.Home.Services
                     }
 
                     _occurrences.AddOrUpdate(key, DateTime.UtcNow, (k, v) => DateTime.UtcNow);
+                }
+                finally
+                {
+                    _lock.Release();
                 }
 
                 var message = new NetworkDeviceFoundMessage("UPNP", response.IpAddress, new byte[0], response.FriendlyName);
@@ -131,15 +134,15 @@ namespace Xpressive.Home.Services
             }
             catch (TaskCanceledException)
             {
-                _log.Error($"TaskCanceledException for device {device.DescriptionLocation.OriginalString}");
+                Log.Error($"TaskCanceledException for device {device.DescriptionLocation.OriginalString}");
             }
             catch (XmlException e)
             {
-                _log.Error($"Xml exception in {device.DescriptionLocation.OriginalString}: {e.Message}");
+                Log.Error($"Xml exception in {device.DescriptionLocation.OriginalString}: {e.Message}");
             }
             catch (Exception e)
             {
-                _log.Error(e.Message, e);
+                Log.Error(e, e.Message);
             }
         }
 

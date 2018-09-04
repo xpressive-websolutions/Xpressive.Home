@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Threading.Tasks;
 using NPoco;
 using Xpressive.Home.Contracts.Automation;
@@ -8,9 +9,16 @@ namespace Xpressive.Home.Automation
 {
     internal class ScheduledScriptRepository : IScheduledScriptRepository
     {
+        private readonly DbConnection _dbConnection;
+
+        public ScheduledScriptRepository(DbConnection dbConnection)
+        {
+            _dbConnection = dbConnection;
+        }
+
         public async Task InsertAsync(Guid jobId, Guid scriptId, string cronTab)
         {
-            using (var database = new Database("ConnectionString"))
+            using (var database = new Database(_dbConnection))
             {
                 await database.InsertAsync(new ScheduledScript
                 {
@@ -23,7 +31,7 @@ namespace Xpressive.Home.Automation
 
         public async Task DeleteAsync(Guid id)
         {
-            using (var database = new Database("ConnectionString"))
+            using (var database = new Database(_dbConnection))
             {
                 var dto = await database.SingleOrDefaultByIdAsync<ScheduledScript>(id);
 
@@ -36,7 +44,7 @@ namespace Xpressive.Home.Automation
 
         public async Task<IEnumerable<ScheduledScript>> GetAsync()
         {
-            using (var database = new Database("ConnectionString"))
+            using (var database = new Database(_dbConnection))
             {
                 return await database.FetchAsync<ScheduledScript>("select * from ScheduledScript");
             }
@@ -44,7 +52,7 @@ namespace Xpressive.Home.Automation
 
         public async Task<ScheduledScript> GetAsync(Guid id)
         {
-            using (var database = new Database("ConnectionString"))
+            using (var database = new Database(_dbConnection))
             {
                 return await database.SingleOrDefaultByIdAsync<ScheduledScript>(id);
             }

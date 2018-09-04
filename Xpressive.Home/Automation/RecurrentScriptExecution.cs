@@ -1,5 +1,6 @@
-using System.Collections.Generic;
 using Quartz;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Xpressive.Home.Contracts.Automation;
 
 namespace Xpressive.Home.Automation
@@ -15,10 +16,11 @@ namespace Xpressive.Home.Automation
             _scriptObjectProviders = scriptObjectProviders;
         }
 
-        public void Execute(IJobExecutionContext context)
+        public Task Execute(IJobExecutionContext context)
         {
             var scriptContext = new ScriptExecutionContext(_script, _scriptObjectProviders);
             scriptContext.Execute("scheduler", context.ScheduledFireTimeUtc?.DateTime.ToString("s"));
+            return Task.CompletedTask;
         }
     }
 }

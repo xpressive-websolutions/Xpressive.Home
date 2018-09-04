@@ -1,4 +1,4 @@
-﻿using log4net;
+﻿using Serilog;
 using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Messaging;
 
@@ -11,31 +11,29 @@ namespace Xpressive.Home.Messaging
         IMessageQueueListener<ExecuteScriptMessage>,
         IMessageQueueListener<NetworkDeviceFoundMessage>
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(MessageQueueLogListener));
-
         public void Notify(UpdateVariableMessage message)
         {
-            _log.Debug($"{message.GetType().Name} for variable {message.Name} received.");
+            Log.Debug("{messageType} for variable {variableName} received.", message.GetType().Name, message.Name);
         }
 
         public void Notify(CommandMessage message)
         {
-            _log.Info($"{message.GetType().Name} for action {message.ActionId} received.");
+            Log.Information("{messageType} for action {actionId} received.", message.GetType().Name, message.ActionId);
         }
 
         public void Notify(NotifyUserMessage message)
         {
-            _log.Info($"{message.GetType().Name} received: {message.Notification}");
+            Log.Information("{messageType} received: {notification}", message.GetType().Name, message.Notification);
         }
 
         public void Notify(ExecuteScriptMessage message)
         {
-            _log.Info($"{message.GetType().Name} received for script {message.ScriptId} with {message.DelayInMilliseconds}ms delay.");
+            Log.Information("{messageType} received for script {scriptId} with {delay}ms delay.", message.GetType().Name, message.ScriptId, message.DelayInMilliseconds);
         }
 
         public void Notify(NetworkDeviceFoundMessage message)
         {
-            _log.Info($"{message.GetType().Name} received with {message.Protocol}: IP={message.IpAddress} MAC={message.MacAddress.MacAddressToString()}");
+            Log.Information("{messageType} received with {protocol}: IP={ipAddress} MAC={macAddress}", message.GetType().Name, message.Protocol, message.IpAddress, message.MacAddress.MacAddressToString());
         }
     }
 }

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Data.Common;
+using System.Data.SqlClient;
 using System.IO;
 using System.Reflection;
 using Autofac;
@@ -9,7 +11,7 @@ namespace Xpressive.Home
     {
         private static IContainer _container;
 
-        public static void Build()
+        public static void Build(string connectionString)
         {
             var builder = new ContainerBuilder();
             _container = builder.Build();
@@ -34,6 +36,12 @@ namespace Xpressive.Home
                 builder.RegisterAssemblyModules(Assembly.LoadFile(plugin));
             }
 
+            builder.Register(_ =>
+            {
+                var connection = new SqlConnection(connectionString);
+                connection.Open();
+                return (DbConnection)connection;
+            });
             builder.Register(cc => _container);
             builder.Update(_container);
         }

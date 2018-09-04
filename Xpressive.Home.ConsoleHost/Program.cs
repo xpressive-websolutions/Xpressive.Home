@@ -1,5 +1,7 @@
 ﻿using System;
-using log4net;
+using System.IO;
+using Microsoft.Extensions.Configuration;
+using Serilog;
 
 namespace Xpressive.Home.ConsoleHost
 {
@@ -7,16 +9,28 @@ namespace Xpressive.Home.ConsoleHost
     {
         public static void Main(string[] args)
         {
-            var log = LogManager.GetLogger(typeof(Program));
-            log.Info("Start Xpressive.Home");
+            var log = new LoggerConfiguration()
+                .WriteTo.Console()
+                .CreateLogger();
 
-            using (Setup.Run())
+            Log.Logger = log;
+            Log.Information("Start Xpressive.Home");
+
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+
+            IConfigurationRoot configuration = builder.Build();
+
+            var connectionString = configuration.GetConnectionString("ConnectionString");
+
+            using (Setup.Run(connectionString))
             {
                 Console.ReadLine();
-                log.Debug("Stopping Xpressive.Home");
+                Log.Debug("Stopping Xpressive.Home");
             }
 
-            log.Info("Stopped Xpressive.Home");
+            Log.Information("Stopped Xpressive.Home");
         }
     }
 }

@@ -1,8 +1,8 @@
-﻿using System;
+﻿using Autofac;
+using Serilog;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Autofac;
-using log4net;
 using Xpressive.Home.Contracts.Messaging;
 using Xpressive.Home.Contracts.Variables;
 
@@ -10,7 +10,6 @@ namespace Xpressive.Home.Variables
 {
     internal sealed class VariableRepository : IVariableRepository, IMessageQueueListener<UpdateVariableMessage>, IStartable
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(VariableRepository));
         private readonly IVariablePersistingService _variablePersistingService;
         private readonly object _variablesLock = new object();
         private readonly Dictionary<string, IVariable> _variables;
@@ -60,7 +59,7 @@ namespace Xpressive.Home.Variables
                     }
                     catch (InvalidCastException)
                     {
-                        _log.Error($"Unable to cast value {message.Value} of variable {message.Name}");
+                        Log.Error("Unable to cast value {messageValue} of variable {messageName}", message.Value, message.Name);
                     }
                 }
                 else
@@ -97,7 +96,7 @@ namespace Xpressive.Home.Variables
             }
             catch (Exception e)
             {
-                _log.Error(e.Message, e);
+                Log.Error(e, e.Message);
             }
         }
 

@@ -1,32 +1,29 @@
+using Serilog;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using log4net;
 using Xpressive.Home.Contracts.Messaging;
 
 namespace Xpressive.Home.Contracts.Gateway
 {
     public abstract class GatewayBase : IGateway, IMessageQueueListener<CommandMessage>
     {
-        private readonly ILog _log;
-        private readonly string _name;
         protected readonly ConcurrentDictionary<string, DeviceBase> _devices;
         protected bool _canCreateDevices;
 
         protected GatewayBase(string name)
         {
-            _log = LogManager.GetLogger(GetType());
-            _name = name;
+            Name = name;
             _devices = new ConcurrentDictionary<string, DeviceBase>(StringComparer.Ordinal);
         }
 
-        public string Name => _name;
+        public string Name { get; }
         public IEnumerable<IDevice> Devices => _devices.Values.ToList();
         public bool CanCreateDevices => _canCreateDevices;
-        
+
         public IDevicePersistingService PersistingService { get; set; }
 
         public bool AddDevice(IDevice device)
@@ -56,7 +53,7 @@ namespace Xpressive.Home.Contracts.Gateway
 
         public void Notify(CommandMessage message)
         {
-            if (!message.ActionId.StartsWith(_name, StringComparison.Ordinal))
+            if (!message.ActionId.StartsWith(Name, StringComparison.Ordinal))
             {
                 return;
             }
@@ -99,7 +96,7 @@ namespace Xpressive.Home.Contracts.Gateway
             }
             catch (Exception e)
             {
-                _log.Error("Unable to load persisted devices.", e);
+                Log.Error(e, "Unable to load persisted devices.");
             }
         }
 

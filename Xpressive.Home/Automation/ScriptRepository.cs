@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
 using NPoco;
@@ -10,6 +11,13 @@ namespace Xpressive.Home.Automation
 {
     internal class ScriptRepository : IScriptRepository
     {
+        private readonly DbConnection _dbConnection;
+
+        public ScriptRepository(DbConnection dbConnection)
+        {
+            _dbConnection = dbConnection;
+        }
+
         public async Task SaveAsync(Script script)
         {
             Assert.NotNull(script);
@@ -26,7 +34,7 @@ namespace Xpressive.Home.Automation
 
         public async Task<Script> GetAsync(Guid id)
         {
-            using (var database = new Database("ConnectionString"))
+            using (var database = new Database(_dbConnection))
             {
                 return await database.SingleOrDefaultByIdAsync<Script>(id);
             }
@@ -41,7 +49,7 @@ namespace Xpressive.Home.Automation
 
         public async Task<IEnumerable<Script>> GetAsync()
         {
-            using (var database = new Database("ConnectionString"))
+            using (var database = new Database(_dbConnection))
             {
                 return await database.FetchAsync<Script>("select * from Script");
             }
@@ -51,10 +59,10 @@ namespace Xpressive.Home.Automation
         {
             Assert.NotNull(script);
 
-            using (var database = new Database("ConnectionString"))
+            using (var database = new Database(_dbConnection))
             {
                 script.IsEnabled = true;
-                await database.UpdateAsync(script, new[] {"IsEnabled"});
+                await database.UpdateAsync(script, new[] { "IsEnabled" });
             }
         }
 
@@ -62,7 +70,7 @@ namespace Xpressive.Home.Automation
         {
             Assert.NotNull(script);
 
-            using (var database = new Database("ConnectionString"))
+            using (var database = new Database(_dbConnection))
             {
                 script.IsEnabled = false;
                 await database.UpdateAsync(script, new[] { "IsEnabled" });
@@ -71,7 +79,7 @@ namespace Xpressive.Home.Automation
 
         public async Task DeleteAsync(Guid id)
         {
-            using (var database = new Database("ConnectionString"))
+            using (var database = new Database(_dbConnection))
             {
                 var dto = await database.SingleOrDefaultByIdAsync<Script>(id);
 
@@ -86,7 +94,7 @@ namespace Xpressive.Home.Automation
         {
             Assert.NotNull(script);
 
-            using (var database = new Database("ConnectionString"))
+            using (var database = new Database(_dbConnection))
             {
                 await database.DeleteAsync(script);
             }
@@ -98,7 +106,7 @@ namespace Xpressive.Home.Automation
 
             script.Id = Guid.NewGuid();
 
-            using (var database = new Database("ConnectionString"))
+            using (var database = new Database(_dbConnection))
             {
                 await database.InsertAsync(script);
             }
@@ -108,9 +116,9 @@ namespace Xpressive.Home.Automation
         {
             Assert.NotNull(script);
 
-            using (var database = new Database("ConnectionString"))
+            using (var database = new Database(_dbConnection))
             {
-                await database.UpdateAsync(script, new[] {"Name", "JavaScript", "IsEnabled"});
+                await database.UpdateAsync(script, new[] { "Name", "JavaScript", "IsEnabled" });
             }
         }
     }

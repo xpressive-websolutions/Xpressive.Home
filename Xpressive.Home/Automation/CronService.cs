@@ -1,18 +1,18 @@
-﻿using System;
-using System.Threading.Tasks;
-using Autofac;
-using log4net;
+﻿using Autofac;
 using Quartz;
 using Quartz.Impl;
 using Quartz.Spi;
+using Serilog;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Xpressive.Home.Contracts.Automation;
 
 namespace Xpressive.Home.Automation
 {
     internal class CronService : IStartable, ICronService, IDisposable
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(CronService));
-        private static readonly object _schedulerLock = new object();
+        private static readonly SemaphoreSlim _schedulerLock = new SemaphoreSlim(1, 1);
         private static volatile IScheduler _scheduler;
         private readonly IJobFactory _jobFactory;
         private readonly IScheduledScriptRepository _scheduledScriptRepository;
@@ -45,7 +45,7 @@ namespace Xpressive.Home.Automation
 
         public async Task DeleteScheduleAsync(Guid id)
         {
-            _scheduler.DeleteJob(new JobKey(id.ToString("n")));
+            await _scheduler.DeleteJob(new JobKey(id.ToString("n")));
             await _scheduledScriptRepository.DeleteAsync(id);
         }
 
@@ -68,24 +68,30 @@ namespace Xpressive.Home.Automation
                     return;
                 }
 
-                lock (_schedulerLock)
+                try
                 {
+                    await _schedulerLock.WaitAsync();
+
                     if (_scheduler != null)
                     {
                         return;
                     }
 
                     var factory = new StdSchedulerFactory();
-                    _scheduler = factory.GetScheduler();
+                    _scheduler = await factory.GetScheduler();
                     _scheduler.JobFactory = _jobFactory;
-                    _scheduler.Start();
+                    await _scheduler.Start();
+                }
+                finally
+                {
+                    _schedulerLock.Release();
                 }
 
                 await SchedulePersistedJobsAsync();
             }
             catch (Exception e)
             {
-                _log.Error(e.Message, e);
+                Log.Error(e, e.Message);
             }
         }
 
@@ -112,11 +118,11 @@ namespace Xpressive.Home.Automation
                 try
                 {
                     Schedule(schedule.Id, schedule.CronTab);
-                    _log.Info($"Schedule {schedule.Id:N} with cron tab {schedule.CronTab} scheduled.");
+                    Log.Information("Schedule {id} with cron tab {cronTab} scheduled.", schedule.Id, schedule.CronTab);
                 }
                 catch (Exception e)
                 {
-                    _log.Error($"Unable to schedule {schedule.Id} with cron tab {schedule.CronTab}: {e.Message}");
+                    Log.Error("Unable to schedule {id} with cron tab {cronTab}: {reason}", schedule.Id, schedule.CronTab, e.Message);
                 }
             }
         }

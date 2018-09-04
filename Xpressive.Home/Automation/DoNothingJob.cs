@@ -1,9 +1,10 @@
 ﻿using Quartz;
+using System.Threading.Tasks;
 
 namespace Xpressive.Home.Automation
 {
     internal class DoNothingJob : IJob
     {
-        public void Execute(IJobExecutionContext context) { }
+        public Task Execute(IJobExecutionContext context) { return Task.CompletedTask; }
     }
 }

@@ -1,16 +1,15 @@
+using Jint;
+using Jint.Runtime;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Jint;
-using Jint.Runtime;
-using log4net;
 using Xpressive.Home.Contracts.Automation;
 
 namespace Xpressive.Home.Automation
 {
     internal class ScriptExecutionContext
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(ScriptExecutionContext));
         private static readonly HashSet<Guid> _currentlyExecuting = new HashSet<Guid>();
         private static readonly object _lock = new object();
         private readonly Script _script;
@@ -48,7 +47,7 @@ namespace Xpressive.Home.Automation
                 _currentlyExecuting.Add(_script.Id);
             }
 
-            _log.Info($"Execute script {_script.Name} ({_script.Id.ToString("n")})");
+            Log.Information("Execute script {scriptName} ({scriptId})", _script.Name, _script.Id);
 
             try
             {
@@ -57,11 +56,11 @@ namespace Xpressive.Home.Automation
             }
             catch (JavaScriptException e)
             {
-                _log.Error($"Error when executing script {_script.Name} ({_script.Id.ToString("n")}) at Line {e.LineNumber}: {e.Message}");
+                Log.Error("Error when executing script {scriptName} ({scriptId}) at Line {lineNumber}: {reason}", _script.Name, _script.Id, e.LineNumber, e.Message);
             }
             catch (Exception e)
             {
-                _log.Error($"Error when executing script {_script.Name} ({_script.Id.ToString("n")})", e);
+                Log.Error(e, "Error when executing script {scriptName} ({scriptId})", _script.Name, _script.Id);
             }
 
             lock (_lock)

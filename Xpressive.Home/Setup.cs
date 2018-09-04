@@ -12,10 +12,10 @@ namespace Xpressive.Home
 {
     public static class Setup
     {
-        public static IDisposable Run()
+        public static IDisposable Run(string connectionString)
         {
-            DbMigrator.Run();
-            IocContainer.Build();
+            DbMigrator.Run(connectionString);
+            IocContainer.Build(connectionString);
             RegisterMessageQueueListeners();
 
             var gateways = IocContainer.Resolve<IList<IGateway>>();
