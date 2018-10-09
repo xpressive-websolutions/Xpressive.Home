@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using ForecastIO;
-using log4net;
+using DarkSky.Services;
+using Microsoft.Extensions.Configuration;
 using Polly;
+using Serilog;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 
@@ -16,15 +16,15 @@ namespace Xpressive.Home.Plugins.Forecast
 {
     public class ForecastGateway : GatewayBase
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(ForecastGateway));
         private readonly string _apiKey;
         private readonly IMessageQueue _messageQueue;
         private readonly Policy _policy;
+        private DarkSkyService _darkSky;
 
-        public ForecastGateway(IMessageQueue messageQueue) : base("Weather")
+        public ForecastGateway(IMessageQueue messageQueue, IConfiguration configuration) : base("Weather")
         {
             _messageQueue = messageQueue;
-            _apiKey = ConfigurationManager.AppSettings["forecast.apikey"];
+            _apiKey = configuration["forecast.apikey"];
             _canCreateDevices = true;
 
             _policy = Policy
@@ -59,6 +59,8 @@ namespace Xpressive.Home.Plugins.Forecast
                 return;
             }
 
+            _darkSky = new DarkSkyService(_apiKey);
+
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
@@ -68,10 +70,10 @@ namespace Xpressive.Home.Plugins.Forecast
                 }
                 catch (Exception e)
                 {
-                    _log.Error(e.Message, e);
+                    Log.Error(e, e.Message);
                 }
 
-                var minutes = Math.Max(_devices.Count*2.5, 10);
+                var minutes = Math.Max(_devices.Count * 2.5, 10);
                 await Task.Delay(TimeSpan.FromMinutes(minutes), cancellationToken).ContinueWith(_ => { });
             }
         }
@@ -85,12 +87,24 @@ namespace Xpressive.Home.Plugins.Forecast
         {
             var latitude = (float)device.Latitude;
             var longitude = (float)device.Longitude;
-            ForecastIOResponse response;
+            DarkSky.Models.Forecast response;
 
             try
             {
-                var request = new ForecastIORequest(_apiKey, latitude, longitude, Unit.si);
-                response = _policy.Execute(() => request.Get());
+                response = await _policy.ExecuteAsync(async () =>
+                {
+                    var r = await _darkSky.GetForecast(latitude, longitude, new DarkSkyService.OptionalParameters
+                    {
+                        MeasurementUnits = "si"
+                    });
+
+                    if (!r.IsSuccessStatus)
+                    {
+                        throw new WebException(r.ResponseReasonPhrase);
+                    }
+
+                    return r.Response;
+                });
             }
             catch (WebException)
             {
@@ -98,21 +112,21 @@ namespace Xpressive.Home.Plugins.Forecast
             }
             catch (Exception e)
             {
-                _log.Error(e.Message, e);
+                Log.Error(e, e.Message);
                 return;
             }
 
-            UpdateVariables(device.Id, string.Empty, response.currently);
+            UpdateVariables(device.Id, string.Empty, response.Currently);
 
-            for (var hour = 0; hour < response.hourly.data.Count; hour++)
+            for (var hour = 0; hour < response.Hourly.Data.Count; hour++)
             {
-                var data = response.hourly.data[hour];
+                var data = response.Hourly.Data[hour];
                 UpdateVariables(device.Id, $"H+{hour}_", data);
             }
 
-            for (var day = 0; day < response.daily.data.Count; day++)
+            for (var day = 0; day < response.Daily.Data.Count; day++)
             {
-                var data = response.daily.data[day];
+                var data = response.Daily.Data[day];
                 UpdateVariables(device.Id, $"D+{day}_", data);
             }
 
