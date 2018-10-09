@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using log4net;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using RestSharp;
+using Serilog;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 
@@ -15,7 +15,6 @@ namespace Xpressive.Home.Plugins.Gardena
 {
     internal class GardenaGateway : GatewayBase
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(GardenaGateway));
         private readonly IMessageQueue _messageQueue;
         private readonly string _username;
         private readonly string _password;
@@ -24,11 +23,11 @@ namespace Xpressive.Home.Plugins.Gardena
         private readonly Dictionary<string, string> _substitutions;
         private Token _token;
 
-        public GardenaGateway(IMessageQueue messageQueue) : base("Gardena")
+        public GardenaGateway(IMessageQueue messageQueue, IConfiguration configuration) : base("Gardena")
         {
             _messageQueue = messageQueue;
-            _username = ConfigurationManager.AppSettings["gardena.username"];
-            _password = ConfigurationManager.AppSettings["gardena.password"];
+            _username = configuration["gardena.username"];
+            _password = configuration["gardena.password"];
             _canCreateDevices = false;
 
             _client = new RestClient("https://smart.gardena.com/");
@@ -109,7 +108,7 @@ namespace Xpressive.Home.Plugins.Gardena
             }
             catch (Exception e)
             {
-                _log.Error(e.Message, e);
+                Log.Error(e, e.Message);
                 return;
             }
 
@@ -162,11 +161,11 @@ namespace Xpressive.Home.Plugins.Gardena
 
                                     if (property.Value is bool)
                                     {
-                                        value = (bool) property.Value;
+                                        value = (bool)property.Value;
                                     }
                                     else if (property.Value is int)
                                     {
-                                        value = (double) (int) property.Value;
+                                        value = (double)(int)property.Value;
                                     }
                                     else
                                     {
@@ -261,7 +260,7 @@ namespace Xpressive.Home.Plugins.Gardena
             request.AddHeader("origin", "https://smart.gardena.com");
             request.AddHeader("referer", "https://smart.gardena.com/");
 
-            var settings = new JsonSerializerSettings {ContractResolver = new CamelCasePropertyNamesContractResolver()};
+            var settings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
             var json = JsonConvert.SerializeObject(new TokenRequestDto(_username, _password), settings);
             request.AddParameter("application/json", json, "application/json", ParameterType.RequestBody);
 
