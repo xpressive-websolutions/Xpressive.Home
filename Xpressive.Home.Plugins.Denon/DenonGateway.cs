@@ -7,9 +7,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
-using log4net;
 using Polly;
 using RestSharp;
+using Serilog;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 using Action = Xpressive.Home.Contracts.Gateway.Action;
@@ -18,7 +18,6 @@ namespace Xpressive.Home.Plugins.Denon
 {
     internal class DenonGateway : GatewayBase, IDenonGateway, IMessageQueueListener<NetworkDeviceFoundMessage>
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(DenonGateway));
         private readonly IMessageQueue _messageQueue;
         private readonly object _deviceLock = new object();
 
@@ -97,7 +96,7 @@ namespace Xpressive.Home.Plugins.Denon
         {
             if (device == null)
             {
-                _log.Warn($"Unable to execute action {action.Name} because the device was not found.");
+                Log.Warning("Unable to execute action {actionName} because the device was not found.", action.Name);
                 return;
             }
 
@@ -148,7 +147,7 @@ namespace Xpressive.Home.Plugins.Denon
                 return;
             }
 
-            _log.Debug($"Send command {command} to {denon.IpAddress}.");
+            Log.Debug("Send command {command} to {ipAddress}.", command, denon.IpAddress);
 
             using (var client = new TcpClient())
             {
