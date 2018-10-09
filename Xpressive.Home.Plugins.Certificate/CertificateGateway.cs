@@ -5,7 +5,7 @@ using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
-using log4net;
+using Serilog;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 
@@ -13,7 +13,6 @@ namespace Xpressive.Home.Plugins.Certificate
 {
     internal sealed class CertificateGateway : GatewayBase, ICertificateGateway
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(CertificateGateway));
         private readonly IMessageQueue _messageQueue;
 
         public CertificateGateway(IMessageQueue messageQueue) : base("Certificate")
@@ -67,7 +66,7 @@ namespace Xpressive.Home.Plugins.Certificate
                 var request = (HttpWebRequest)WebRequest.Create(device.HostName);
                 request.AllowAutoRedirect = true;
 
-                using (var response = (HttpWebResponse) await request.GetResponseAsync())
+                using (var response = (HttpWebResponse)await request.GetResponseAsync())
                 {
                     var cert = new X509Certificate2(request.ServicePoint.Certificate);
 
@@ -94,7 +93,7 @@ namespace Xpressive.Home.Plugins.Certificate
             }
             catch (Exception e)
             {
-                _log.Error(e.Message, e);
+                Log.Error(e, e.Message);
             }
         }
     }
