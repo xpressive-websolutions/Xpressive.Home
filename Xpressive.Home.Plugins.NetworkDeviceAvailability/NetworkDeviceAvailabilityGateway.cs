@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using log4net;
+using Serilog;
 using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
@@ -12,7 +12,6 @@ namespace Xpressive.Home.Plugins.NetworkDeviceAvailability
 {
     internal sealed class NetworkDeviceAvailabilityGateway : GatewayBase, IMessageQueueListener<NetworkDeviceFoundMessage>
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(NetworkDeviceAvailabilityGateway));
         private readonly IDictionary<string, DateTime> _lastSeenMacAddresses;
         private readonly IMessageQueue _messageQueue;
 
@@ -53,7 +52,7 @@ namespace Xpressive.Home.Plugins.NetworkDeviceAvailability
                     }
                     catch (Exception e)
                     {
-                        _log.Error(e.Message, e);
+                        Log.Error(e, e.Message);
                     }
                 }
 
