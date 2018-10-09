@@ -5,11 +5,11 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using log4net;
 using Polly;
 using Polly.Retry;
 using Q42.HueApi;
 using Q42.HueApi.Models;
+using Serilog;
 using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
@@ -21,7 +21,6 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 {
     internal sealed class PhilipsHueGateway : GatewayBase, IPhilipsHueGateway
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(PhilipsHueGateway));
         private readonly IVariableRepository _variableRepository;
         private readonly IPhilipsHueDeviceDiscoveringService _deviceDiscoveringService;
         private readonly IMessageQueue _messageQueue;
@@ -183,7 +182,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                     }
                     catch (Exception e)
                     {
-                        _log.Error(e.Message, e);
+                        Log.Error(e, e.Message);
                     }
                 }
             }
@@ -193,7 +192,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
         {
             if (device == null)
             {
-                _log.Warn($"Unable to execute action {action.Name} because the device was not found.");
+                Log.Warning("Unable to execute action {actionName} because the device was not found.", action.Name);
                 return Task.CompletedTask;
             }
 
@@ -201,7 +200,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 
             if (bulb == null)
             {
-                _log.Warn($"Unable to execute action {action.Name} because the device isn't a bulb.");
+                Log.Warning("Unable to execute action {actionName} because the device isn't a bulb.", action.Name);
                 return Task.CompletedTask;
             }
 
@@ -416,7 +415,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             }
             catch (Exception e)
             {
-                _log.Error(e.Message, e);
+                Log.Error(e, e.Message);
             }
         }
 
@@ -470,7 +469,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 
         private int MirekToKelvin(int mirek)
         {
-            return 1000000/mirek;
+            return 1000000 / mirek;
         }
     }
 }

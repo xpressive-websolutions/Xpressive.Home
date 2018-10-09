@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using log4net;
 using Q42.HueApi;
 using Q42.HueApi.Models;
+using Serilog;
 using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Variables;
 
@@ -13,7 +13,6 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 {
     internal class PhilipsHueDeviceDiscoveringService : IPhilipsHueDeviceDiscoveringService
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(PhilipsHueDeviceDiscoveringService));
         private readonly IVariableRepository _variableRepository;
         private readonly IPhilipsHueBridgeDiscoveringService _bridgeDiscoveringService;
         private readonly IList<PhilipsHueBridge> _bridges;
@@ -74,7 +73,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             }
             catch (Exception e)
             {
-                _log.Error($"Unable to get devices ({e.GetType().Name}) {e.Message}");
+                Log.Error(e, "Unable to get devices.");
             }
         }
 
