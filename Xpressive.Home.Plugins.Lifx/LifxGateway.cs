@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
-using log4net;
+using Microsoft.Extensions.Configuration;
 using Polly;
+using Serilog;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 using Xpressive.Home.Contracts.Services;
@@ -17,19 +17,18 @@ namespace Xpressive.Home.Plugins.Lifx
 {
     internal sealed class LifxGateway : GatewayBase, ILifxGateway
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(LifxGateway));
         private readonly IMessageQueue _messageQueue;
         private readonly IDeviceConfigurationBackupService _deviceConfigurationBackupService;
         private readonly string _token;
         private readonly object _deviceLock = new object();
         private readonly LifxLocalClient _localClient = new LifxLocalClient();
 
-        public LifxGateway(IMessageQueue messageQueue, IDeviceConfigurationBackupService deviceConfigurationBackupService) : base("Lifx")
+        public LifxGateway(IMessageQueue messageQueue, IDeviceConfigurationBackupService deviceConfigurationBackupService, IConfiguration configuration) : base("Lifx")
         {
             _messageQueue = messageQueue;
             _deviceConfigurationBackupService = deviceConfigurationBackupService;
             _canCreateDevices = false;
-            _token = ConfigurationManager.AppSettings["lifx.token"];
+            _token = configuration["lifx.token"];
 
             _localClient.DeviceDiscovered += (s, e) =>
             {
@@ -165,7 +164,7 @@ namespace Xpressive.Home.Plugins.Lifx
             }
             catch (Exception e)
             {
-                _log.Error(e.Message, e);
+                Log.Error(e, e.Message);
             }
         }
 
@@ -178,11 +177,11 @@ namespace Xpressive.Home.Plugins.Lifx
 
             if (device == null)
             {
-                _log.Warn($"Unable to execute action {action.Name} because the device was not found.");
+                Log.Warning("Unable to execute action {actionName} because the device was not found.", action.Name);
                 return;
             }
 
-            var bulb = (LifxDevice) device;
+            var bulb = (LifxDevice)device;
             int seconds;
             double brightness;
 
@@ -237,15 +236,15 @@ namespace Xpressive.Home.Plugins.Lifx
             }
             catch (WebException e)
             {
-                _log.Error($"Error while executing {description}: {e.Message}");
+                Log.Error(e, "Error while executing {description}.", description);
             }
             catch (XmlException e)
             {
-                _log.Error($"Error while executing {description}: {e.Message}");
+                Log.Error(e, "Error while executing {description}.", description);
             }
             catch (Exception e)
             {
-                _log.Error(e.Message, e);
+                Log.Error(e, e.Message);
             }
         }
 
