@@ -6,15 +6,13 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
-using log4net;
 using Polly;
+using Serilog;
 
 namespace Xpressive.Home.Plugins.Sonos
 {
     internal class SonosSoapClient : ISonosSoapClient
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(SonosSoapClient));
-
         public async Task<Dictionary<string, string>> ExecuteAsync(SonosDevice device, UpnpService service, UpnpAction action, Dictionary<string, string> values)
         {
             var uri = new Uri($"http://{device.IpAddress}:1400{service.ControlUrl}");
@@ -47,11 +45,11 @@ namespace Xpressive.Home.Plugins.Sonos
             }
             catch (WebException e)
             {
-                _log.Error($"Unable to execute action {action.Name} for device {device.Name}: {e.Message}");
+                Log.Error("Unable to execute action {actionName} for device {deviceName}: {exception}", action.Name, device.Name, e.Message);
             }
             catch (Exception e)
             {
-                _log.Error($"Unable to execute action {action.Name} for device {device.Name}: {e.Message}", e);
+                Log.Error("Unable to execute action {actionName} for device {deviceName}: {exception}", action.Name, device.Name, e.Message);
             }
 
             return result;

@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using log4net;
-using RestSharp.Extensions.MonoHttp;
+using System.Web;
+using Serilog;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 using Action = Xpressive.Home.Contracts.Gateway.Action;
@@ -13,7 +13,6 @@ namespace Xpressive.Home.Plugins.Sonos
 {
     internal class SonosGateway : GatewayBase, ISonosGateway
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(SonosGateway));
         private readonly IMessageQueue _messageQueue;
         private readonly ISonosSoapClient _soapClient;
 
@@ -124,7 +123,7 @@ namespace Xpressive.Home.Plugins.Sonos
                 }
                 catch (Exception e)
                 {
-                    _log.Error(e.Message, e);
+                    Log.Error(e, e.Message);
                 }
 
                 await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken).ContinueWith(_ => { });
@@ -135,7 +134,7 @@ namespace Xpressive.Home.Plugins.Sonos
         {
             if (device == null)
             {
-                _log.Warn($"Unable to execute action {action.Name} because the device was not found.");
+                Log.Warning("Unable to execute action {actionName} because the device was not found.", action.Name);
                 return;
             }
 
@@ -273,7 +272,7 @@ namespace Xpressive.Home.Plugins.Sonos
             }
 
             var masterId = device.CurrentUri?.Replace("x-rincon:", string.Empty) ?? string.Empty;
-            var master = (SonosDevice) Devices.SingleOrDefault(d => d.Id.Equals(masterId, StringComparison.OrdinalIgnoreCase));
+            var master = (SonosDevice)Devices.SingleOrDefault(d => d.Id.Equals(masterId, StringComparison.OrdinalIgnoreCase));
             return master ?? device;
         }
 

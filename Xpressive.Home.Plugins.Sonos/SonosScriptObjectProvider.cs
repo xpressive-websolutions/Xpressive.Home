@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using log4net;
+using Serilog;
 using Xpressive.Home.Contracts.Automation;
 using Xpressive.Home.Contracts.Rooms;
 
@@ -91,7 +91,6 @@ namespace Xpressive.Home.Plugins.Sonos
 
         public class SonosScriptObject
         {
-            private static readonly ILog _log = LogManager.GetLogger(typeof(SonosScriptObject));
             private readonly ISonosGateway _gateway;
             private readonly SonosDevice _device;
 
@@ -130,7 +129,7 @@ namespace Xpressive.Home.Plugins.Sonos
             {
                 if (_device == null)
                 {
-                    _log.Warn("Unable to get variable value because the device was not found.");
+                    Log.Warning("Unable to get variable value because the device was not found.");
                     return null;
                 }
 
@@ -146,7 +145,7 @@ namespace Xpressive.Home.Plugins.Sonos
             {
                 if (_device == null)
                 {
-                    _log.Warn("Unable to get variable value because the device was not found.");
+                    Log.Warning("Unable to get variable value because the device was not found.");
                     return null;
                 }
 
@@ -157,7 +156,7 @@ namespace Xpressive.Home.Plugins.Sonos
             {
                 if (_device == null)
                 {
-                    _log.Warn("Unable to get variable value because the device was not found.");
+                    Log.Warning("Unable to get variable value because the device was not found.");
                     return null;
                 }
 
