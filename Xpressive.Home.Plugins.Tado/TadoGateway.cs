@@ -1,44 +1,40 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using log4net;
+using Microsoft.Extensions.Configuration;
 using RestSharp;
+using Serilog;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
-using Xpressive.Home.Contracts.Services;
 using Action = Xpressive.Home.Contracts.Gateway.Action;
 
 namespace Xpressive.Home.Plugins.Tado
 {
     internal class TadoGateway : GatewayBase
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(TadoGateway));
         private readonly object _deviceListLock = new object();
         private readonly IMessageQueue _messageQueue;
-        private readonly IHttpClientProvider _httpClientProvider;
         private readonly RestClient _client;
         private readonly RestClient _authClient;
         private readonly string _username;
         private readonly string _password;
         private TokenDto _token;
 
-        public TadoGateway(IMessageQueue messageQueue, IHttpClientProvider httpClientProvider) : base("tado")
+        public TadoGateway(IMessageQueue messageQueue, IConfiguration configuration) : base("tado")
         {
             _messageQueue = messageQueue;
-            _httpClientProvider = httpClientProvider;
 
             _client = new RestClient("https://my.tado.com/");
             _authClient = new RestClient("https://auth.tado.com/");
-            _username = ConfigurationManager.AppSettings["tado.username"];
-            _password = ConfigurationManager.AppSettings["tado.password"];
+            _username = configuration["tado.username"];
+            _password = configuration["tado.password"];
         }
 
         public override IEnumerable<IAction> GetActions(IDevice device)
         {
-            yield return new Action("Set temperature") { Fields = { "Temperature" }};
+            yield return new Action("Set temperature") { Fields = { "Temperature" } };
         }
 
         public override async Task StartAsync(CancellationToken cancellationToken)
@@ -60,7 +56,7 @@ namespace Xpressive.Home.Plugins.Tado
             }
             catch (Exception e)
             {
-                _log.Error(e.Message, e);
+                Log.Error(e.Message, e);
                 return;
             }
 
@@ -78,7 +74,7 @@ namespace Xpressive.Home.Plugins.Tado
 
                         lock (_deviceListLock)
                         {
-                            device = _devices.Cast<TadoDevice>() .SingleOrDefault(d => d.Id.Equals(device.Id, StringComparison.OrdinalIgnoreCase));
+                            device = _devices.Cast<TadoDevice>().SingleOrDefault(d => d.Id.Equals(device.Id, StringComparison.OrdinalIgnoreCase));
 
                             if (device == null)
                             {
@@ -104,7 +100,7 @@ namespace Xpressive.Home.Plugins.Tado
                 }
                 catch (Exception e)
                 {
-                    _log.Error(e.Message, e);
+                    Log.Error(e.Message, e);
                 }
 
                 await Task.Delay(TimeSpan.FromSeconds(60), cancellationToken).ContinueWith(_ => { });
@@ -202,7 +198,7 @@ namespace Xpressive.Home.Plugins.Tado
         {
             if (device == null)
             {
-                _log.Warn($"Unable to execute action {action.Name} because the device was not found.");
+                Log.Warning("Unable to execute action {actionName} because the device was not found.", action.Name);
                 return;
             }
 
