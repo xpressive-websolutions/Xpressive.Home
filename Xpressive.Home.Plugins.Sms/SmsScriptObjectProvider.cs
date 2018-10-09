@@ -1,16 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Net;
 using System.Text.RegularExpressions;
-using log4net;
+using Microsoft.Extensions.Configuration;
 using RestSharp;
+using Serilog;
 using Xpressive.Home.Contracts.Automation;
 
 namespace Xpressive.Home.Plugins.Sms
 {
     internal sealed class SmsScriptObjectProvider : IScriptObjectProvider
     {
+        private readonly IConfiguration _configuration;
+
+        public SmsScriptObjectProvider(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
         public IEnumerable<Tuple<string, Delegate>> GetDelegates()
         {
             yield break;
@@ -18,20 +25,19 @@ namespace Xpressive.Home.Plugins.Sms
 
         public IEnumerable<Tuple<string, object>> GetObjects()
         {
-            yield return Tuple.Create("sms", (object)new SmsScriptObject());
+            yield return Tuple.Create("sms", (object)new SmsScriptObject(_configuration));
         }
 
         public class SmsScriptObject
         {
-            private static readonly ILog _log = LogManager.GetLogger(typeof(SmsScriptObject));
             private readonly string _username;
             private readonly string _password;
             private readonly Regex _numberValidator;
 
-            public SmsScriptObject()
+            public SmsScriptObject(IConfiguration configuration)
             {
-                _username = ConfigurationManager.AppSettings["sms.username"];
-                _password = ConfigurationManager.AppSettings["sms.password"];
+                _username = configuration["sms.username"];
+                _password = configuration["sms.password"];
                 _numberValidator = new Regex(@"\+\d+", RegexOptions.Compiled | RegexOptions.Singleline);
             }
 
@@ -39,19 +45,19 @@ namespace Xpressive.Home.Plugins.Sms
             {
                 if (string.IsNullOrEmpty(text) || text.Length > 603)
                 {
-                    _log.Error("Unable to send sms because text is null or longer than 603 characters.");
+                    Log.Error("Unable to send sms because text is null or longer than 603 characters.");
                     return;
                 }
 
                 if (string.IsNullOrEmpty(recipient) || !_numberValidator.IsMatch(recipient))
                 {
-                    _log.Error("Unable to send sms because recipient isn't a valid phone number.");
+                    Log.Error("Unable to send sms because recipient isn't a valid phone number.");
                     return;
                 }
 
                 if (string.IsNullOrEmpty(_username) || string.IsNullOrEmpty(_password))
                 {
-                    _log.Error("Unable to send sms because 'sms.username' or 'sms.password' is not specified.");
+                    Log.Error("Unable to send sms because 'sms.username' or 'sms.password' is not specified.");
                     return;
                 }
 
@@ -62,7 +68,7 @@ namespace Xpressive.Home.Plugins.Sms
                     UserName = _username,
                     Password = _password,
                     Originator = "Xpressive.H",
-                    Recipients = new [] { recipient },
+                    Recipients = new[] { recipient },
                     MessageText = text
                 });
 
@@ -72,11 +78,11 @@ namespace Xpressive.Home.Plugins.Sms
                 {
                     if (response.ErrorException != null)
                     {
-                        _log.Error("Error when sending SMS: " + response.ErrorMessage, response.ErrorException);
+                        Log.Error("Error when sending SMS: " + response.ErrorMessage, response.ErrorException);
                     }
                     else
                     {
-                        _log.Error("Error when sending SMS: " + response.ErrorMessage);
+                        Log.Error("Error when sending SMS: " + response.ErrorMessage);
                     }
                 }
             }
