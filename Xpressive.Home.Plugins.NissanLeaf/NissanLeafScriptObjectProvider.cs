@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using log4net;
+using Serilog;
 using Xpressive.Home.Contracts.Automation;
 
 namespace Xpressive.Home.Plugins.NissanLeaf
@@ -36,7 +36,6 @@ namespace Xpressive.Home.Plugins.NissanLeaf
 
         public class NissanLeafScriptObject
         {
-            private static readonly ILog _log = LogManager.GetLogger(typeof(NissanLeafScriptObject));
             private readonly NissanLeafDevice _device;
             private readonly INissanLeafGateway _gateway;
 
@@ -50,7 +49,7 @@ namespace Xpressive.Home.Plugins.NissanLeaf
             {
                 if (_device == null)
                 {
-                    _log.Warn("Unable to get variable value because the device was not found.");
+                    Log.Warning("Unable to get variable value because the device was not found.");
                     return null;
                 }
 
@@ -61,7 +60,7 @@ namespace Xpressive.Home.Plugins.NissanLeaf
             {
                 if (_device == null)
                 {
-                    _log.Warn("Unable to get variable value because the device was not found.");
+                    Log.Warning("Unable to get variable value because the device was not found.");
                     return null;
                 }
 
@@ -72,7 +71,7 @@ namespace Xpressive.Home.Plugins.NissanLeaf
             {
                 if (_device == null)
                 {
-                    _log.Warn("Unable to get variable value because the device was not found.");
+                    Log.Warning("Unable to get variable value because the device was not found.");
                     return null;
                 }
 
@@ -83,7 +82,7 @@ namespace Xpressive.Home.Plugins.NissanLeaf
             {
                 if (_device == null)
                 {
-                    _log.Warn("Unable to get variable value because the device was not found.");
+                    Log.Warning("Unable to get variable value because the device was not found.");
                     return null;
                 }
 
@@ -94,7 +93,7 @@ namespace Xpressive.Home.Plugins.NissanLeaf
             {
                 if (_device == null)
                 {
-                    _log.Warn("Unable to get variable value because the device was not found.");
+                    Log.Warning("Unable to get variable value because the device was not found.");
                     return null;
                 }
 

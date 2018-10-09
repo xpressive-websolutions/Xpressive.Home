@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 using Action = Xpressive.Home.Contracts.Gateway.Action;
@@ -17,13 +17,13 @@ namespace Xpressive.Home.Plugins.NissanLeaf
         private readonly string _username;
         private readonly string _password;
 
-        public NissanLeafGateway(INissanLeafClient nissanLeafClient, IMessageQueue messageQueue) : base("NissanLeaf")
+        public NissanLeafGateway(INissanLeafClient nissanLeafClient, IMessageQueue messageQueue, IConfiguration configuration) : base("NissanLeaf")
         {
             _nissanLeafClient = nissanLeafClient;
             _messageQueue = messageQueue;
             _canCreateDevices = false;
-            _username = ConfigurationManager.AppSettings["nissanleaf.username"];
-            _password = ConfigurationManager.AppSettings["nissanleaf.password"];
+            _username = configuration["nissanleaf.username"];
+            _password = configuration["nissanleaf.password"];
         }
 
         public IEnumerable<NissanLeafDevice> GetDevices()
