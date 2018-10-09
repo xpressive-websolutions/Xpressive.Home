@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using log4net;
+using Serilog;
 using Xpressive.Home.Contracts.Automation;
 
 namespace Xpressive.Home.Plugins.Workday
@@ -37,7 +37,6 @@ namespace Xpressive.Home.Plugins.Workday
 
         public class WorkdayScriptObject
         {
-            private static readonly ILog _log = LogManager.GetLogger(typeof(WorkdayScriptObject));
             private readonly WorkdayDevice _device;
             private readonly IWorkdayCalculator _calculator;
 
@@ -51,7 +50,7 @@ namespace Xpressive.Home.Plugins.Workday
             {
                 if (_device == null)
                 {
-                    _log.Warn("Unable to get variable value because the device was not found.");
+                    Log.Warning("Unable to get variable value because the device was not found.");
                     return null;
                 }
 
@@ -62,7 +61,7 @@ namespace Xpressive.Home.Plugins.Workday
             {
                 if (_device == null)
                 {
-                    _log.Warn("Unable to get variable value because the device was not found.");
+                    Log.Warning("Unable to get variable value because the device was not found.");
                     return null;
                 }
 
