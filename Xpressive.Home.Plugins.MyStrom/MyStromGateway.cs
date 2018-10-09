@@ -4,9 +4,9 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using log4net;
 using Polly;
 using RestSharp;
+using Serilog;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 using Xpressive.Home.Contracts.Services;
@@ -16,7 +16,6 @@ namespace Xpressive.Home.Plugins.MyStrom
 {
     internal class MyStromGateway : GatewayBase, IMyStromGateway, IMessageQueueListener<NetworkDeviceFoundMessage>
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(MyStromGateway));
         private readonly IMessageQueue _messageQueue;
         private readonly IMyStromDeviceNameService _myStromDeviceNameService;
         private readonly IDeviceConfigurationBackupService _deviceConfigurationBackupService;
@@ -121,7 +120,7 @@ namespace Xpressive.Home.Plugins.MyStrom
             }
             catch (Exception e)
             {
-                _log.Error(e.Message, e);
+                Log.Error(e, e.Message);
             }
         }
 
@@ -129,7 +128,7 @@ namespace Xpressive.Home.Plugins.MyStrom
         {
             if (device == null)
             {
-                _log.Warn($"Unable to execute action {action.Name} because the device was not found.");
+                Log.Warning("Unable to execute action {actionName} because the device was not found.", action.Name);
                 return;
             }
 
