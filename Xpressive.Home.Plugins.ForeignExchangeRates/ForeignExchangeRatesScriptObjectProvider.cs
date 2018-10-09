@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using log4net;
+using Serilog;
 using Xpressive.Home.Contracts.Automation;
 
 namespace Xpressive.Home.Plugins.ForeignExchangeRates
@@ -35,7 +35,6 @@ namespace Xpressive.Home.Plugins.ForeignExchangeRates
 
         public class ForeignExchangeRatesScriptObject
         {
-            private static readonly ILog _log = LogManager.GetLogger(typeof(ForeignExchangeRatesScriptObject));
             private readonly ForeignExchangeRatesDevice _device;
 
             public ForeignExchangeRatesScriptObject(ForeignExchangeRatesDevice device)
@@ -47,14 +46,13 @@ namespace Xpressive.Home.Plugins.ForeignExchangeRates
             {
                 if (_device == null)
                 {
-                    _log.Warn("Unable to get variable value because the device was not found.");
+                    Log.Warning("Unable to get variable value because the device was not found.");
                     return null;
                 }
 
-                double rate;
-                if (!_device.Rates.TryGetValue(currency, out rate))
+                if (!_device.Rates.TryGetValue(currency, out double rate))
                 {
-                    _log.Warn($"Unable to get exchange rate because the currency '{currency}' it was not found.");
+                    Log.Warning("Unable to get exchange rate because the currency '{currency}' it was not found.", currency);
                     return null;
                 }
 

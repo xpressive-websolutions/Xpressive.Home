@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using log4net;
 using Newtonsoft.Json;
+using Serilog;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 using Xpressive.Home.Contracts.Services;
@@ -13,7 +13,6 @@ namespace Xpressive.Home.Plugins.ForeignExchangeRates
 {
     internal sealed class ForeignExchangeRatesGateway : GatewayBase, IForeignExchangeRatesGateway
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(ForeignExchangeRatesGateway));
         private readonly IMessageQueue _messageQueue;
         private readonly IHttpClientProvider _httpClientProvider;
 
@@ -84,7 +83,7 @@ namespace Xpressive.Home.Plugins.ForeignExchangeRates
             }
             catch (Exception e)
             {
-                _log.Error(e.Message, e);
+                Log.Error(e, e.Message);
             }
         }
     }
