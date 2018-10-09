@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using log4net;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 
@@ -11,7 +10,6 @@ namespace Xpressive.Home.Plugins.Daylight
 {
     internal class DaylightGateway : GatewayBase, IDaylightGateway
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(DaylightGateway));
         private readonly IMessageQueue _messageQueue;
 
         public DaylightGateway(IMessageQueue messageQueue) : base("Daylight")
