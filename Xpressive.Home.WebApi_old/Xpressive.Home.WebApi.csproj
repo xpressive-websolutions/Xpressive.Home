@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Autofac" Version="4.8.1" />
+    <PackageReference Include="CronExpressionDescriptor" Version="2.6.0" />
+    <PackageReference Include="Serilog" Version="2.7.1" />
+    <PackageReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Xpressive.Home.Contracts\Xpressive.Home.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>
