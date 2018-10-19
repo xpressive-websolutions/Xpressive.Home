@@ -121,7 +121,7 @@ namespace Xpressive.Home.Plugins.Lifx
             await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
 
             FindLocalBulbs(cancellationToken);
-            FindCloudBulbsAsync(cancellationToken).ConfigureAwait(false);
+            FindCloudBulbsAsync(cancellationToken);
 
             await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
 

@@ -95,7 +95,7 @@ namespace Xpressive.Home.Plugins.NissanLeaf
         //    request.AddParameter("VIN", device.Vin);
         //    request.AddParameter("custom_sessionid", device.CustomSessionId);
 
-        //    var response = await _restClient.PostTaskAsync<>(request).ConfigureAwait(false);
+        //    var response = await _restClient.PostTaskAsync<>(request);
         //}
 
         public async Task ActivateClimateControl(NissanLeafDevice device)
@@ -105,7 +105,7 @@ namespace Xpressive.Home.Plugins.NissanLeaf
             request.AddParameter("VIN", device.Vin);
             request.AddParameter("custom_sessionid", device.CustomSessionId);
 
-            await _restClient.ExecutePostTaskAsync(request).ConfigureAwait(false);
+            await _restClient.ExecutePostTaskAsync(request);
         }
 
         public async Task DeactivateClimateControl(NissanLeafDevice device)
@@ -115,7 +115,7 @@ namespace Xpressive.Home.Plugins.NissanLeaf
             request.AddParameter("VIN", device.Vin);
             request.AddParameter("custom_sessionid", device.CustomSessionId);
 
-            await _restClient.ExecutePostTaskAsync(request).ConfigureAwait(false);
+            await _restClient.ExecutePostTaskAsync(request);
         }
 
         public async Task StartCharging(NissanLeafDevice device)
@@ -127,7 +127,7 @@ namespace Xpressive.Home.Plugins.NissanLeaf
             request.AddParameter("tz", _timezone);
             request.AddParameter("ExecuteTime", DateTime.Today.ToString("yyyy-MM-dd"));
 
-            await _restClient.ExecutePostTaskAsync(request).ConfigureAwait(false);
+            await _restClient.ExecutePostTaskAsync(request);
         }
 
         private static BatteryStatus CreateBatteryStatus(BatteryStatusResultResponse response)

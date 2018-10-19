@@ -31,7 +31,7 @@ namespace Xpressive.Home.Plugins.NetworkDeviceAvailability
 
         protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
-            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { }).ConfigureAwait(false);
+            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
 
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -58,7 +58,7 @@ namespace Xpressive.Home.Plugins.NetworkDeviceAvailability
                     }
                 }
 
-                await Task.Delay(TimeSpan.FromMinutes(5), cancellationToken).ContinueWith(_ => { }).ConfigureAwait(false);
+                await Task.Delay(TimeSpan.FromMinutes(5), cancellationToken).ContinueWith(_ => { });
             }
         }
 
