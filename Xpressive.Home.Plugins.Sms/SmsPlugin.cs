@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Automation;
+using Xpressive.Home.Contracts.Gateway;
 
 namespace Xpressive.Home.Plugins.Sms
 {
@@ -11,7 +12,9 @@ namespace Xpressive.Home.Plugins.Sms
         {
             services.AddTransient<IScriptObjectProvider, SmsScriptObjectProvider>();
 
-            services.AddSingleton<IHostedService, SmsGateway>();
+            services.AddSingleton<SmsGateway>();
+            services.AddSingleton<IHostedService>(s => s.GetService<SmsGateway>());
+            services.AddSingleton<IGateway>(s => s.GetService<SmsGateway>());
         }
     }
 }

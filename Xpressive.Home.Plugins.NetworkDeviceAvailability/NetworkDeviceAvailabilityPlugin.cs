@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Xpressive.Home.Contracts;
+using Xpressive.Home.Contracts.Gateway;
 
 namespace Xpressive.Home.Plugins.NetworkDeviceAvailability
 {
@@ -8,7 +9,9 @@ namespace Xpressive.Home.Plugins.NetworkDeviceAvailability
     {
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSingleton<IHostedService, NetworkDeviceAvailabilityGateway>();
+            services.AddSingleton<NetworkDeviceAvailabilityGateway>();
+            services.AddSingleton<IHostedService>(s => s.GetService<NetworkDeviceAvailabilityGateway>());
+            services.AddSingleton<IGateway>(s => s.GetService<NetworkDeviceAvailabilityGateway>());
         }
     }
 }

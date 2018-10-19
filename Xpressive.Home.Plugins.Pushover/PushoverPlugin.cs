@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Hosting;
 using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Automation;
+using Xpressive.Home.Contracts.Gateway;
 
 namespace Xpressive.Home.Plugins.Pushover
 {
@@ -11,7 +12,9 @@ namespace Xpressive.Home.Plugins.Pushover
         {
             services.AddTransient<IScriptObjectProvider, PushoverScriptObjectProvider>();
 
-            services.AddSingleton<IHostedService, PushoverGateway>();
+            services.AddSingleton<PushoverGateway>();
+            services.AddSingleton<IHostedService>(s => s.GetService<PushoverGateway>());
+            services.AddSingleton<IGateway>(s => s.GetService<PushoverGateway>());
         }
     }
 }

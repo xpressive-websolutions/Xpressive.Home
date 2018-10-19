@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Automation;
+using Xpressive.Home.Contracts.Gateway;
 
 namespace Xpressive.Home.Plugins.Daylight
 {
@@ -14,6 +15,7 @@ namespace Xpressive.Home.Plugins.Daylight
             services.AddSingleton<DaylightGateway>();
             services.AddSingleton<IDaylightGateway>(s => s.GetService<DaylightGateway>());
             services.AddSingleton<IHostedService>(s => s.GetService<DaylightGateway>());
+            services.AddSingleton<IGateway>(s => s.GetService<DaylightGateway>());
         }
     }
 }

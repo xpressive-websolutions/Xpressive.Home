@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Hosting;
 using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Automation;
+using Xpressive.Home.Contracts.Gateway;
 
 namespace Xpressive.Home.Plugins.Denon
 {
@@ -14,6 +15,7 @@ namespace Xpressive.Home.Plugins.Denon
             services.AddSingleton<DenonGateway>();
             services.AddSingleton<IDenonGateway>(s => s.GetService<DenonGateway>());
             services.AddSingleton<IHostedService>(s => s.GetService<DenonGateway>());
+            services.AddSingleton<IGateway>(s => s.GetService<DenonGateway>());
         }
     }
 }

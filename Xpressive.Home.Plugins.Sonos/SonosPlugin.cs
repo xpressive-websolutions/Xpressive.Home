@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Hosting;
 using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Automation;
+using Xpressive.Home.Contracts.Gateway;
 
 namespace Xpressive.Home.Plugins.Sonos
 {
@@ -16,6 +17,7 @@ namespace Xpressive.Home.Plugins.Sonos
             services.AddSingleton<SonosGateway>();
             services.AddSingleton<ISonosGateway>(s => s.GetService<SonosGateway>());
             services.AddSingleton<IHostedService>(s => s.GetService<SonosGateway>());
+            services.AddSingleton<IGateway>(s => s.GetService<SonosGateway>());
         }
     }
 }

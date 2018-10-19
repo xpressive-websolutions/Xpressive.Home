@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Automation;
+using Xpressive.Home.Contracts.Gateway;
 
 namespace Xpressive.Home.Plugins.NissanLeaf
 {
@@ -16,6 +17,7 @@ namespace Xpressive.Home.Plugins.NissanLeaf
             services.AddSingleton<NissanLeafGateway>();
             services.AddSingleton<INissanLeafGateway>(s => s.GetService<NissanLeafGateway>());
             services.AddSingleton<IHostedService>(s => s.GetService<NissanLeafGateway>());
+            services.AddSingleton<IGateway>(s => s.GetService<NissanLeafGateway>());
         }
     }
 }
