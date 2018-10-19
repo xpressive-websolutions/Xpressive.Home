@@ -10,20 +10,6 @@ var informationalVersion = versionPrefix + "-beta.11";
 
 Setup(context =>
 {
-    var assemblyInfo = new AssemblyInfoSettings
-    {
-        Configuration = "",
-        Company = "Xpressive Websolutions",
-        Product = "Xpressive.Home",
-        Copyright = "Copyright \x00A9 " + DateTime.Now.Year,
-        Trademark = "",
-        ComVisible = false,
-        Version = version,
-        FileVersion = version,
-        InformationalVersion = informationalVersion
-    };
-
-    CreateAssemblyInfo("./Xpressive.Home/Properties/AssemblyInfo.shared.cs", assemblyInfo);
 });
 
 Task("Pre-Build Clean Up").Does(() =>

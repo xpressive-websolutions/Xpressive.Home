@@ -1,23 +1,37 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <Configurations>Debug;Release;Build</Configurations>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <PublishDir>.\bin\Debug\publish</PublishDir>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Autofac" Version="4.8.1" />
+    <PackageReference Include="BouncyCastle.NetCore" Version="1.8.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+    <PackageReference Include="Octokit" Version="0.31.0" />
+    <PackageReference Include="Polly" Version="6.1.0" />
+    <PackageReference Include="RestSharp" Version="106.5.4" />
+    <PackageReference Include="Rssdp" Version="4.0.2" />
     <PackageReference Include="Jint" Version="2.11.58" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="1.1.0" />
-    <PackageReference Include="NPoco" Version="3.9.4" />
     <PackageReference Include="Quartz" Version="3.0.6" />
-    <PackageReference Include="Serilog" Version="2.7.1" />
-    <PackageReference Include="Should" Version="1.1.20" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="3.1.1" />
+    <PackageReference Include="Serilog.AspNetCore" Version="2.1.1" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="3.0.1" />
+    <PackageReference Include="Shouldly" Version="3.0.1" />
+    <PackageReference Include="CronExpressionDescriptor" Version="2.8.0" />
+    <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Xpressive.Home.Contracts\Xpressive.Home.Contracts.csproj" />
     <ProjectReference Include="..\Xpressive.Home.DatabaseMigrator\Xpressive.Home.DatabaseMigrator.csproj" />
   </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="dotnet publish $(SolutionDir)Xpressive.Home.Plugins.Certificate\Xpressive.Home.Plugins.Certificate.csproj&#xD;&#xA;dotnet publish $(SolutionDir)Xpressive.Home.Plugins.Daylight\Xpressive.Home.Plugins.Daylight.csproj&#xD;&#xA;dotnet publish $(SolutionDir)Xpressive.Home.Plugins.Denon\Xpressive.Home.Plugins.Denon.csproj&#xD;&#xA;dotnet publish $(SolutionDir)Xpressive.Home.Plugins.Forecast\Xpressive.Home.Plugins.Forecast.csproj&#xD;&#xA;dotnet publish $(SolutionDir)Xpressive.Home.Plugins.ForeignExchangeRates\Xpressive.Home.Plugins.ForeignExchangeRates.csproj&#xD;&#xA;dotnet publish $(SolutionDir)Xpressive.Home.Plugins.Gardena\Xpressive.Home.Plugins.Gardena.csproj&#xD;&#xA;dotnet publish $(SolutionDir)Xpressive.Home.Plugins.Lifx\Xpressive.Home.Plugins.Lifx.csproj&#xD;&#xA;dotnet publish $(SolutionDir)Xpressive.Home.Plugins.MyStrom\Xpressive.Home.Plugins.MyStrom.csproj&#xD;&#xA;dotnet publish $(SolutionDir)Xpressive.Home.Plugins.Netatmo\Xpressive.Home.Plugins.Netatmo.csproj&#xD;&#xA;dotnet publish $(SolutionDir)Xpressive.Home.Plugins.NetworkDeviceAvailability\Xpressive.Home.Plugins.NetworkDeviceAvailability.csproj&#xD;&#xA;dotnet publish $(SolutionDir)Xpressive.Home.Plugins.NissanLeaf\Xpressive.Home.Plugins.NissanLeaf.csproj&#xD;&#xA;dotnet publish $(SolutionDir)Xpressive.Home.Plugins.PhilipsHue\Xpressive.Home.Plugins.PhilipsHue.csproj&#xD;&#xA;dotnet publish $(SolutionDir)Xpressive.Home.Plugins.Pushover\Xpressive.Home.Plugins.Pushover.csproj&#xD;&#xA;dotnet publish $(SolutionDir)Xpressive.Home.Plugins.Sms\Xpressive.Home.Plugins.Sms.csproj&#xD;&#xA;dotnet publish $(SolutionDir)Xpressive.Home.Plugins.Sonos\Xpressive.Home.Plugins.Sonos.csproj&#xD;&#xA;dotnet publish $(SolutionDir)Xpressive.Home.Plugins.Tado\Xpressive.Home.Plugins.Tado.csproj&#xD;&#xA;dotnet publish $(SolutionDir)Xpressive.Home.Plugins.Unifi\Xpressive.Home.Plugins.Unifi.csproj&#xD;&#xA;dotnet publish $(SolutionDir)Xpressive.Home.Plugins.WebHook\Xpressive.Home.Plugins.WebHook.csproj&#xD;&#xA;dotnet publish $(SolutionDir)Xpressive.Home.Plugins.Workday\Xpressive.Home.Plugins.Workday.csproj" />
+  </Target>
 
 </Project>

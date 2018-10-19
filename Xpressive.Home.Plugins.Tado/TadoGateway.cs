@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
@@ -22,9 +21,11 @@ namespace Xpressive.Home.Plugins.Tado
         private readonly string _password;
         private TokenDto _token;
 
-        public TadoGateway(IMessageQueue messageQueue, IConfiguration configuration) : base("tado")
+        public TadoGateway(IMessageQueue messageQueue, IConfiguration configuration)
+            : base("tado", false)
         {
             _messageQueue = messageQueue;
+            _messageQueue.Subscribe<CommandMessage>(Notify);
 
             _client = new RestClient("https://my.tado.com/");
             _authClient = new RestClient("https://auth.tado.com/");
@@ -37,7 +38,7 @@ namespace Xpressive.Home.Plugins.Tado
             yield return new Action("Set temperature") { Fields = { "Temperature" } };
         }
 
-        public override async Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
 
@@ -74,7 +75,14 @@ namespace Xpressive.Home.Plugins.Tado
 
                         lock (_deviceListLock)
                         {
-                            device = _devices.Cast<TadoDevice>().SingleOrDefault(d => d.Id.Equals(device.Id, StringComparison.OrdinalIgnoreCase));
+                            if (DeviceDictionary.TryGetValue(device.Id, out var d))
+                            {
+                                device = d as TadoDevice;
+                            }
+                            else
+                            {
+                                device = null;
+                            }
 
                             if (device == null)
                             {
@@ -84,7 +92,7 @@ namespace Xpressive.Home.Plugins.Tado
                                     Icon = "fa fa-thermometer-full"
                                 };
 
-                                _devices.TryAdd(device.Id, device);
+                                DeviceDictionary.TryAdd(device.Id, device);
                             }
                         }
 

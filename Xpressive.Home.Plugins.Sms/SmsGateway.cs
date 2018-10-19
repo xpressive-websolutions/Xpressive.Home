@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 
 namespace Xpressive.Home.Plugins.Sms
 {
-    internal sealed class SmsGateway : IGateway
+    internal sealed class SmsGateway : BackgroundService, IGateway
     {
         private readonly IMessageQueue _messageQueue;
         private readonly IConfiguration _configuration;
@@ -47,7 +48,7 @@ namespace Xpressive.Home.Plugins.Sms
             yield break;
         }
 
-        public async Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
             var username = _configuration["sms.username"];

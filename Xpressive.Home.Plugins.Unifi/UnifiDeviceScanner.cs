@@ -2,15 +2,15 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Serilog;
 using UnifiApi;
 using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Messaging;
-using Xpressive.Home.Contracts.Services;
 
 namespace Xpressive.Home.Plugins.Unifi
 {
-    internal sealed class UnifiDeviceScanner : INetworkDeviceScanner
+    internal sealed class UnifiDeviceScanner : BackgroundService
     {
         private readonly IMessageQueue _messageQueue;
         private readonly string _ipAddress;
@@ -52,9 +52,9 @@ namespace Xpressive.Home.Plugins.Unifi
             }
         }
 
-        public async Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
-            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { }).ConfigureAwait(false);
+            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
 
             if (!_isValidConfiguration)
             {
@@ -63,14 +63,21 @@ namespace Xpressive.Home.Plugins.Unifi
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                await ScanNetworkAsync().ConfigureAwait(false);
-                await Task.Delay(TimeSpan.FromMinutes(1), cancellationToken).ContinueWith(_ => { }).ConfigureAwait(false);
+                try
+                {
+                    await ScanNetworkAsync();
+                }
+                catch (Exception e)
+                {
+                    Log.Fatal(e, e.Message);
+                }
+                await Task.Delay(TimeSpan.FromMinutes(1), cancellationToken).ContinueWith(_ => { });
             }
         }
 
         private async Task ScanNetworkAsync()
         {
-            var url = $"{_ipAddress}:{_port}";
+            var url = $"https://{_ipAddress}:{_port}";
 
             try
             {

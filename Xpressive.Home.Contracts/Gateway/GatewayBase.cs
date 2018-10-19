@@ -1,30 +1,29 @@
-using Serilog;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Hosting;
+using Serilog;
 using Xpressive.Home.Contracts.Messaging;
 
 namespace Xpressive.Home.Contracts.Gateway
 {
-    public abstract class GatewayBase : IGateway, IMessageQueueListener<CommandMessage>
+    public abstract class GatewayBase : BackgroundService, IGateway, IMessageQueueListener<CommandMessage>
     {
-        protected readonly ConcurrentDictionary<string, DeviceBase> _devices;
-        protected bool _canCreateDevices;
-
-        protected GatewayBase(string name)
+        protected GatewayBase(string name, bool canCreateDevices, IDevicePersistingService devicePersistingService = null)
         {
             Name = name;
-            _devices = new ConcurrentDictionary<string, DeviceBase>(StringComparer.Ordinal);
+            CanCreateDevices = canCreateDevices;
+            PersistingService = devicePersistingService;
+            DeviceDictionary = new ConcurrentDictionary<string, DeviceBase>(StringComparer.Ordinal);
         }
 
         public string Name { get; }
-        public IEnumerable<IDevice> Devices => _devices.Values.ToList();
-        public bool CanCreateDevices => _canCreateDevices;
-
-        public IDevicePersistingService PersistingService { get; set; }
+        public IEnumerable<IDevice> Devices => DeviceDictionary.Values.ToList();
+        public bool CanCreateDevices { get; }
+        public IDevicePersistingService PersistingService { get; }
+        protected ConcurrentDictionary<string, DeviceBase> DeviceDictionary { get; }
 
         public bool AddDevice(IDevice device)
         {
@@ -34,21 +33,19 @@ namespace Xpressive.Home.Contracts.Gateway
 
         public void RemoveDevice(IDevice device)
         {
-            if (!_canCreateDevices)
+            if (!CanCreateDevices)
             {
                 throw new InvalidOperationException("Unable to remove devices.");
             }
 
             DeviceBase d;
-            if (_devices.TryRemove(device.Id, out d))
+            if (DeviceDictionary.TryRemove(device.Id, out d))
             {
                 PersistingService.DeleteAsync(Name, d);
             }
         }
 
         public abstract IEnumerable<IAction> GetActions(IDevice device);
-
-        public abstract Task StartAsync(CancellationToken cancellationToken);
         public abstract IDevice CreateEmptyDevice();
 
         public void Notify(CommandMessage message)
@@ -68,7 +65,7 @@ namespace Xpressive.Home.Contracts.Gateway
             var deviceId = parts[1];
             var actionName = parts[2];
             DeviceBase device;
-            if (!_devices.TryGetValue(deviceId, out device))
+            if (!DeviceDictionary.TryGetValue(deviceId, out device))
             {
                 return;
             }
@@ -91,7 +88,7 @@ namespace Xpressive.Home.Contracts.Gateway
 
                 foreach (var device in devices)
                 {
-                    _devices.AddOrUpdate(device.Id, device, (_, e) => device);
+                    DeviceDictionary.AddOrUpdate(device.Id, device, (_, e) => device);
                 }
             }
             catch (Exception e)
@@ -107,12 +104,12 @@ namespace Xpressive.Home.Contracts.Gateway
 
         protected virtual bool AddDeviceInternal(DeviceBase device)
         {
-            if (!_canCreateDevices || device == null || !device.IsConfigurationValid())
+            if (!CanCreateDevices || device == null || !device.IsConfigurationValid())
             {
                 return false;
             }
 
-            _devices.AddOrUpdate(device.Id, device, (_, e) => device);
+            DeviceDictionary.AddOrUpdate(device.Id, device, (_, e) => device);
             PersistingService.SaveAsync(Name, device);
             return true;
         }

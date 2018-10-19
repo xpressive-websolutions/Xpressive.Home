@@ -26,7 +26,8 @@ namespace Xpressive.Home.Plugins.Netatmo
         private readonly string _password;
         private readonly bool _isValidConfiguration;
 
-        public NetatmoGateway(IMessageQueue messageQueue, IConfiguration configuration) : base("Netatmo")
+        public NetatmoGateway(IMessageQueue messageQueue, IConfiguration configuration)
+            : base("Netatmo", false)
         {
             _messageQueue = messageQueue;
             _clientId = configuration["netatmo.clientid"];
@@ -39,8 +40,6 @@ namespace Xpressive.Home.Plugins.Netatmo
                 !string.IsNullOrEmpty(_clientSecret) &&
                 !string.IsNullOrEmpty(_username) &&
                 !string.IsNullOrEmpty(_password);
-
-            _canCreateDevices = false;
         }
 
         public override IDevice CreateEmptyDevice()
@@ -63,7 +62,7 @@ namespace Xpressive.Home.Plugins.Netatmo
             throw new NotSupportedException();
         }
 
-        public override async Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
 
@@ -141,12 +140,10 @@ namespace Xpressive.Home.Plugins.Netatmo
         {
             var id = $"{station}-{module.ModuleName}";
 
-            var device = GetDevices().SingleOrDefault(d => d.Id.Equals(id));
-
-            if (device == null)
+            if (!DeviceDictionary.TryGetValue(id, out var d) || !(d is NetatmoDevice device))
             {
                 device = new NetatmoDevice(id, module.ModuleName);
-                _devices.TryAdd(id, device);
+                DeviceDictionary.TryAdd(id, device);
             }
 
             PublishVariables(device, module);

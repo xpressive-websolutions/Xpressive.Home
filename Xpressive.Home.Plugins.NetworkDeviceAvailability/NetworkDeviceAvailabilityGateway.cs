@@ -10,16 +10,18 @@ using Xpressive.Home.Contracts.Messaging;
 
 namespace Xpressive.Home.Plugins.NetworkDeviceAvailability
 {
-    internal sealed class NetworkDeviceAvailabilityGateway : GatewayBase, IMessageQueueListener<NetworkDeviceFoundMessage>
+    internal sealed class NetworkDeviceAvailabilityGateway : GatewayBase
     {
         private readonly IDictionary<string, DateTime> _lastSeenMacAddresses;
         private readonly IMessageQueue _messageQueue;
 
-        public NetworkDeviceAvailabilityGateway(IMessageQueue messageQueue) : base("AvailableNetworkDevices")
+        public NetworkDeviceAvailabilityGateway(IMessageQueue messageQueue, IDevicePersistingService persistingService)
+            : base("AvailableNetworkDevices", true, persistingService)
         {
             _messageQueue = messageQueue;
             _lastSeenMacAddresses = new Dictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
-            _canCreateDevices = true;
+
+            _messageQueue.Subscribe<NetworkDeviceFoundMessage>(Notify);
         }
 
         public override IEnumerable<IAction> GetActions(IDevice device)
@@ -27,7 +29,7 @@ namespace Xpressive.Home.Plugins.NetworkDeviceAvailability
             yield break;
         }
 
-        public override async Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { }).ConfigureAwait(false);
 
@@ -101,7 +103,11 @@ namespace Xpressive.Home.Plugins.NetworkDeviceAvailability
 
         private bool TryGetDevice(string id, out AvailableNetworkDevice device)
         {
-            device = _devices.Values.SingleOrDefault(d => d.Id.Equals(id, StringComparison.OrdinalIgnoreCase)) as AvailableNetworkDevice;
+            device = null;
+            if (DeviceDictionary.TryGetValue(id, out var d))
+            {
+                device = d as AvailableNetworkDevice;
+            }
             return device != null;
         }
     }

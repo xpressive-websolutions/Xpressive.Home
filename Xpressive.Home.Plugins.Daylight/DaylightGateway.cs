@@ -12,11 +12,10 @@ namespace Xpressive.Home.Plugins.Daylight
     {
         private readonly IMessageQueue _messageQueue;
 
-        public DaylightGateway(IMessageQueue messageQueue) : base("Daylight")
+        public DaylightGateway(IMessageQueue messageQueue, IDevicePersistingService persistingService)
+            : base("Daylight", true, persistingService)
         {
             _messageQueue = messageQueue;
-
-            _canCreateDevices = true;
         }
 
         public override IDevice CreateEmptyDevice()
@@ -34,7 +33,7 @@ namespace Xpressive.Home.Plugins.Daylight
             yield break;
         }
 
-        public override async Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
 

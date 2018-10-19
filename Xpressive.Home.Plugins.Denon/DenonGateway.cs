@@ -16,15 +16,17 @@ using Action = Xpressive.Home.Contracts.Gateway.Action;
 
 namespace Xpressive.Home.Plugins.Denon
 {
-    internal class DenonGateway : GatewayBase, IDenonGateway, IMessageQueueListener<NetworkDeviceFoundMessage>
+    internal class DenonGateway : GatewayBase, IDenonGateway
     {
         private readonly IMessageQueue _messageQueue;
         private readonly object _deviceLock = new object();
 
-        public DenonGateway(IMessageQueue messageQueue) : base("Denon")
+        public DenonGateway(IMessageQueue messageQueue) : base("Denon", false)
         {
             _messageQueue = messageQueue;
-            _canCreateDevices = false;
+
+            _messageQueue.Subscribe<NetworkDeviceFoundMessage>(Notify);
+            _messageQueue.Subscribe<CommandMessage>(Notify);
         }
 
         public override IDevice CreateEmptyDevice()
@@ -162,7 +164,7 @@ namespace Xpressive.Home.Plugins.Denon
             }
         }
 
-        public override async Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
 
@@ -243,7 +245,7 @@ namespace Xpressive.Home.Plugins.Denon
                 {
                     Name = fn.InnerText.Replace("Denon", string.Empty).Trim()
                 };
-                _devices.TryAdd(sn.InnerText, device);
+                DeviceDictionary.TryAdd(sn.InnerText, device);
 
                 return device;
             }

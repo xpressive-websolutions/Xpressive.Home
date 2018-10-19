@@ -31,12 +31,14 @@ namespace Xpressive.Home.Plugins.PhilipsHue
         public PhilipsHueGateway(
             IVariableRepository variableRepository,
             IPhilipsHueDeviceDiscoveringService deviceDiscoveringService,
-            IMessageQueue messageQueue) : base("PhilipsHue")
+            IMessageQueue messageQueue)
+            : base("PhilipsHue", false)
         {
             _variableRepository = variableRepository;
             _deviceDiscoveringService = deviceDiscoveringService;
             _messageQueue = messageQueue;
-            _canCreateDevices = false;
+
+            _messageQueue.Subscribe<CommandMessage>(Notify);
 
             _deviceDiscoveringService.BulbFound += OnDeviceFound;
             _deviceDiscoveringService.PresenceSensorFound += OnDeviceFound;
@@ -133,7 +135,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             throw new NotSupportedException();
         }
 
-        public override async Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(t => { });
 
@@ -149,9 +151,9 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 
                 lock (_devicesLock)
                 {
-                    bulbs = _devices.OfType<PhilipsHueBulb>().ToList();
-                    presenceSensors = _devices.OfType<PhilipsHuePresenceSensor>().ToList();
-                    buttonSensors = _devices.OfType<PhilipsHueButtonSensor>().ToList();
+                    bulbs = Devices.OfType<PhilipsHueBulb>().ToList();
+                    presenceSensors = Devices.OfType<PhilipsHuePresenceSensor>().ToList();
+                    buttonSensors = Devices.OfType<PhilipsHueButtonSensor>().ToList();
                 }
 
                 var bridges = bulbs
@@ -423,12 +425,12 @@ namespace Xpressive.Home.Plugins.PhilipsHue
         {
             lock (_devicesLock)
             {
-                if (_devices.Cast<PhilipsHueDevice>().Any(d => d.Id.Equals(device.Id, StringComparison.OrdinalIgnoreCase)))
+                if (DeviceDictionary.TryGetValue(device.Id, out var d) && d is PhilipsHueDevice)
                 {
                     return;
                 }
 
-                _devices.TryAdd(device.Id, device);
+                DeviceDictionary.TryAdd(device.Id, device);
             }
         }
 

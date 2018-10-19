@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
     <Configurations>Debug;Release;Build</Configurations>
   </PropertyGroup>
 
@@ -10,14 +10,12 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <OutputPath>..\Xpressive.Home.ConsoleHost\bin\Debug\Plugins\</OutputPath>
+    <PublishDir>..\Xpressive.Home\bin\Debug\publish\Plugins\Unifi</PublishDir>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Autofac" Version="4.8.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="2.1.1" />
-    <PackageReference Include="Serilog" Version="2.7.1" />
-    <PackageReference Include="UnifiApi" Version="1.0.0.8" />
+    <PackageReference Include="UnifiApi" Version="1.0.0.10" />
   </ItemGroup>
 
   <ItemGroup>

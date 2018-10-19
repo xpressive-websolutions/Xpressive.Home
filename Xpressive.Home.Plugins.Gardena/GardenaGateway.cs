@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
@@ -23,12 +22,12 @@ namespace Xpressive.Home.Plugins.Gardena
         private readonly Dictionary<string, string> _substitutions;
         private Token _token;
 
-        public GardenaGateway(IMessageQueue messageQueue, IConfiguration configuration) : base("Gardena")
+        public GardenaGateway(IMessageQueue messageQueue, IConfiguration configuration)
+            : base("Gardena", false)
         {
             _messageQueue = messageQueue;
             _username = configuration["gardena.username"];
             _password = configuration["gardena.password"];
-            _canCreateDevices = false;
 
             _client = new RestClient("https://smart.gardena.com/");
             _authClient = new RestClient("https://iam-api.dss.husqvarnagroup.net/");
@@ -92,7 +91,7 @@ namespace Xpressive.Home.Plugins.Gardena
 
         }
 
-        public override async Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
 
@@ -126,16 +125,14 @@ namespace Xpressive.Home.Plugins.Gardena
 
                         foreach (var device in devices.Devices)
                         {
-                            var gardenaDevice = _devices.Values.SingleOrDefault(d => d.Id.Equals(device.Id, StringComparison.OrdinalIgnoreCase)) as GardenaDevice;
-
-                            if (gardenaDevice == null)
+                            if (!DeviceDictionary.TryGetValue(device.Id, out var d) || !(d is GardenaDevice gardenaDevice))
                             {
                                 gardenaDevice = new GardenaDevice
                                 {
                                     Id = device.Id,
                                     Name = device.Name
                                 };
-                                _devices.TryAdd(device.Id, gardenaDevice);
+                                DeviceDictionary.TryAdd(device.Id, gardenaDevice);
                             }
 
                             foreach (var ability in device.Abilities)

@@ -23,12 +23,14 @@ namespace Xpressive.Home.Plugins.Lifx
         private readonly object _deviceLock = new object();
         private readonly LifxLocalClient _localClient = new LifxLocalClient();
 
-        public LifxGateway(IMessageQueue messageQueue, IDeviceConfigurationBackupService deviceConfigurationBackupService, IConfiguration configuration) : base("Lifx")
+        public LifxGateway(IMessageQueue messageQueue, IDeviceConfigurationBackupService deviceConfigurationBackupService, IConfiguration configuration)
+            : base("Lifx", false)
         {
             _messageQueue = messageQueue;
             _deviceConfigurationBackupService = deviceConfigurationBackupService;
-            _canCreateDevices = false;
             _token = configuration["lifx.token"];
+
+            _messageQueue.Subscribe<CommandMessage>(Notify);
 
             _localClient.DeviceDiscovered += (s, e) =>
             {
@@ -37,9 +39,7 @@ namespace Xpressive.Home.Plugins.Lifx
 
             _localClient.VariableChanged += (s, e) =>
             {
-                var device = _devices.Values.Cast<LifxDevice>().SingleOrDefault(d => d.Id.Equals(e.Item1.Id));
-
-                if (device != null)
+                if (DeviceDictionary.TryGetValue(e.Item1.Id, out var d) && d is LifxDevice device)
                 {
                     device.Name = e.Item1.Name;
                 }
@@ -116,7 +116,7 @@ namespace Xpressive.Home.Plugins.Lifx
             StartActionInNewTask(device, action, parameters);
         }
 
-        public override async Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
 
@@ -379,14 +379,11 @@ namespace Xpressive.Home.Plugins.Lifx
 
             lock (_deviceLock)
             {
-                var device = _devices.Cast<LifxDevice>().SingleOrDefault(d => d.Id.Equals(id));
-
-                if (device == null)
+                if (!DeviceDictionary.TryGetValue(id, out var d) || !(d is LifxDevice device))
                 {
                     device = create();
-                    _devices.TryAdd(device.Id, device);
+                    DeviceDictionary.TryAdd(device.Id, device);
                 }
-
                 return device;
             }
         }

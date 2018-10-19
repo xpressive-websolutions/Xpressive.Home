@@ -17,18 +17,18 @@ namespace Xpressive.Home.Plugins.NissanLeaf
         private readonly string _username;
         private readonly string _password;
 
-        public NissanLeafGateway(INissanLeafClient nissanLeafClient, IMessageQueue messageQueue, IConfiguration configuration) : base("NissanLeaf")
+        public NissanLeafGateway(INissanLeafClient nissanLeafClient, IMessageQueue messageQueue, IConfiguration configuration)
+            : base("NissanLeaf", false)
         {
             _nissanLeafClient = nissanLeafClient;
             _messageQueue = messageQueue;
-            _canCreateDevices = false;
             _username = configuration["nissanleaf.username"];
             _password = configuration["nissanleaf.password"];
         }
 
         public IEnumerable<NissanLeafDevice> GetDevices()
         {
-            return _devices.Cast<NissanLeafDevice>();
+            return Devices.Cast<NissanLeafDevice>();
         }
 
         public void StartCharging(NissanLeafDevice device)
@@ -57,7 +57,7 @@ namespace Xpressive.Home.Plugins.NissanLeaf
             yield return new Action("Stop climate control");
         }
 
-        public override async Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { }).ConfigureAwait(false);
 
@@ -75,21 +75,17 @@ namespace Xpressive.Home.Plugins.NissanLeaf
 
                 foreach (var foundDevice in foundDevices)
                 {
-                    var existingDevice = _devices
-                        .Cast<NissanLeafDevice>()
-                        .SingleOrDefault(d => d.Id.Equals(foundDevice.Id, StringComparison.OrdinalIgnoreCase));
-
-                    if (existingDevice == null)
-                    {
-                        _devices.TryAdd(foundDevice.Id, foundDevice);
-                    }
-                    else
+                    if (DeviceDictionary.TryGetValue(foundDevice.Id, out var d) && d is NissanLeafDevice existingDevice)
                     {
                         existingDevice.CustomSessionId = foundDevice.CustomSessionId;
                     }
+                    else
+                    {
+                        DeviceDictionary.TryAdd(foundDevice.Id, foundDevice);
+                    }
                 }
 
-                foreach (var device in _devices.Cast<NissanLeafDevice>())
+                foreach (var device in Devices.Cast<NissanLeafDevice>())
                 {
                     var batteryStatus = await _nissanLeafClient.GetBatteryStatusAsync(device, cancellationToken).ConfigureAwait(false);
 

@@ -16,11 +16,13 @@ namespace Xpressive.Home.Plugins.Sonos
         private readonly IMessageQueue _messageQueue;
         private readonly ISonosSoapClient _soapClient;
 
-        public SonosGateway(IMessageQueue messageQueue, ISonosDeviceDiscoverer deviceDiscoverer, ISonosSoapClient soapClient) : base("Sonos")
+        public SonosGateway(IMessageQueue messageQueue, ISonosDeviceDiscoverer deviceDiscoverer, ISonosSoapClient soapClient)
+            : base("Sonos", false)
         {
             _messageQueue = messageQueue;
             _soapClient = soapClient;
-            _canCreateDevices = false;
+
+            _messageQueue.Subscribe<CommandMessage>(Notify);
 
             deviceDiscoverer.DeviceFound += (s, e) =>
             {
@@ -31,7 +33,7 @@ namespace Xpressive.Home.Plugins.Sonos
                     e.Icon = "SonosIcon SonosIcon_" + e.Type;
                 }
 
-                _devices.TryAdd(e.Id, e);
+                DeviceDictionary.TryAdd(e.Id, e);
             };
         }
 
@@ -106,7 +108,7 @@ namespace Xpressive.Home.Plugins.Sonos
             StartActionInNewTask(device, new Action("Change Volume"), parameters);
         }
 
-        public override async Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
 

@@ -21,11 +21,11 @@ namespace Xpressive.Home.Plugins.Forecast
         private readonly Policy _policy;
         private DarkSkyService _darkSky;
 
-        public ForecastGateway(IMessageQueue messageQueue, IConfiguration configuration) : base("Weather")
+        public ForecastGateway(IMessageQueue messageQueue, IConfiguration configuration, IDevicePersistingService persistingService)
+            : base("Weather", true, persistingService)
         {
             _messageQueue = messageQueue;
             _apiKey = configuration["forecast.apikey"];
-            _canCreateDevices = true;
 
             _policy = Policy
                 .Handle<WebException>()
@@ -47,7 +47,7 @@ namespace Xpressive.Home.Plugins.Forecast
             yield break;
         }
 
-        public override async Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
 
@@ -65,7 +65,7 @@ namespace Xpressive.Home.Plugins.Forecast
             {
                 try
                 {
-                    var devices = _devices.Cast<ForecastDevice>().ToList();
+                    var devices = Devices.Cast<ForecastDevice>().ToList();
                     devices.ForEach(async d => await GetWeatherInfo(d, cancellationToken));
                 }
                 catch (Exception e)
@@ -73,7 +73,7 @@ namespace Xpressive.Home.Plugins.Forecast
                     Log.Error(e, e.Message);
                 }
 
-                var minutes = Math.Max(_devices.Count * 2.5, 10);
+                var minutes = Math.Max(DeviceDictionary.Count * 2.5, 10);
                 await Task.Delay(TimeSpan.FromMinutes(minutes), cancellationToken).ContinueWith(_ => { });
             }
         }

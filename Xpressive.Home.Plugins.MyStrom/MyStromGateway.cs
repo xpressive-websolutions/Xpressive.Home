@@ -14,7 +14,7 @@ using Action = Xpressive.Home.Contracts.Gateway.Action;
 
 namespace Xpressive.Home.Plugins.MyStrom
 {
-    internal class MyStromGateway : GatewayBase, IMyStromGateway, IMessageQueueListener<NetworkDeviceFoundMessage>
+    internal class MyStromGateway : GatewayBase, IMyStromGateway
     {
         private readonly IMessageQueue _messageQueue;
         private readonly IMyStromDeviceNameService _myStromDeviceNameService;
@@ -24,17 +24,20 @@ namespace Xpressive.Home.Plugins.MyStrom
         public MyStromGateway(
             IMessageQueue messageQueue,
             IMyStromDeviceNameService myStromDeviceNameService,
-            IDeviceConfigurationBackupService deviceConfigurationBackupService) : base("myStrom")
+            IDeviceConfigurationBackupService deviceConfigurationBackupService)
+            : base("myStrom", false)
         {
             _messageQueue = messageQueue;
             _myStromDeviceNameService = myStromDeviceNameService;
             _deviceConfigurationBackupService = deviceConfigurationBackupService;
-            _canCreateDevices = false;
+
+            _messageQueue.Subscribe<NetworkDeviceFoundMessage>(Notify);
+            _messageQueue.Subscribe<CommandMessage>(Notify);
         }
 
         public IEnumerable<MyStromDevice> GetDevices()
         {
-            return _devices.Cast<MyStromDevice>();
+            return Devices.Cast<MyStromDevice>();
         }
 
         public void SwitchOn(MyStromDevice device)
@@ -56,7 +59,7 @@ namespace Xpressive.Home.Plugins.MyStrom
             }
         }
 
-        public override async Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             await LoadDevicesFromBackup();
 
@@ -66,7 +69,7 @@ namespace Xpressive.Home.Plugins.MyStrom
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                foreach (var device in _devices.Cast<MyStromDevice>())
+                foreach (var device in Devices.Cast<MyStromDevice>())
                 {
                     var dto = await GetReport(device.IpAddress);
 
@@ -155,7 +158,7 @@ namespace Xpressive.Home.Plugins.MyStrom
         {
             if (disposing)
             {
-                var ipAddresses = _devices.OfType<MyStromDevice>().Select(d => d.IpAddress).ToList();
+                var ipAddresses = Devices.OfType<MyStromDevice>().Select(d => d.IpAddress).ToList();
                 _deviceConfigurationBackupService.Save(Name, new DeviceConfigurationBackupDto(ipAddresses));
             }
             base.Dispose(disposing);
@@ -209,8 +212,9 @@ namespace Xpressive.Home.Plugins.MyStrom
 
             lock (_deviceListLock)
             {
-                if (_devices.Cast<MyStromDevice>().Any(d => d.MacAddress.Equals(macAddress)))
+                if (DeviceDictionary.TryGetValue(macAddress, out var d) && d is MyStromDevice device)
                 {
+                    device.IpAddress = ipAddress;
                     return;
                 }
 
@@ -222,7 +226,7 @@ namespace Xpressive.Home.Plugins.MyStrom
                     }
                 }
 
-                _devices.TryAdd(macAddress, new MyStromDevice(name, ipAddress, macAddress));
+                DeviceDictionary.TryAdd(macAddress, new MyStromDevice(name, ipAddress, macAddress));
             }
         }
 
