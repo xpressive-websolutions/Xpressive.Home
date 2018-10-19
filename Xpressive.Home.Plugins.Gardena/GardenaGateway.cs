@@ -45,7 +45,7 @@ namespace Xpressive.Home.Plugins.Gardena
                 {"gateway_time_zone", "time_zone"},
                 {"battery_level", "battery_level"},
                 {"battery_disposable_battery_status", "battery_status"},
-                {"ambient_temperature_temperature", "abient_temperature"},
+                {"ambient_temperature_temperature", "ambient_temperature"},
                 {"ambient_temperature_frost_warning", "frost_warning"},
                 {"soil_temperature_temperature", "soil_temperature"},
                 {"humidity_humidity", "humidity"},
