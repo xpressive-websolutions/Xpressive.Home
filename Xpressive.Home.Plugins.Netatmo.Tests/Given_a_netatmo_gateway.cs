@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
+using Moq;
 using Xpressive.Home.Contracts.Messaging;
 using Xunit;
 using Xunit.Abstractions;
@@ -19,7 +21,9 @@ namespace Xpressive.Home.Plugins.Netatmo.Tests
         [Fact]
         public async Task X()
         {
-            var gateway = new NetatmoGateway(new MessageQueueMock(_output.WriteLine));
+            var configuration = new Mock<IConfiguration>();
+            configuration.Setup(c => c[It.IsAny<string>()]).Returns("asdf");
+            var gateway = new NetatmoGateway(new MessageQueueMock(_output.WriteLine), configuration.Object);
             await gateway.StartAsync(new CancellationToken());
         }
     }

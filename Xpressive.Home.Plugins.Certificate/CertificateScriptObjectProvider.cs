@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using log4net;
+using Serilog;
 using Xpressive.Home.Contracts.Automation;
 
 namespace Xpressive.Home.Plugins.Certificate
@@ -35,7 +35,6 @@ namespace Xpressive.Home.Plugins.Certificate
 
         public class CertificateScriptObject
         {
-            private static readonly ILog _log = LogManager.GetLogger(typeof(CertificateScriptObject));
             private readonly CertificateDevice _device;
 
             public CertificateScriptObject(CertificateDevice device)
@@ -47,7 +46,7 @@ namespace Xpressive.Home.Plugins.Certificate
             {
                 if (_device == null)
                 {
-                    _log.Warn("Unable to get variable value because the device was not found.");
+                    Log.Warning("Unable to get variable value because the device was not found.");
                     return null;
                 }
 
@@ -58,7 +57,7 @@ namespace Xpressive.Home.Plugins.Certificate
             {
                 if (_device == null)
                 {
-                    _log.Warn("Unable to get variable value because the device was not found.");
+                    Log.Warning("Unable to get variable value because the device was not found.");
                     return null;
                 }
 
@@ -69,7 +68,7 @@ namespace Xpressive.Home.Plugins.Certificate
             {
                 if (_device == null)
                 {
-                    _log.Warn("Unable to get variable value because the device was not found.");
+                    Log.Warning("Unable to get variable value because the device was not found.");
                     return null;
                 }
 
@@ -80,7 +79,7 @@ namespace Xpressive.Home.Plugins.Certificate
             {
                 if (_device == null)
                 {
-                    _log.Warn("Unable to get variable value because the device was not found.");
+                    Log.Warning("Unable to get variable value because the device was not found.");
                     return null;
                 }
 
@@ -91,7 +90,7 @@ namespace Xpressive.Home.Plugins.Certificate
             {
                 if (_device == null)
                 {
-                    _log.Warn("Unable to get variable value because the device was not found.");
+                    Log.Warning("Unable to get variable value because the device was not found.");
                     return null;
                 }
 
@@ -102,7 +101,7 @@ namespace Xpressive.Home.Plugins.Certificate
             {
                 if (_device == null)
                 {
-                    _log.Warn("Unable to get variable value because the device was not found.");
+                    Log.Warning("Unable to get variable value because the device was not found.");
                     return null;
                 }
 
@@ -113,7 +112,7 @@ namespace Xpressive.Home.Plugins.Certificate
             {
                 if (_device == null)
                 {
-                    _log.Warn("Unable to get variable value because the device was not found.");
+                    Log.Warning("Unable to get variable value because the device was not found.");
                     return null;
                 }
 
@@ -124,7 +123,7 @@ namespace Xpressive.Home.Plugins.Certificate
             {
                 if (_device == null)
                 {
-                    _log.Warn("Unable to get variable value because the device was not found.");
+                    Log.Warning("Unable to get variable value because the device was not found.");
                     return null;
                 }
 

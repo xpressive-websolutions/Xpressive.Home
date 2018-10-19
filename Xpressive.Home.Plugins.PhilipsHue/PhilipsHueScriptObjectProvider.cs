@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using log4net;
+using Serilog;
 using Xpressive.Home.Contracts.Automation;
 using Xpressive.Home.Contracts.Rooms;
 
@@ -91,7 +91,6 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 
         public class PhilipsHueScriptObject
         {
-            private static readonly ILog _log = LogManager.GetLogger(typeof(PhilipsHueScriptObject));
             private readonly IPhilipsHueGateway _gateway;
             private readonly PhilipsHueDevice _device;
 
@@ -107,7 +106,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 
                 if (bulb == null)
                 {
-                    _log.Warn("Unable to get variable value because the device was not found or it isn't a bulb.");
+                    Log.Warning("Unable to get variable value because the device was not found or it isn't a bulb.");
                     return null;
                 }
 
@@ -120,7 +119,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 
                 if (sensor == null)
                 {
-                    _log.Warn("Unable to get variable value because the device was not found or it isn't a sensor.");
+                    Log.Warning("Unable to get variable value because the device was not found or it isn't a sensor.");
                     return null;
                 }
 

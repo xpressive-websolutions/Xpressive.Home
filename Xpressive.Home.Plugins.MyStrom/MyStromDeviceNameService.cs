@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Configuration;
+using System.Threading;
 using System.Threading.Tasks;
-using Nito.AsyncEx;
+using Microsoft.Extensions.Configuration;
 using RestSharp;
 using Xpressive.Home.Contracts.Messaging;
 
@@ -13,15 +13,15 @@ namespace Xpressive.Home.Plugins.MyStrom
         private readonly IMessageQueue _messageQueue;
         private readonly string _username;
         private readonly string _password;
-        private readonly AsyncLock _lock = new AsyncLock();
+        private readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
         private DateTime _recentResultTimestamp;
         private IDictionary<string, string> _recentResult;
 
-        public MyStromDeviceNameService(IMessageQueue messageQueue)
+        public MyStromDeviceNameService(IMessageQueue messageQueue, IConfiguration configuration)
         {
             _messageQueue = messageQueue;
-            _username = ConfigurationManager.AppSettings["mystrom.username"];
-            _password = ConfigurationManager.AppSettings["mystrom.password"];
+            _username = configuration["mystrom.username"];
+            _password = configuration["mystrom.password"];
 
             _recentResultTimestamp = DateTime.MinValue;
             _recentResult = new Dictionary<string, string>(0);
@@ -29,7 +29,8 @@ namespace Xpressive.Home.Plugins.MyStrom
 
         public async Task<IDictionary<string, string>> GetDeviceNamesByMacAsync()
         {
-            using (await _lock.LockAsync())
+            await _lock.WaitAsync();
+            try
             {
                 if ((DateTime.UtcNow - _recentResultTimestamp).TotalMinutes < 10)
                 {
@@ -57,7 +58,8 @@ namespace Xpressive.Home.Plugins.MyStrom
                 request = new RestRequest("app/de/device/command");
                 request.AddHeader("Origin", "https://mystrom.ch");
                 request.AddHeader("Referer", "https://mystrom.ch/app/de/home");
-                request.AddHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.87 Safari/537.36");
+                request.AddHeader("User-Agent",
+                    "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.87 Safari/537.36");
                 request.AddHeader("Accept", "application/json, text/javascript, */*; q=0.01");
                 request.AddHeader("Content-Type", "application/json; charset=UTF-8");
                 request.AddHeader("X-Requested-With", "XMLHttpRequest");
@@ -87,6 +89,10 @@ namespace Xpressive.Home.Plugins.MyStrom
                 _recentResultTimestamp = DateTime.UtcNow;
 
                 return result;
+            }
+            finally
+            {
+                _lock.Release();
             }
         }
 

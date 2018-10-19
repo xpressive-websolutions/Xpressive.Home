@@ -1,21 +1,23 @@
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using log4net;
+using Microsoft.Extensions.Configuration;
 using Polly;
 using Polly.Retry;
 using RestSharp;
+using Serilog;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
+
+[assembly: InternalsVisibleTo("Xpressive.Home.Plugins.Netatmo.Tests")]
 
 namespace Xpressive.Home.Plugins.Netatmo
 {
     internal class NetatmoGateway : GatewayBase, INetatmoGateway
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(NetatmoGateway));
         private readonly IMessageQueue _messageQueue;
         private readonly object _deviceLock = new object();
         private readonly string _clientId;
@@ -24,21 +26,20 @@ namespace Xpressive.Home.Plugins.Netatmo
         private readonly string _password;
         private readonly bool _isValidConfiguration;
 
-        public NetatmoGateway(IMessageQueue messageQueue) : base("Netatmo")
+        public NetatmoGateway(IMessageQueue messageQueue, IConfiguration configuration)
+            : base("Netatmo", false)
         {
             _messageQueue = messageQueue;
-            _clientId = ConfigurationManager.AppSettings["netatmo.clientid"];
-            _clientSecret = ConfigurationManager.AppSettings["netatmo.clientsecret"];
-            _username = ConfigurationManager.AppSettings["netatmo.username"];
-            _password = ConfigurationManager.AppSettings["netatmo.password"];
+            _clientId = configuration["netatmo.clientid"];
+            _clientSecret = configuration["netatmo.clientsecret"];
+            _username = configuration["netatmo.username"];
+            _password = configuration["netatmo.password"];
 
             _isValidConfiguration =
                 !string.IsNullOrEmpty(_clientId) &&
                 !string.IsNullOrEmpty(_clientSecret) &&
                 !string.IsNullOrEmpty(_username) &&
                 !string.IsNullOrEmpty(_password);
-
-            _canCreateDevices = false;
         }
 
         public override IDevice CreateEmptyDevice()
@@ -61,7 +62,7 @@ namespace Xpressive.Home.Plugins.Netatmo
             throw new NotSupportedException();
         }
 
-        public override async Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
 
@@ -93,7 +94,7 @@ namespace Xpressive.Home.Plugins.Netatmo
                 }
                 catch (Exception e)
                 {
-                    _log.Error(e.Message, e);
+                    Log.Error(e, e.Message);
                 }
 
                 await Task.Delay(TimeSpan.FromMinutes(1), cancellationToken).ContinueWith(_ => { });
@@ -139,12 +140,10 @@ namespace Xpressive.Home.Plugins.Netatmo
         {
             var id = $"{station}-{module.ModuleName}";
 
-            var device = GetDevices().SingleOrDefault(d => d.Id.Equals(id));
-
-            if (device == null)
+            if (!DeviceDictionary.TryGetValue(id, out var d) || !(d is NetatmoDevice device))
             {
                 device = new NetatmoDevice(id, module.ModuleName);
-                _devices.TryAdd(id, device);
+                DeviceDictionary.TryAdd(id, device);
             }
 
             PublishVariables(device, module);
@@ -172,7 +171,7 @@ namespace Xpressive.Home.Plugins.Netatmo
                 if (module.DataType.Contains(property.Name))
                 {
                     var name = property.Name[0] + property.Name.ToLowerInvariant().Substring(1);
-                    var value = (double) property.GetValue(module.DashboardData);
+                    var value = (double)property.GetValue(module.DashboardData);
                     _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, name, value));
 
                     switch (name)

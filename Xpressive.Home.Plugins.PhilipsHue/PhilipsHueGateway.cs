@@ -5,11 +5,11 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using log4net;
 using Polly;
 using Polly.Retry;
 using Q42.HueApi;
 using Q42.HueApi.Models;
+using Serilog;
 using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
@@ -21,7 +21,6 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 {
     internal sealed class PhilipsHueGateway : GatewayBase, IPhilipsHueGateway
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(PhilipsHueGateway));
         private readonly IVariableRepository _variableRepository;
         private readonly IPhilipsHueDeviceDiscoveringService _deviceDiscoveringService;
         private readonly IMessageQueue _messageQueue;
@@ -32,12 +31,14 @@ namespace Xpressive.Home.Plugins.PhilipsHue
         public PhilipsHueGateway(
             IVariableRepository variableRepository,
             IPhilipsHueDeviceDiscoveringService deviceDiscoveringService,
-            IMessageQueue messageQueue) : base("PhilipsHue")
+            IMessageQueue messageQueue)
+            : base("PhilipsHue", false)
         {
             _variableRepository = variableRepository;
             _deviceDiscoveringService = deviceDiscoveringService;
             _messageQueue = messageQueue;
-            _canCreateDevices = false;
+
+            _messageQueue.Subscribe<CommandMessage>(Notify);
 
             _deviceDiscoveringService.BulbFound += OnDeviceFound;
             _deviceDiscoveringService.PresenceSensorFound += OnDeviceFound;
@@ -134,7 +135,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             throw new NotSupportedException();
         }
 
-        public override async Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(t => { });
 
@@ -150,9 +151,9 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 
                 lock (_devicesLock)
                 {
-                    bulbs = _devices.OfType<PhilipsHueBulb>().ToList();
-                    presenceSensors = _devices.OfType<PhilipsHuePresenceSensor>().ToList();
-                    buttonSensors = _devices.OfType<PhilipsHueButtonSensor>().ToList();
+                    bulbs = Devices.OfType<PhilipsHueBulb>().ToList();
+                    presenceSensors = Devices.OfType<PhilipsHuePresenceSensor>().ToList();
+                    buttonSensors = Devices.OfType<PhilipsHueButtonSensor>().ToList();
                 }
 
                 var bridges = bulbs
@@ -183,7 +184,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
                     }
                     catch (Exception e)
                     {
-                        _log.Error(e.Message, e);
+                        Log.Error(e, e.Message);
                     }
                 }
             }
@@ -193,7 +194,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
         {
             if (device == null)
             {
-                _log.Warn($"Unable to execute action {action.Name} because the device was not found.");
+                Log.Warning("Unable to execute action {actionName} because the device was not found.", action.Name);
                 return Task.CompletedTask;
             }
 
@@ -201,7 +202,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 
             if (bulb == null)
             {
-                _log.Warn($"Unable to execute action {action.Name} because the device isn't a bulb.");
+                Log.Warning("Unable to execute action {actionName} because the device isn't a bulb.", action.Name);
                 return Task.CompletedTask;
             }
 
@@ -416,7 +417,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             }
             catch (Exception e)
             {
-                _log.Error(e.Message, e);
+                Log.Error(e, e.Message);
             }
         }
 
@@ -424,12 +425,12 @@ namespace Xpressive.Home.Plugins.PhilipsHue
         {
             lock (_devicesLock)
             {
-                if (_devices.Cast<PhilipsHueDevice>().Any(d => d.Id.Equals(device.Id, StringComparison.OrdinalIgnoreCase)))
+                if (DeviceDictionary.TryGetValue(device.Id, out var d) && d is PhilipsHueDevice)
                 {
                     return;
                 }
 
-                _devices.TryAdd(device.Id, device);
+                DeviceDictionary.TryAdd(device.Id, device);
             }
         }
 
@@ -470,7 +471,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 
         private int MirekToKelvin(int mirek)
         {
-            return 1000000/mirek;
+            return 1000000 / mirek;
         }
     }
 }

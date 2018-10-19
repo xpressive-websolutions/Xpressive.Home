@@ -5,7 +5,7 @@ using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
-using log4net;
+using Serilog;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 
@@ -13,14 +13,12 @@ namespace Xpressive.Home.Plugins.Certificate
 {
     internal sealed class CertificateGateway : GatewayBase, ICertificateGateway
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(CertificateGateway));
         private readonly IMessageQueue _messageQueue;
 
-        public CertificateGateway(IMessageQueue messageQueue) : base("Certificate")
+        public CertificateGateway(IMessageQueue messageQueue, IDevicePersistingService persistingService)
+            : base("Certificate", true, persistingService)
         {
             _messageQueue = messageQueue;
-
-            _canCreateDevices = true;
         }
 
         public override IDevice CreateEmptyDevice()
@@ -38,7 +36,7 @@ namespace Xpressive.Home.Plugins.Certificate
             yield break;
         }
 
-        public override async Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
 
@@ -66,11 +64,9 @@ namespace Xpressive.Home.Plugins.Certificate
             {
                 var request = (HttpWebRequest)WebRequest.Create(device.HostName);
                 request.AllowAutoRedirect = true;
-
-                using (var response = (HttpWebResponse) await request.GetResponseAsync())
+                request.ServerCertificateValidationCallback += (sender, certificate, chain, errors) =>
                 {
-                    var cert = new X509Certificate2(request.ServicePoint.Certificate);
-
+                    var cert = new X509Certificate2(certificate);
                     device.FriendlyName = cert.FriendlyName;
                     device.HasPrivateKey = cert.HasPrivateKey;
                     device.Issuer = cert.Issuer;
@@ -89,12 +85,17 @@ namespace Xpressive.Home.Plugins.Certificate
                     _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Subject", cert.Subject));
                     _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Thumbprint", cert.Thumbprint));
 
+                    return true;
+                };
+
+                using (var response = (HttpWebResponse)await request.GetResponseAsync())
+                {
                     response.Close();
                 }
             }
             catch (Exception e)
             {
-                _log.Error(e.Message, e);
+                Log.Error(e, e.Message);
             }
         }
     }

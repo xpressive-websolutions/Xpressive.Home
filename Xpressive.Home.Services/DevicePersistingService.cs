@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Reflection;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
@@ -10,6 +11,13 @@ namespace Xpressive.Home.Services
 {
     internal class DevicePersistingService : IDevicePersistingService
     {
+        private readonly DbConnection _dbConnection;
+
+        public DevicePersistingService(DbConnection dbConnection)
+        {
+            _dbConnection = dbConnection;
+        }
+
         public async Task SaveAsync(string gatewayName, DeviceBase device)
         {
             var properties = GetProperties(device);
@@ -22,7 +30,7 @@ namespace Xpressive.Home.Services
                 Properties = JsonConvert.SerializeObject(properties)
             };
 
-            using (var database = new Database("ConnectionString"))
+            using (var database = new Database(_dbConnection))
             {
                 var result = await database.UpdateAsync("Device", "Id", dto, dto.Id, new[] {"Gateway", "Name", "Properties"});
 
@@ -37,7 +45,7 @@ namespace Xpressive.Home.Services
 
         public async Task DeleteAsync(string gatewayName, DeviceBase device)
         {
-            using (var database = new Database("ConnectionString"))
+            using (var database = new Database(_dbConnection))
             {
                 var sql = "delete from Device where Gateway = @0 and Id = @1";
                 await database.ExecuteAsync(sql, gatewayName, device.Id);
@@ -48,7 +56,7 @@ namespace Xpressive.Home.Services
         {
             var devices = new List<DeviceBase>();
 
-            using (var database = new Database("ConnectionString"))
+            using (var database = new Database(_dbConnection))
             {
                 var sql = "select * from Device where Gateway = @0";
                 var dtos = await database.FetchAsync<DeviceDto>(sql, gatewayName);

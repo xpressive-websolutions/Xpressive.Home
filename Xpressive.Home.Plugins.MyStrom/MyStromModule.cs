@@ -1,25 +1,20 @@
-﻿using Autofac;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Automation;
-using Xpressive.Home.Contracts.Gateway;
-using Xpressive.Home.Contracts.Messaging;
 
 namespace Xpressive.Home.Plugins.MyStrom
 {
-    public class MyStromModule : Module
+    public class MyStromPlugin : IPlugin
     {
-        protected override void Load(ContainerBuilder builder)
+        public void ConfigureServices(IServiceCollection services)
         {
-            builder.RegisterType<MyStromDeviceNameService>().As<IMyStromDeviceNameService>();
-            builder.RegisterType<MyStromScriptObjectProvider>().As<IScriptObjectProvider>();
+            services.AddTransient<IScriptObjectProvider, MyStromScriptObjectProvider>();
+            services.AddTransient<IMyStromDeviceNameService, MyStromDeviceNameService>();
 
-            builder.RegisterType<MyStromGateway>()
-                .As<IGateway>()
-                .As<IMyStromGateway>()
-                .As<IMessageQueueListener<CommandMessage>>()
-                .As<IMessageQueueListener<NetworkDeviceFoundMessage>>()
-                .SingleInstance();
-
-            base.Load(builder);
+            services.AddSingleton<MyStromGateway>();
+            services.AddSingleton<IMyStromGateway>(s => s.GetService<MyStromGateway>());
+            services.AddSingleton<IHostedService>(s => s.GetService<MyStromGateway>());
         }
     }
 }

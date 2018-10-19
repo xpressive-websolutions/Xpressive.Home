@@ -13,11 +13,11 @@ namespace Xpressive.Home.Plugins.Workday
         private readonly IMessageQueue _messageQueue;
         private readonly IWorkdayCalculator _calculator;
 
-        public WorkdayGateway(IMessageQueue messageQueue, IWorkdayCalculator calculator) : base("Workday")
+        public WorkdayGateway(IMessageQueue messageQueue, IWorkdayCalculator calculator, IDevicePersistingService persistingService)
+            : base("Workday", true, persistingService)
         {
             _messageQueue = messageQueue;
             _calculator = calculator;
-            _canCreateDevices = true;
         }
 
         public override IDevice CreateEmptyDevice()
@@ -35,7 +35,7 @@ namespace Xpressive.Home.Plugins.Workday
             yield break;
         }
 
-        public override async Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
 

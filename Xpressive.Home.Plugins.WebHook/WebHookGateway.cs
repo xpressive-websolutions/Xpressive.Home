@@ -11,10 +11,10 @@ namespace Xpressive.Home.Plugins.WebHook
     {
         private readonly IWebHookService _webHookService;
 
-        public WebHookGateway(IWebHookService webHookService) : base("WebHook")
+        public WebHookGateway(IWebHookService webHookService, IDevicePersistingService persistingService)
+            : base("WebHook", true, persistingService)
         {
             _webHookService = webHookService;
-            _canCreateDevices = true;
         }
 
         public override IDevice CreateEmptyDevice()
@@ -27,7 +27,7 @@ namespace Xpressive.Home.Plugins.WebHook
             yield break;
         }
 
-        public override async Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
 

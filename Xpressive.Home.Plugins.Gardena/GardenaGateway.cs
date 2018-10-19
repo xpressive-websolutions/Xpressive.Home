@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using log4net;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using RestSharp;
+using Serilog;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 
@@ -15,7 +14,6 @@ namespace Xpressive.Home.Plugins.Gardena
 {
     internal class GardenaGateway : GatewayBase
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(GardenaGateway));
         private readonly IMessageQueue _messageQueue;
         private readonly string _username;
         private readonly string _password;
@@ -24,12 +22,12 @@ namespace Xpressive.Home.Plugins.Gardena
         private readonly Dictionary<string, string> _substitutions;
         private Token _token;
 
-        public GardenaGateway(IMessageQueue messageQueue) : base("Gardena")
+        public GardenaGateway(IMessageQueue messageQueue, IConfiguration configuration)
+            : base("Gardena", false)
         {
             _messageQueue = messageQueue;
-            _username = ConfigurationManager.AppSettings["gardena.username"];
-            _password = ConfigurationManager.AppSettings["gardena.password"];
-            _canCreateDevices = false;
+            _username = configuration["gardena.username"];
+            _password = configuration["gardena.password"];
 
             _client = new RestClient("https://smart.gardena.com/");
             _authClient = new RestClient("https://iam-api.dss.husqvarnagroup.net/");
@@ -93,7 +91,7 @@ namespace Xpressive.Home.Plugins.Gardena
 
         }
 
-        public override async Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
 
@@ -109,7 +107,7 @@ namespace Xpressive.Home.Plugins.Gardena
             }
             catch (Exception e)
             {
-                _log.Error(e.Message, e);
+                Log.Error(e, e.Message);
                 return;
             }
 
@@ -127,16 +125,14 @@ namespace Xpressive.Home.Plugins.Gardena
 
                         foreach (var device in devices.Devices)
                         {
-                            var gardenaDevice = _devices.Values.SingleOrDefault(d => d.Id.Equals(device.Id, StringComparison.OrdinalIgnoreCase)) as GardenaDevice;
-
-                            if (gardenaDevice == null)
+                            if (!DeviceDictionary.TryGetValue(device.Id, out var d) || !(d is GardenaDevice gardenaDevice))
                             {
                                 gardenaDevice = new GardenaDevice
                                 {
                                     Id = device.Id,
                                     Name = device.Name
                                 };
-                                _devices.TryAdd(device.Id, gardenaDevice);
+                                DeviceDictionary.TryAdd(device.Id, gardenaDevice);
                             }
 
                             foreach (var ability in device.Abilities)
@@ -162,11 +158,11 @@ namespace Xpressive.Home.Plugins.Gardena
 
                                     if (property.Value is bool)
                                     {
-                                        value = (bool) property.Value;
+                                        value = (bool)property.Value;
                                     }
                                     else if (property.Value is int)
                                     {
-                                        value = (double) (int) property.Value;
+                                        value = (double)(int)property.Value;
                                     }
                                     else
                                     {
@@ -261,7 +257,7 @@ namespace Xpressive.Home.Plugins.Gardena
             request.AddHeader("origin", "https://smart.gardena.com");
             request.AddHeader("referer", "https://smart.gardena.com/");
 
-            var settings = new JsonSerializerSettings {ContractResolver = new CamelCasePropertyNamesContractResolver()};
+            var settings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
             var json = JsonConvert.SerializeObject(new TokenRequestDto(_username, _password), settings);
             request.AddParameter("application/json", json, "application/json", ParameterType.RequestBody);
 
