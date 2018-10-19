@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using RestSharp;
+using Serilog;
 
 namespace Xpressive.Home.Plugins.NissanLeaf
 {
@@ -21,70 +22,94 @@ namespace Xpressive.Home.Plugins.NissanLeaf
 
         public async Task<bool> InitAsync()
         {
-            var request = new RestRequest("InitialApp.php");
-            request.AddParameter("initial_app_strings", "geORNtsZe5I4lRGjG9GZiA");
-            request.OnBeforeDeserialization = restResponse => { restResponse.ContentType = "application/json"; };
-            var response = await _restClient.ExecutePostTaskAsync<InitialResponse>(request).ConfigureAwait(false);
-            _basePrm = response.Data.baseprm;
-            return !string.IsNullOrEmpty(_basePrm);
+            try
+            {
+                var request = new RestRequest("InitialApp.php");
+                request.AddParameter("initial_app_strings", "geORNtsZe5I4lRGjG9GZiA");
+                request.OnBeforeDeserialization = restResponse => { restResponse.ContentType = "application/json"; };
+                var response = await _restClient.ExecutePostTaskAsync<InitialResponse>(request);
+                _basePrm = response.Data.baseprm;
+                return !string.IsNullOrEmpty(_basePrm);
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, e.Message);
+                return false;
+            }
         }
 
         public async Task<List<NissanLeafDevice>> LoginAsync(string username, string password)
         {
-            var request = new RestRequest("UserLoginRequest.php");
-            request.AddParameter("RegionCode", "NE");
-            request.AddParameter("UserId", username);
-            request.AddParameter("Password", _encryptionService.Encrypt(password, _basePrm));
-            request.AddParameter("initial_app_strings", "geORNtsZe5I4lRGjG9GZiA");
-
-            var response = await _restClient.ExecutePostTaskAsync<LoginResponse>(request).ConfigureAwait(false);
-            var devices = new List<NissanLeafDevice>();
-            _timezone = response.Data.CustomerInfo.Timezone;
-
-            foreach (var vehicleInfo in response.Data.VehicleInfoList.vehicleInfo)
+            try
             {
-                var device = new NissanLeafDevice(
-                    vehicleInfo.vin,
-                    response.Data.vehicle.profile.dcmId,
-                    vehicleInfo.nickname,
-                    response.Data.vehicle.profile.modelyear)
-                {
-                    CustomSessionId = vehicleInfo.custom_sessionid
-                };
-                devices.Add(device);
-            }
+                var request = new RestRequest("UserLoginRequest.php");
+                request.AddParameter("RegionCode", "NE");
+                request.AddParameter("UserId", username);
+                request.AddParameter("Password", _encryptionService.Encrypt(password, _basePrm));
+                request.AddParameter("initial_app_strings", "geORNtsZe5I4lRGjG9GZiA");
 
-            return devices;
+                var response = await _restClient.ExecutePostTaskAsync<LoginResponse>(request);
+                var devices = new List<NissanLeafDevice>();
+                _timezone = response.Data.CustomerInfo.Timezone;
+
+                foreach (var vehicleInfo in response.Data.VehicleInfoList.vehicleInfo)
+                {
+                    var device = new NissanLeafDevice(
+                        vehicleInfo.vin,
+                        response.Data.vehicle.profile.dcmId,
+                        vehicleInfo.nickname,
+                        response.Data.vehicle.profile.modelyear)
+                    {
+                        CustomSessionId = vehicleInfo.custom_sessionid
+                    };
+                    devices.Add(device);
+                }
+
+                return devices;
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, e.Message);
+                return new List<NissanLeafDevice>(0);
+            }
         }
 
         public async Task<BatteryStatus> GetBatteryStatusAsync(NissanLeafDevice device, CancellationToken cancellationToken)
         {
-            var checkRequest = new RestRequest("BatteryStatusCheckRequest.php");
-            checkRequest.AddParameter("RegionCode", "NE");
-            checkRequest.AddParameter("VIN", device.Vin);
-            checkRequest.AddParameter("custom_sessionid", device.CustomSessionId);
-
-            var checkResponse = await _restClient.PostTaskAsync<BatteryStatusCheckResponse>(checkRequest).ConfigureAwait(false);
-
-            while (!cancellationToken.IsCancellationRequested)
+            try
             {
-                var resultRequest = new RestRequest("BatteryStatusCheckResultRequest.php");
-                resultRequest.AddParameter("RegionCode", "NE");
-                resultRequest.AddParameter("VIN", device.Vin);
-                resultRequest.AddParameter("custom_sessionid", device.CustomSessionId);
-                resultRequest.AddParameter("resultKey", checkResponse.resultKey);
+                var checkRequest = new RestRequest("BatteryStatusCheckRequest.php");
+                checkRequest.AddParameter("RegionCode", "NE");
+                checkRequest.AddParameter("VIN", device.Vin);
+                checkRequest.AddParameter("custom_sessionid", device.CustomSessionId);
 
-                var resultResponse = await _restClient.PostTaskAsync<BatteryStatusResultResponse>(resultRequest).ConfigureAwait(false);
+                var checkResponse = await _restClient.PostAsync<BatteryStatusCheckResponse>(checkRequest);
 
-                if (resultResponse.responseFlag == "1")
+                while (!cancellationToken.IsCancellationRequested)
                 {
-                    return CreateBatteryStatus(resultResponse);
+                    var resultRequest = new RestRequest("BatteryStatusCheckResultRequest.php");
+                    resultRequest.AddParameter("RegionCode", "NE");
+                    resultRequest.AddParameter("VIN", device.Vin);
+                    resultRequest.AddParameter("custom_sessionid", device.CustomSessionId);
+                    resultRequest.AddParameter("resultKey", checkResponse.resultKey);
+
+                    var resultResponse = await _restClient.PostAsync<BatteryStatusResultResponse>(resultRequest);
+
+                    if (resultResponse.responseFlag == "1")
+                    {
+                        return CreateBatteryStatus(resultResponse);
+                    }
+
+                    await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken).ContinueWith(_ => { });
                 }
 
-                await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken).ContinueWith(_ => { }).ConfigureAwait(false);
+                return null;
             }
-
-            return null;
+            catch (Exception e)
+            {
+                Log.Error(e, e.Message);
+                return null;
+            }
         }
 
         //public async Task GetClimateControlStatusAsync(NissanLeafDevice device)
@@ -156,7 +181,7 @@ namespace Xpressive.Home.Plugins.NissanLeaf
                 double.TryParse(response.batteryCapacity, out capacity) &&
                 capacity > 0)
             {
-                batteryStatus.Power = degradation/capacity;
+                batteryStatus.Power = degradation / capacity;
             }
 
             return batteryStatus;
