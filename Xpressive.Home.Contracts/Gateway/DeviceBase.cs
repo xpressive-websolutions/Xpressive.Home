@@ -1,16 +1,10 @@
-using NPoco;
-
 namespace Xpressive.Home.Contracts.Gateway
 {
-    [TableName("Device")]
-    [PrimaryKey("Id", AutoIncrement = false)]
     public abstract class DeviceBase : IDevice
     {
         protected DeviceBase()
         {
             BatteryStatus = DeviceBatteryStatus.Full;
-            WriteStatus = DeviceWriteStatus.Ok;
-            ReadStatus = DeviceReadStatus.Ok;
         }
 
         [DeviceProperty(1)]
@@ -21,8 +15,6 @@ namespace Xpressive.Home.Contracts.Gateway
 
         public string Icon { get; set; }
         public DeviceBatteryStatus BatteryStatus { get; set; }
-        public DeviceWriteStatus WriteStatus { get; set; }
-        public DeviceReadStatus ReadStatus { get; set; }
 
         public virtual bool IsConfigurationValid()
         {

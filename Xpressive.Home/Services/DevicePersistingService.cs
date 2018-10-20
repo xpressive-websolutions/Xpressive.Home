@@ -1,21 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Common;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
-using NPoco;
 using Xpressive.Home.Contracts.Gateway;
+using Xpressive.Home.DatabaseModel;
 
 namespace Xpressive.Home.Services
 {
     internal class DevicePersistingService : IDevicePersistingService
     {
-        private readonly DbConnection _dbConnection;
+        private readonly IContextFactory _contextFactory;
 
-        public DevicePersistingService(DbConnection dbConnection)
+        public DevicePersistingService(IContextFactory contextFactory)
         {
-            _dbConnection = dbConnection;
+            _contextFactory = contextFactory;
         }
 
         public async Task SaveAsync(string gatewayName, DeviceBase device)
@@ -30,56 +31,58 @@ namespace Xpressive.Home.Services
                 Properties = JsonConvert.SerializeObject(properties)
             };
 
-            using (var database = new Database(_dbConnection))
+            await _contextFactory.InScope(async context =>
             {
-                var result = await database.UpdateAsync("Device", "Id", dto, dto.Id, new[] {"Gateway", "Name", "Properties"});
+                var existing = await context.Device.FindAsync(dto.Id);
 
-                if (result == 1)
+                if (existing != null)
                 {
-                    return;
+                    existing.Properties = dto.Properties;
+                    existing.Name = dto.Name;
+                }
+                else
+                {
+                    context.Device.Add(dto);
                 }
 
-                await database.InsertAsync("Device", "Id", false, dto);
-            }
+                await context.SaveChangesAsync();
+            });
         }
 
         public async Task DeleteAsync(string gatewayName, DeviceBase device)
         {
-            using (var database = new Database(_dbConnection))
+            await _contextFactory.InScope(async context =>
             {
-                var sql = "delete from Device where Gateway = @0 and Id = @1";
-                await database.ExecuteAsync(sql, gatewayName, device.Id);
-            }
+                var result = await context.Device.Where(d => d.Gateway == gatewayName && d.Id == device.Id).ToListAsync();
+                context.Device.RemoveRange(result);
+                await context.SaveChangesAsync();
+            });
         }
 
         public async Task<IEnumerable<DeviceBase>> GetAsync(string gatewayName, Func<string, string, DeviceBase> emptyDevice)
         {
             var devices = new List<DeviceBase>();
 
-            using (var database = new Database(_dbConnection))
+            var dtos = await _contextFactory.InScope(async context => await context.Device.Where(d => d.Gateway == gatewayName).ToListAsync());
+
+            foreach (var dto in dtos)
             {
-                var sql = "select * from Device where Gateway = @0";
-                var dtos = await database.FetchAsync<DeviceDto>(sql, gatewayName);
+                var device = emptyDevice(dto.Id, dto.Name);
+                var properties = GetProperties(dto.Properties);
 
-                foreach (var dto in dtos)
+                foreach (var property in GetPropertyInfo(device))
                 {
-                    var device = emptyDevice(dto.Id, dto.Name);
-                    var properties = GetProperties(dto.Properties);
-
-                    foreach (var property in GetPropertyInfo(device))
+                    object value;
+                    if (properties.TryGetValue(property.Name, out value))
                     {
-                        object value;
-                        if (properties.TryGetValue(property.Name, out value))
-                        {
-                            var converted = Convert.ChangeType(value, property.PropertyType);
-                            property.SetValue(device, converted);
-                        }
+                        var converted = Convert.ChangeType(value, property.PropertyType);
+                        property.SetValue(device, converted);
                     }
-
-                    device.Id = device.Id.Substring(dto.Gateway.Length + 1);
-
-                    devices.Add(device);
                 }
+
+                device.Id = device.Id.Substring(dto.Gateway.Length + 1);
+
+                devices.Add(device);
             }
 
             return devices;
@@ -119,14 +122,6 @@ namespace Xpressive.Home.Services
             result.Remove("Name");
 
             return result;
-        }
-
-        public class DeviceDto
-        {
-            public string Gateway { get; set; }
-            public string Id { get; set; }
-            public string Name { get; set; }
-            public string Properties { get; set; }
         }
     }
 }

@@ -5,9 +5,9 @@ namespace Xpressive.Home.Contracts.Services
 {
     public interface IFavoriteRadioStationService
     {
-        Task<IEnumerable<FavoriteRadioStation>> GetAsync();
+        Task<IEnumerable<Radio>> GetAsync();
 
-        Task AddAsync(TuneInRadioStation radioStation);
-        Task RemoveAsync(FavoriteRadioStation favorite);
+        Task AddAsync(Radio radioStation);
+        Task RemoveAsync(Radio favorite);
     }
 }

@@ -101,14 +101,19 @@ namespace Xpressive.Home.Plugins.Gardena
                 return;
             }
 
-            try
+            while (!cancellationToken.IsCancellationRequested)
             {
-                await LoginAsync();
-            }
-            catch (Exception e)
-            {
-                Log.Error(e, e.Message);
-                return;
+                try
+                {
+                    await LoginAsync();
+                    break;
+                }
+                catch (Exception e)
+                {
+                    Log.Error(e, e.Message);
+                }
+
+                await Task.Delay(TimeSpan.FromMinutes(10), cancellationToken).ContinueWith(_ => { });
             }
 
             while (!cancellationToken.IsCancellationRequested)
@@ -209,14 +214,13 @@ namespace Xpressive.Home.Plugins.Gardena
                             }
                         }
                     }
-
-                    await Task.Delay(TimeSpan.FromMinutes(10), cancellationToken).ContinueWith(_ => { });
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
-                    throw;
+                    Log.Error(e, e.Message);
                 }
+
+                await Task.Delay(TimeSpan.FromMinutes(10), cancellationToken).ContinueWith(_ => { });
             }
         }
 
@@ -261,7 +265,7 @@ namespace Xpressive.Home.Plugins.Gardena
             var json = JsonConvert.SerializeObject(new TokenRequestDto(_username, _password), settings);
             request.AddParameter("application/json", json, "application/json", ParameterType.RequestBody);
 
-            var token = await _authClient.PostTaskAsync<TokenResponseDto>(request);
+            var token = await _authClient.PostAsync<TokenResponseDto>(request);
 
             _token = new Token
             {

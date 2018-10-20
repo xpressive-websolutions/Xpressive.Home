@@ -75,11 +75,9 @@ namespace Xpressive.Home.Plugins.MyStrom
 
                     if (dto == null)
                     {
-                        device.ReadStatus = DeviceReadStatus.Erroneous;
                         continue;
                     }
 
-                    device.ReadStatus = DeviceReadStatus.Ok;
                     device.Power = dto.Power;
                     device.Relay = dto.Relay;
                     _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Relay", dto.Relay));

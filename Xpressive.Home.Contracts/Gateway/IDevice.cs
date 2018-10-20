@@ -4,9 +4,6 @@ namespace Xpressive.Home.Contracts.Gateway
     {
         string Id { get; }
         string Name { get; set; }
-
         DeviceBatteryStatus BatteryStatus { get; }
-        DeviceWriteStatus WriteStatus { get; }
-        DeviceReadStatus ReadStatus { get; }
     }
 }

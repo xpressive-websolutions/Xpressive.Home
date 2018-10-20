@@ -1,54 +1,57 @@
 using System;
 using System.Collections.Generic;
-using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
-using NPoco;
+using Microsoft.EntityFrameworkCore;
 using Xpressive.Home.Contracts.Rooms;
+using Xpressive.Home.DatabaseModel;
 
 namespace Xpressive.Home.Services
 {
     internal class RoomScriptRepository : IRoomScriptRepository
     {
-        private readonly DbConnection _dbConnection;
+        private readonly IContextFactory _contextFactory;
 
-        public RoomScriptRepository(DbConnection dbConnection)
+        public RoomScriptRepository(IContextFactory contextFactory)
         {
-            _dbConnection = dbConnection;
+            _contextFactory = contextFactory;
         }
 
         public async Task<IEnumerable<RoomScript>> GetAsync(Guid groupId)
         {
-            using (var database = new Database(_dbConnection))
+            return await _contextFactory.InScope(async context =>
             {
-                const string sql = "select * from RoomScript where GroupId = @0";
-                var scripts = await database.FetchAsync<RoomScript>(sql, groupId);
+                var scripts = await context.RoomScript.Where(r => r.GroupId == groupId).ToListAsync();
                 return scripts.OrderBy(s => s.Name, StringComparer.OrdinalIgnoreCase);
-            }
+            });
         }
 
         public async Task SaveAsync(RoomScript roomScript)
         {
-            using (var database = new Database(_dbConnection))
+            await _contextFactory.InScope(async context =>
             {
                 if (roomScript.Id == Guid.Empty)
                 {
                     roomScript.Id = Guid.NewGuid();
-                    await database.InsertAsync(roomScript);
+                    context.RoomScript.Add(roomScript);
                 }
                 else
                 {
-                    await database.UpdateAsync(roomScript);
+                    context.RoomScript.Attach(roomScript);
                 }
-            }
+
+                await context.SaveChangesAsync();
+            });
+
         }
 
         public async Task DeleteAsync(RoomScript roomScript)
         {
-            using (var database = new Database(_dbConnection))
+            await _contextFactory.InScope(async context =>
             {
-                await database.DeleteAsync(roomScript);
-            }
+                context.RoomScript.Remove(roomScript);
+                await context.SaveChangesAsync();
+            });
         }
     }
 }

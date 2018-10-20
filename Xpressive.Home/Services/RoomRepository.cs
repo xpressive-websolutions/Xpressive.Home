@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
-using NPoco;
+using Microsoft.EntityFrameworkCore;
 using Xpressive.Home.Contracts.Rooms;
+using Xpressive.Home.DatabaseModel;
 
 namespace Xpressive.Home.Services
 {
@@ -12,40 +12,39 @@ namespace Xpressive.Home.Services
     {
         private readonly IRoomScriptGroupRepository _roomScriptGroupRepository;
         private readonly IRoomScriptRepository _roomScriptRepository;
-        private readonly DbConnection _dbConnection;
+        private readonly IContextFactory _contextFactory;
 
-        public RoomRepository(IRoomScriptGroupRepository roomScriptGroupRepository, IRoomScriptRepository roomScriptRepository, DbConnection dbConnection)
+        public RoomRepository(IRoomScriptGroupRepository roomScriptGroupRepository, IRoomScriptRepository roomScriptRepository, IContextFactory contextFactory)
         {
             _roomScriptGroupRepository = roomScriptGroupRepository;
             _roomScriptRepository = roomScriptRepository;
-            _dbConnection = dbConnection;
+            _contextFactory = contextFactory;
         }
 
         public async Task<IEnumerable<Room>> GetAsync()
         {
-            using (var database = new Database(_dbConnection))
+            return await _contextFactory.InScope(async context =>
             {
-                var rooms =  await database.FetchAsync<Room>("select * from Room");
-                return rooms
-                    .OrderBy(r => r.SortOrder)
-                    .ThenBy(r => r.Name, StringComparer.OrdinalIgnoreCase);
-            }
+                var result = await context.Room.ToListAsync();
+                return result.OrderBy(r => r.SortOrder).ThenBy(r => r.Name, StringComparer.OrdinalIgnoreCase);
+            });
         }
 
         public async Task SaveAsync(Room room)
         {
-            using (var database = new Database(_dbConnection))
+            await _contextFactory.InScope(async context =>
             {
                 if (room.Id == Guid.Empty)
                 {
                     room.Id = Guid.NewGuid();
-                    await database.InsertAsync(room);
+                    context.Room.Add(room);
                 }
                 else
                 {
-                    await database.UpdateAsync(room);
+                    context.Room.Attach(room);
                 }
-            }
+                await context.SaveChangesAsync();
+            });
         }
 
         public async Task DeleteAsync(Room room)
@@ -58,25 +57,26 @@ namespace Xpressive.Home.Services
                 scripts.AddRange(await _roomScriptRepository.GetAsync(group.Id));
             }
 
-            using (var database = new Database(_dbConnection))
+            await _contextFactory.InScope(async context =>
             {
-                using (var transaction = database.GetTransaction())
+                using (var transaction = context.Database.BeginTransaction())
                 {
                     foreach (var script in scripts)
                     {
-                        await database.DeleteAsync(script);
+                        context.RoomScript.Remove(script);
                     }
 
                     foreach (var group in groups)
                     {
-                        await database.DeleteAsync(group);
+                        context.RoomScriptGroup.Remove(group);
                     }
 
-                    await database.DeleteAsync(room);
+                    context.Room.Remove(room);
 
-                    transaction.Complete();
+                    await context.SaveChangesAsync();
+                    transaction.Commit();
                 }
-            }
+            });
         }
     }
 }

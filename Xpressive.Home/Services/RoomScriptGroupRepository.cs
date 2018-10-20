@@ -1,74 +1,71 @@
 using System;
 using System.Collections.Generic;
-using System.Data.Common;
+using System.Linq;
 using System.Threading.Tasks;
-using NPoco;
+using Microsoft.EntityFrameworkCore;
 using Xpressive.Home.Contracts.Rooms;
+using Xpressive.Home.DatabaseModel;
 
 namespace Xpressive.Home.Services
 {
     internal class RoomScriptGroupRepository : IRoomScriptGroupRepository
     {
         private readonly IRoomScriptRepository _roomScriptRepository;
-        private readonly DbConnection _dbConnection;
+        private readonly IContextFactory _contextFactory;
 
-        public RoomScriptGroupRepository(IRoomScriptRepository roomScriptRepository, DbConnection dbConnection)
+        public RoomScriptGroupRepository(IRoomScriptRepository roomScriptRepository, IContextFactory contextFactory)
         {
             _roomScriptRepository = roomScriptRepository;
-            _dbConnection = dbConnection;
+            _contextFactory = contextFactory;
         }
 
-        public async Task<RoomScriptGroup> GetAsync(Guid id)
+        public Task<RoomScriptGroup> GetAsync(Guid id)
         {
-            using (var database = new Database(_dbConnection))
-            {
-                return await database.SingleOrDefaultByIdAsync<RoomScriptGroup>(id);
-            }
+            return _contextFactory.InScope(async context => await context.RoomScriptGroup.FindAsync(id));
         }
 
         public async Task<IEnumerable<RoomScriptGroup>> GetAsync(Room room)
         {
-            using (var database = new Database(_dbConnection))
-            {
-                var sql = "select * from RoomScriptGroup where RoomId = @0";
-                return await database.FetchAsync<RoomScriptGroup>(sql, room.Id);
-            }
+            return await _contextFactory.InScope(async context => await context.RoomScriptGroup.Where(g => g.RoomId == room.Id).ToListAsync());
         }
 
         public async Task SaveAsync(RoomScriptGroup group)
         {
-            using (var database = new Database(_dbConnection))
+            await _contextFactory.InScope(async context =>
             {
                 if (group.Id == Guid.Empty)
                 {
                     group.Id = Guid.NewGuid();
-                    await database.InsertAsync(group);
+                    context.RoomScriptGroup.Add(group);
                 }
                 else
                 {
-                    await database.UpdateAsync(group);
+                    context.RoomScriptGroup.Attach(group);
                 }
-            }
+
+                await context.SaveChangesAsync();
+            });
         }
 
         public async Task DeleteAsync(RoomScriptGroup group)
         {
             var scripts = await _roomScriptRepository.GetAsync(group.Id);
 
-            using (var database = new Database(_dbConnection))
+            await _contextFactory.InScope(async context =>
             {
-                using (var transaction = database.GetTransaction())
+                using (var transaction = context.Database.BeginTransaction())
                 {
                     foreach (var script in scripts)
                     {
-                        await database.DeleteAsync(script);
+                        context.RoomScript.Remove(script);
                     }
 
-                    await database.DeleteAsync(group);
+                    context.RoomScriptGroup.Remove(group);
+                    await context.SaveChangesAsync();
 
-                    transaction.Complete();
+                    transaction.Commit();
                 }
-            }
+            });
         }
     }
 }

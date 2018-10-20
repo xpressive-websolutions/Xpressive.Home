@@ -27,7 +27,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Xpressive.Home.Contracts\Xpressive.Home.Contracts.csproj" />
-    <ProjectReference Include="..\Xpressive.Home.DatabaseMigrator\Xpressive.Home.DatabaseMigrator.csproj" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

@@ -23,8 +23,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xpressive.Home.Plugins.Lifx
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xpressive.Home.Plugins.Forecast", "Xpressive.Home.Plugins.Forecast\Xpressive.Home.Plugins.Forecast.csproj", "{09E2EAFA-A757-4A8F-9D5F-0CBD7C9DCB9D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xpressive.Home.DatabaseMigrator", "Xpressive.Home.DatabaseMigrator\Xpressive.Home.DatabaseMigrator.csproj", "{BD690159-08FC-4F77-8FE5-3A580E6E9FAF}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xpressive.Home.Plugins.Sms", "Xpressive.Home.Plugins.Sms\Xpressive.Home.Plugins.Sms.csproj", "{061ACF4D-C609-4E85-997C-5154562549DB}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xpressive.Home.Plugins.Tado", "Xpressive.Home.Plugins.Tado\Xpressive.Home.Plugins.Tado.csproj", "{D8BE8949-53E4-47E2-A40F-6D9523E689C6}"
@@ -117,12 +115,6 @@ Global
 		{09E2EAFA-A757-4A8F-9D5F-0CBD7C9DCB9D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{09E2EAFA-A757-4A8F-9D5F-0CBD7C9DCB9D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{09E2EAFA-A757-4A8F-9D5F-0CBD7C9DCB9D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BD690159-08FC-4F77-8FE5-3A580E6E9FAF}.Build|Any CPU.ActiveCfg = Build|Any CPU
-		{BD690159-08FC-4F77-8FE5-3A580E6E9FAF}.Build|Any CPU.Build.0 = Build|Any CPU
-		{BD690159-08FC-4F77-8FE5-3A580E6E9FAF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BD690159-08FC-4F77-8FE5-3A580E6E9FAF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BD690159-08FC-4F77-8FE5-3A580E6E9FAF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BD690159-08FC-4F77-8FE5-3A580E6E9FAF}.Release|Any CPU.Build.0 = Release|Any CPU
 		{061ACF4D-C609-4E85-997C-5154562549DB}.Build|Any CPU.ActiveCfg = Build|Any CPU
 		{061ACF4D-C609-4E85-997C-5154562549DB}.Build|Any CPU.Build.0 = Build|Any CPU
 		{061ACF4D-C609-4E85-997C-5154562549DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU

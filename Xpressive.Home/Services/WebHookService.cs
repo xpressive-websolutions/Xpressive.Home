@@ -1,23 +1,23 @@
 ﻿using System.Collections.Generic;
-using System.Data.Common;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
-using NPoco;
+using Microsoft.EntityFrameworkCore;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Services;
+using Xpressive.Home.DatabaseModel;
 
 namespace Xpressive.Home.Services
 {
     internal sealed class WebHookService : IWebHookService
     {
         private readonly IBase62Converter _base62Converter;
-        private readonly DbConnection _dbConnection;
+        private readonly IContextFactory _contextFactory;
 
-        public WebHookService(IBase62Converter base62Converter, DbConnection dbConnection)
+        public WebHookService(IBase62Converter base62Converter, IContextFactory contextFactory)
         {
             _base62Converter = base62Converter;
-            _dbConnection = dbConnection;
+            _contextFactory = contextFactory;
         }
 
         public async Task<IWebHook> RegisterNewWebHookAsync(string gatewayName, string id, IDevice device)
@@ -29,10 +29,11 @@ namespace Xpressive.Home.Services
                 DeviceId = device.Id
             };
 
-            using (var database = new Database(_dbConnection))
+            await _contextFactory.InScope(async context =>
             {
-                await database.InsertAsync("WebHook", "Id", false, webhook);
-            }
+                context.WebHook.Add(webhook);
+                await context.SaveChangesAsync();
+            });
 
             return webhook;
         }
@@ -44,19 +45,12 @@ namespace Xpressive.Home.Services
 
         public async Task<IWebHook> GetWebHookAsync(string id)
         {
-            using (var database = new Database(_dbConnection))
-            {
-                var result = await database.FetchAsync<WebHook>("select * from WebHook where Id = @0", id);
-                return result.SingleOrDefault();
-            }
+            return await _contextFactory.InScope(async context => await context.WebHook.FindAsync(id));
         }
 
         public async Task<IEnumerable<IWebHook>> GetWebHooksAsync(string gatewayName, string deviceId)
         {
-            using (var database = new Database(_dbConnection))
-            {
-                return await database.FetchAsync<WebHook>("select * from WebHook where GatewayName = @0 and DeviceId = @1", gatewayName, deviceId);
-            }
+            return await _contextFactory.InScope(async context => await context.WebHook.Where(w => w.GatewayName == gatewayName && w.DeviceId == deviceId).ToListAsync());
         }
 
         public string GenerateId()
@@ -68,12 +62,5 @@ namespace Xpressive.Home.Services
                 return _base62Converter.ToBase62(binary).Substring(0, 16);
             }
         }
-    }
-
-    internal sealed class WebHook : IWebHook
-    {
-        public string Id { get; set; }
-        public string GatewayName { get; set; }
-        public string DeviceId { get; set; }
     }
 }

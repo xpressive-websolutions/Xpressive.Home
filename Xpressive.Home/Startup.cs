@@ -1,17 +1,17 @@
 ﻿using System;
-using System.Data.Common;
-using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Quartz.Spi;
 using Serilog;
+using Serilog.Events;
 using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Automation;
 using Xpressive.Home.Contracts.Gateway;
@@ -19,7 +19,7 @@ using Xpressive.Home.Contracts.Messaging;
 using Xpressive.Home.Contracts.Rooms;
 using Xpressive.Home.Contracts.Services;
 using Xpressive.Home.Contracts.Variables;
-using Xpressive.Home.DatabaseMigrator;
+using Xpressive.Home.DatabaseModel;
 using Xpressive.Home.Services;
 using Xpressive.Home.Services.Automation;
 using Xpressive.Home.Services.Messaging;
@@ -39,6 +39,8 @@ namespace Xpressive.Home
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddDbContext<XpressiveHomeContext>(o => o.UseSqlServer(Configuration.GetConnectionString("ConnectionString")));
+
             LoadPlugins(services);
 
             services.AddSingleton<IMessageQueue, MessageQueue>();
@@ -78,13 +80,7 @@ namespace Xpressive.Home
             services.AddSingleton<ISoftwareUpdateDownloadService>(s => s.GetService<SoftwareUpdateDownloadService>());
             services.AddSingleton<IHostedService>(s => s.GetService<SoftwareUpdateDownloadService>());
             services.AddHostedService<UpnpDeviceDiscoveringService>();
-
-            services.AddTransient<DbConnection>(s =>
-            {
-                var connection = new SqlConnection(Configuration.GetConnectionString("ConnectionString"));
-                connection.Open();
-                return connection;
-            });
+            services.AddSingleton<IContextFactory, ContextFactory>();
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
@@ -93,6 +89,7 @@ namespace Xpressive.Home
         {
             Log.Logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(Configuration)
+                .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
                 .WriteTo.Console()
                 .CreateLogger();
 
@@ -107,7 +104,13 @@ namespace Xpressive.Home
             }
 
             // Run DB Migrations
-            DbMigrator.Run(Configuration.GetConnectionString("ConnectionString"));
+            using (var serviceScope = app.ApplicationServices.GetRequiredService<IServiceScopeFactory>().CreateScope())
+            {
+                using (var context = serviceScope.ServiceProvider.GetService<XpressiveHomeContext>())
+                {
+                    context.Database.Migrate();
+                }
+            }
 
             // Register Queue Listeners
 

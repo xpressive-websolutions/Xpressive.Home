@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Configuration;
-using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
-using NPoco;
+using Microsoft.EntityFrameworkCore;
 using Xpressive.Home.Contracts.Variables;
+using Xpressive.Home.DatabaseModel;
 
 namespace Xpressive.Home.Services.Variables
 {
@@ -15,22 +14,11 @@ namespace Xpressive.Home.Services.Variables
         private static readonly BlockingCollection<IVariable> _variablesToSave = new BlockingCollection<IVariable>();
         private static readonly SingleTaskRunner _taskRunner = new SingleTaskRunner();
         private static readonly HashSet<string> _persistedVariables = new HashSet<string>(StringComparer.Ordinal);
-        private readonly DbConnection _dbConnection;
-        private readonly bool _isInMemory;
+        private readonly IContextFactory _contextFactory;
 
-        public VariablePersistingService(DbConnection dbConnection)
+        public VariablePersistingService(IContextFactory contextFactory)
         {
-            _dbConnection = dbConnection;
-            _isInMemory = true;
-
-            foreach (ConnectionStringSettings cs in ConfigurationManager.ConnectionStrings)
-            {
-                if (cs.Name.Equals("ConnectionString"))
-                {
-                    _isInMemory = false;
-                    break;
-                }
-            }
+            _contextFactory = contextFactory;
         }
 
         public void Save(IVariable variable)
@@ -39,40 +27,27 @@ namespace Xpressive.Home.Services.Variables
             _taskRunner.StartIfNotAlreadyRunning(SaveVariables);
         }
 
-        public async Task<IEnumerable<IVariable>> LoadAsync()
+        public Task<IEnumerable<IVariable>> LoadAsync()
         {
-            if (_isInMemory)
+            return _contextFactory.InScope(async context =>
             {
-                return new List<IVariable>(0);
-            }
+                var variables = await context.Variable.ToListAsync();
 
-            List<PersistedVariable> persistedVariables;
-
-            using (var database = new Database(_dbConnection))
-            {
-                var sql = "select * from Variable";
-                persistedVariables = await database.FetchAsync<PersistedVariable>(sql);
-            }
-
-            foreach (var variable in persistedVariables)
-            {
-                if (!_persistedVariables.Contains(variable.Name))
+                foreach (var variable in variables)
                 {
-                    _persistedVariables.Add(variable.Name);
+                    if (!_persistedVariables.Contains(variable.Name))
+                    {
+                        _persistedVariables.Add(variable.Name);
+                    }
                 }
-            }
 
-            return persistedVariables.Select(CreateVariable);
+                return variables.Select(CreateVariable);
+            });
         }
 
-        private async Task SaveVariables()
+        private Task SaveVariables()
         {
-            if (_isInMemory)
-            {
-                return;
-            }
-
-            using (var database = new Database(_dbConnection))
+            return _contextFactory.InScope(async context =>
             {
                 while (_variablesToSave.Count > 0)
                 {
@@ -87,15 +62,18 @@ namespace Xpressive.Home.Services.Variables
 
                     if (_persistedVariables.Contains(variable.Name))
                     {
-                        await database.UpdateAsync("Variable", "Name", persistedVariable, variable.Name, new[] { "Value" });
+                        var existing = await context.Variable.FindAsync(variable.Name);
+                        existing.Value = persistedVariable.Value;
                     }
                     else
                     {
-                        await database.InsertAsync("Variable", "Name", false, persistedVariable);
+                        context.Variable.Add(persistedVariable);
                         _persistedVariables.Add(variable.Name);
                     }
+
+                    await context.SaveChangesAsync();
                 }
-            }
+            });
         }
 
         private IVariable CreateVariable(PersistedVariable persistedVariable)
@@ -131,12 +109,12 @@ namespace Xpressive.Home.Services.Variables
 
             throw new NotSupportedException(dataType);
         }
+    }
 
-        private class PersistedVariable
-        {
-            public string Name { get; set; }
-            public string DataType { get; set; }
-            public string Value { get; set; }
-        }
+    public class PersistedVariable
+    {
+        public string Name { get; set; }
+        public string DataType { get; set; }
+        public string Value { get; set; }
     }
 }

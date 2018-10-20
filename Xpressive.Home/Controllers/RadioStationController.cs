@@ -103,7 +103,7 @@ namespace Xpressive.Home.Controllers
         }
 
         [HttpGet, Route("starred")]
-        public async Task<IEnumerable<FavoriteRadioStation>> GetFavorites()
+        public async Task<IEnumerable<Radio>> GetFavorites()
         {
             var favorites = await _favoriteRadioStationService.GetAsync();
             return favorites;
@@ -112,7 +112,7 @@ namespace Xpressive.Home.Controllers
         [HttpPut, Route("star")]
         public async Task Star([FromBody] RadioStationDto dto)
         {
-            var radioStation = new TuneInRadioStation
+            var radioStation = new Radio
             {
                 Id = dto.Id,
                 Name = dto.Name,

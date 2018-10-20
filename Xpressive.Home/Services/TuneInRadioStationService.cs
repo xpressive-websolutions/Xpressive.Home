@@ -198,7 +198,7 @@ namespace Xpressive.Home.Services
 
                 if ("audio".Equals(outline.Type) && outline.Formats != null && outline.Formats.Contains("mp3"))
                 {
-                    result.Stations.Add(new TuneInRadioStation
+                    result.Stations.Add(new Radio
                     {
                         Id = outline.GuideId,
                         Name = outline.Text,

@@ -35,7 +35,7 @@ namespace Xpressive.Home.Services
                     }
                 }
 
-                await Task.Delay(TimeSpan.FromHours(1), cancellationToken).ContinueWith(_ => { });
+                await Task.Delay(TimeSpan.FromHours(12), cancellationToken).ContinueWith(_ => { });
             }
         }
     }

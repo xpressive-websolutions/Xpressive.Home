@@ -29,7 +29,7 @@ namespace Xpressive.Home.Plugins.Forecast
 
             _policy = Policy
                 .Handle<WebException>()
-                .WaitAndRetry(new[]
+                .WaitAndRetryAsync(new[]
                 {
                     TimeSpan.FromSeconds(1),
                     TimeSpan.FromSeconds(2),
@@ -135,8 +135,13 @@ namespace Xpressive.Home.Plugins.Forecast
 
         private void UpdateVariables(string deviceId, string prefix, object data)
         {
+            if (data == null)
+            {
+                return;
+            }
+
             var properties = data.GetType().GetProperties();
-            var dict = properties.ToDictionary(p => p.Name, p => p.GetValue(data));
+            var dict = properties.ToDictionary(p => p.Name, p => p.GetValue(data), StringComparer.OrdinalIgnoreCase);
 
             var doubleParameters = new[] {
                 "apparentTemperature",
@@ -158,8 +163,8 @@ namespace Xpressive.Home.Plugins.Forecast
 
             var stringParameters = new[] { "icon", "summary" };
 
-            UpdateVariables(deviceId, prefix, dict, doubleParameters, v => Math.Round((float)v, 2));
-            UpdateVariables(deviceId, prefix, dict, stringParameters, v => v);
+            UpdateVariables(deviceId, prefix, dict, doubleParameters, v => Math.Round((double)v, 2));
+            UpdateVariables(deviceId, prefix, dict, stringParameters, v => v is string ? v : v.ToString());
         }
 
         private void UpdateVariables(string deviceId, string prefix, IDictionary<string, object> values, IEnumerable<string> properties, Func<object, object> convert)
@@ -167,7 +172,7 @@ namespace Xpressive.Home.Plugins.Forecast
             foreach (var p in properties)
             {
                 object v;
-                if (!values.TryGetValue(p, out v))
+                if (!values.TryGetValue(p, out v) || v == null)
                 {
                     continue;
                 }

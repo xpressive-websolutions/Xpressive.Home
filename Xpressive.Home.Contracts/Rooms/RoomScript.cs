@@ -1,10 +1,7 @@
 ﻿using System;
-using NPoco;
 
 namespace Xpressive.Home.Contracts.Rooms
 {
-    [TableName("RoomScript")]
-    [PrimaryKey("Id", AutoIncrement = false)]
     public class RoomScript
     {
         public Guid Id { get; set; }

@@ -1,61 +1,54 @@
 using System;
 using System.Collections.Generic;
-using System.Data.Common;
 using System.Threading.Tasks;
-using NPoco;
+using Microsoft.EntityFrameworkCore;
 using Xpressive.Home.Contracts.Automation;
+using Xpressive.Home.DatabaseModel;
 
 namespace Xpressive.Home.Services.Automation
 {
     internal class ScheduledScriptRepository : IScheduledScriptRepository
     {
-        private readonly DbConnection _dbConnection;
+        private readonly IContextFactory _contextFactory;
 
-        public ScheduledScriptRepository(DbConnection dbConnection)
+        public ScheduledScriptRepository(IContextFactory contextFactory)
         {
-            _dbConnection = dbConnection;
+            _contextFactory = contextFactory;
         }
 
         public async Task InsertAsync(Guid jobId, Guid scriptId, string cronTab)
         {
-            using (var database = new Database(_dbConnection))
+            await _contextFactory.InScope(async context =>
             {
-                await database.InsertAsync(new ScheduledScript
+                context.ScheduledScript.Add(new ScheduledScript
                 {
                     Id = jobId,
                     ScriptId = scriptId,
                     CronTab = cronTab,
                 });
-            }
+
+                await context.SaveChangesAsync();
+            });
         }
 
         public async Task DeleteAsync(Guid id)
         {
-            using (var database = new Database(_dbConnection))
+            await _contextFactory.InScope(async context =>
             {
-                var dto = await database.SingleOrDefaultByIdAsync<ScheduledScript>(id);
-
-                if (dto != null)
-                {
-                    await database.DeleteAsync(dto);
-                }
-            }
+                var result = await context.ScheduledScript.FindAsync(id);
+                context.ScheduledScript.Remove(result);
+                await context.SaveChangesAsync();
+            });
         }
 
         public async Task<IEnumerable<ScheduledScript>> GetAsync()
         {
-            using (var database = new Database(_dbConnection))
-            {
-                return await database.FetchAsync<ScheduledScript>("select * from ScheduledScript");
-            }
+            return await _contextFactory.InScope(async context => await context.ScheduledScript.ToListAsync());
         }
 
-        public async Task<ScheduledScript> GetAsync(Guid id)
+        public Task<ScheduledScript> GetAsync(Guid id)
         {
-            using (var database = new Database(_dbConnection))
-            {
-                return await database.SingleOrDefaultByIdAsync<ScheduledScript>(id);
-            }
+            return _contextFactory.InScope(async context => await context.ScheduledScript.FindAsync(id));
         }
     }
 }

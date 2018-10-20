@@ -1,46 +1,35 @@
 using System;
 using System.Collections.Generic;
-using System.Data.Common;
+using System.Linq;
 using System.Threading.Tasks;
-using NPoco;
+using Microsoft.EntityFrameworkCore;
 using Xpressive.Home.Contracts.Automation;
+using Xpressive.Home.DatabaseModel;
 
 namespace Xpressive.Home.Services.Automation
 {
     internal sealed class ScriptTriggerService : IScriptTriggerService
     {
-        private readonly DbConnection _dbConnection;
+        private readonly IContextFactory _contextFactory;
 
-        public ScriptTriggerService(DbConnection dbConnection)
+        public ScriptTriggerService(IContextFactory contextFactory)
         {
-            _dbConnection = dbConnection;
+            _contextFactory = contextFactory;
         }
 
         public async Task<IEnumerable<TriggeredScript>> GetTriggersAsync()
         {
-            using (var database = new Database(_dbConnection))
-            {
-                const string sql = "select * from TriggeredScript";
-                return await database.FetchAsync<TriggeredScript>(sql);
-            }
+            return await _contextFactory.InScope(async context => await context.TriggeredScript.ToListAsync());
         }
 
         public async Task<IEnumerable<TriggeredScript>> GetTriggersByVariableAsync(string variable)
         {
-            using (var database = new Database(_dbConnection))
-            {
-                const string sql = "select * from TriggeredScript where [Variable] = @0";
-                return await database.FetchAsync<TriggeredScript>(sql, variable);
-            }
+            return await _contextFactory.InScope(async context => await context.TriggeredScript.Where(t => t.Variable == variable).ToListAsync());
         }
 
         public async Task<IEnumerable<TriggeredScript>> GetTriggersByScriptAsync(Guid scriptId)
         {
-            using (var database = new Database(_dbConnection))
-            {
-                const string sql = "select * from TriggeredScript where ScriptId = @0";
-                return await database.FetchAsync<TriggeredScript>(sql, scriptId);
-            }
+            return await _contextFactory.InScope(async context => await context.TriggeredScript.Where(t => t.ScriptId == scriptId).ToListAsync());
         }
 
         public async Task<TriggeredScript> AddTriggerAsync(Guid scriptId, string variable)
@@ -52,25 +41,27 @@ namespace Xpressive.Home.Services.Automation
                 Variable = variable
             };
 
-            using (var database = new Database(_dbConnection))
+            await _contextFactory.InScope(async context =>
             {
-                await database.InsertAsync(triggeredScript);
-            }
+                context.TriggeredScript.Add(triggeredScript);
+                await context.SaveChangesAsync();
+            });
 
             return triggeredScript;
         }
 
         public async Task DeleteTriggerAsync(Guid id)
         {
-            using (var database = new Database(_dbConnection))
+            await _contextFactory.InScope(async context =>
             {
-                var dto = await database.SingleOrDefaultByIdAsync<TriggeredScript>(id);
-
-                if (dto != null)
+                var t = await context.TriggeredScript.FindAsync(id);
+                if (t != null)
                 {
-                    await database.DeleteAsync(dto);
+                    context.TriggeredScript.Remove(t);
+                    await context.SaveChangesAsync();
                 }
-            }
+            });
+
         }
     }
 }

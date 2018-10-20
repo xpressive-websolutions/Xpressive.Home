@@ -1,49 +1,36 @@
 using System.Collections.Generic;
-using System.Data.Common;
 using System.Threading.Tasks;
-using NPoco;
+using Microsoft.EntityFrameworkCore;
 using Xpressive.Home.Contracts.Services;
+using Xpressive.Home.DatabaseModel;
 
 namespace Xpressive.Home.Services
 {
     internal sealed class FavoriteRadioStationService : IFavoriteRadioStationService
     {
-        private readonly DbConnection _dbConnection;
+        private readonly XpressiveHomeContext _dbContext;
 
-        public FavoriteRadioStationService(DbConnection dbConnection)
+        public FavoriteRadioStationService(XpressiveHomeContext dbContext)
         {
-            _dbConnection = dbConnection;
+            _dbContext = dbContext;
         }
 
-        public async Task<IEnumerable<FavoriteRadioStation>> GetAsync()
+        public async Task<IEnumerable<Radio>> GetAsync()
         {
-            using (var database = new Database(_dbConnection))
-            {
-                return await database.FetchAsync<FavoriteRadioStation>();
-            }
+            var radios = await _dbContext.Radio.ToListAsync();
+            return radios;
         }
 
-        public async Task AddAsync(TuneInRadioStation radioStation)
+        public async Task AddAsync(Radio radioStation)
         {
-            var favorite = new FavoriteRadioStation
-            {
-                Id = radioStation.Id,
-                Name = radioStation.Name,
-                ImageUrl = radioStation.ImageUrl
-            };
-
-            using (var database = new Database(_dbConnection))
-            {
-                await database.InsertAsync(favorite);
-            }
+            await _dbContext.Radio.AddAsync(radioStation);
+            await _dbContext.SaveChangesAsync();
         }
 
-        public async Task RemoveAsync(FavoriteRadioStation favorite)
+        public async Task RemoveAsync(Radio favorite)
         {
-            using (var database = new Database(_dbConnection))
-            {
-                await database.DeleteAsync(favorite);
-            }
+            _dbContext.Radio.Remove(favorite);
+            await _dbContext.SaveChangesAsync();
         }
     }
 }
