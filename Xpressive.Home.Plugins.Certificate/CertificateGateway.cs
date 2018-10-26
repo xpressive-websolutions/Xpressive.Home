@@ -13,12 +13,9 @@ namespace Xpressive.Home.Plugins.Certificate
 {
     internal sealed class CertificateGateway : GatewayBase, ICertificateGateway
     {
-        private readonly IMessageQueue _messageQueue;
-
         public CertificateGateway(IMessageQueue messageQueue, IDevicePersistingService persistingService)
-            : base("Certificate", true, persistingService)
+            : base(messageQueue, "Certificate", true, persistingService)
         {
-            _messageQueue = messageQueue;
         }
 
         public override IDevice CreateEmptyDevice()
@@ -76,14 +73,14 @@ namespace Xpressive.Home.Plugins.Certificate
                     device.Subject = cert.Subject;
                     device.Thumbprint = cert.Thumbprint;
 
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "FriendlyName", cert.FriendlyName));
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "HasPrivateKey", cert.HasPrivateKey));
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Issuer", cert.Issuer));
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "NotAfter", cert.NotAfter.ToUniversalTime().ToString("s")));
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "NotBefore", cert.NotBefore.ToUniversalTime().ToString("s")));
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "SignatureAlgorithm", cert.SignatureAlgorithm.FriendlyName));
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Subject", cert.Subject));
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Thumbprint", cert.Thumbprint));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "FriendlyName", cert.FriendlyName));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "HasPrivateKey", cert.HasPrivateKey));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Issuer", cert.Issuer));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "NotAfter", cert.NotAfter.ToUniversalTime().ToString("s")));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "NotBefore", cert.NotBefore.ToUniversalTime().ToString("s")));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "SignatureAlgorithm", cert.SignatureAlgorithm.FriendlyName));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Subject", cert.Subject));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Thumbprint", cert.Thumbprint));
 
                     return true;
                 };

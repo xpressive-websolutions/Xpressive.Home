@@ -9,7 +9,7 @@ using Xpressive.Home.Contracts.Variables;
 
 namespace Xpressive.Home.Plugins.PhilipsHue
 {
-    internal class PhilipsHueBridgeDiscoveringService : IPhilipsHueBridgeDiscoveringService, IDisposable, IMessageQueueListener<NetworkDeviceFoundMessage>
+    internal class PhilipsHueBridgeDiscoveringService : IPhilipsHueBridgeDiscoveringService, IDisposable
     {
         private readonly IMessageQueue _messageQueue;
         private readonly IVariableRepository _variableRepository;
@@ -27,6 +27,8 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             _messageQueue = messageQueue;
             _variableRepository = variableRepository;
             _deviceConfigurationBackupService = deviceConfigurationBackupService;
+
+            messageQueue.Subscribe<NetworkDeviceFoundMessage>(Notify);
         }
 
         public event EventHandler<PhilipsHueBridge> BridgeFound;

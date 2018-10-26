@@ -18,15 +18,11 @@ namespace Xpressive.Home.Plugins.Denon
 {
     internal class DenonGateway : GatewayBase, IDenonGateway
     {
-        private readonly IMessageQueue _messageQueue;
         private readonly object _deviceLock = new object();
 
-        public DenonGateway(IMessageQueue messageQueue) : base("Denon", false)
+        public DenonGateway(IMessageQueue messageQueue) : base(messageQueue, "Denon", false)
         {
-            _messageQueue = messageQueue;
-
-            _messageQueue.Subscribe<NetworkDeviceFoundMessage>(Notify);
-            _messageQueue.Subscribe<CommandMessage>(Notify);
+            messageQueue.Subscribe<NetworkDeviceFoundMessage>(Notify);
         }
 
         public override IDevice CreateEmptyDevice()
@@ -272,9 +268,9 @@ namespace Xpressive.Home.Plugins.Denon
             device.IsMute = isMute;
             device.Source = select;
 
-            _messageQueue.Publish(new UpdateVariableMessage($"{Name}.{device.Id}.Volume", volume));
-            _messageQueue.Publish(new UpdateVariableMessage($"{Name}.{device.Id}.IsMute", isMute));
-            _messageQueue.Publish(new UpdateVariableMessage($"{Name}.{device.Id}.Source", select));
+            MessageQueue.Publish(new UpdateVariableMessage($"{Name}.{device.Id}.Volume", volume));
+            MessageQueue.Publish(new UpdateVariableMessage($"{Name}.{device.Id}.IsMute", isMute));
+            MessageQueue.Publish(new UpdateVariableMessage($"{Name}.{device.Id}.Source", select));
         }
     }
 }

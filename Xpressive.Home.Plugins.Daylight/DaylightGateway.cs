@@ -10,12 +10,9 @@ namespace Xpressive.Home.Plugins.Daylight
 {
     internal class DaylightGateway : GatewayBase, IDaylightGateway
     {
-        private readonly IMessageQueue _messageQueue;
-
         public DaylightGateway(IMessageQueue messageQueue, IDevicePersistingService persistingService)
-            : base("Daylight", true, persistingService)
+            : base(messageQueue, "Daylight", true, persistingService)
         {
-            _messageQueue = messageQueue;
         }
 
         public override IDevice CreateEmptyDevice()
@@ -62,11 +59,11 @@ namespace Xpressive.Home.Plugins.Daylight
             var sunset = SunsetCalculator.GetSunset(device.Latitude, device.Longitude);
 
             device.IsDaylight = time >= sunrise && time <= sunset;
-            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsDaylight", device.IsDaylight));
+            MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsDaylight", device.IsDaylight));
 
             var offset = DateTime.UtcNow - DateTime.Now;
-            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Sunrise", (sunrise - offset).ToString("hh\\:mm\\:ss"), "Local time"));
-            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Sunset", (sunset - offset).ToString("hh\\:mm\\:ss"), "Local time"));
+            MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Sunrise", (sunrise - offset).ToString("hh\\:mm\\:ss"), "Local time"));
+            MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Sunset", (sunset - offset).ToString("hh\\:mm\\:ss"), "Local time"));
         }
     }
 }

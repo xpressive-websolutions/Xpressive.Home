@@ -13,16 +13,12 @@ namespace Xpressive.Home.Plugins.Sonos
 {
     internal class SonosGateway : GatewayBase, ISonosGateway
     {
-        private readonly IMessageQueue _messageQueue;
         private readonly ISonosSoapClient _soapClient;
 
         public SonosGateway(IMessageQueue messageQueue, ISonosDeviceDiscoverer deviceDiscoverer, ISonosSoapClient soapClient)
-            : base("Sonos", false)
+            : base(messageQueue, "Sonos", false)
         {
-            _messageQueue = messageQueue;
             _soapClient = soapClient;
-
-            _messageQueue.Subscribe<CommandMessage>(Notify);
 
             deviceDiscoverer.DeviceFound += (s, e) =>
             {
@@ -335,7 +331,7 @@ namespace Xpressive.Home.Plugins.Sonos
 
         private void UpdateVariable(SonosDevice device, string variable, object value)
         {
-            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, variable, value));
+            MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, variable, value));
         }
     }
 }

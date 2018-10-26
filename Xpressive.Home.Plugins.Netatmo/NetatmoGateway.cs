@@ -18,7 +18,6 @@ namespace Xpressive.Home.Plugins.Netatmo
 {
     internal class NetatmoGateway : GatewayBase, INetatmoGateway
     {
-        private readonly IMessageQueue _messageQueue;
         private readonly object _deviceLock = new object();
         private readonly string _clientId;
         private readonly string _clientSecret;
@@ -27,9 +26,8 @@ namespace Xpressive.Home.Plugins.Netatmo
         private readonly bool _isValidConfiguration;
 
         public NetatmoGateway(IMessageQueue messageQueue, IConfiguration configuration)
-            : base("Netatmo", false)
+            : base(messageQueue, "Netatmo", false)
         {
-            _messageQueue = messageQueue;
             _clientId = configuration["netatmo.clientid"];
             _clientSecret = configuration["netatmo.clientsecret"];
             _username = configuration["netatmo.username"];
@@ -68,7 +66,7 @@ namespace Xpressive.Home.Plugins.Netatmo
 
             if (!_isValidConfiguration)
             {
-                _messageQueue.Publish(new NotifyUserMessage("Add netatmo configuration to config file."));
+                MessageQueue.Publish(new NotifyUserMessage("Add netatmo configuration to config file."));
                 return;
             }
 
@@ -172,7 +170,7 @@ namespace Xpressive.Home.Plugins.Netatmo
                 {
                     var name = property.Name[0] + property.Name.ToLowerInvariant().Substring(1);
                     var value = (double)property.GetValue(module.DashboardData);
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, name, value));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, name, value));
 
                     switch (name)
                     {

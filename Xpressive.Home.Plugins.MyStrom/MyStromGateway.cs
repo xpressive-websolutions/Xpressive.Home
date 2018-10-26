@@ -16,7 +16,6 @@ namespace Xpressive.Home.Plugins.MyStrom
 {
     internal class MyStromGateway : GatewayBase, IMyStromGateway
     {
-        private readonly IMessageQueue _messageQueue;
         private readonly IMyStromDeviceNameService _myStromDeviceNameService;
         private readonly IDeviceConfigurationBackupService _deviceConfigurationBackupService;
         private readonly object _deviceListLock = new object();
@@ -25,14 +24,12 @@ namespace Xpressive.Home.Plugins.MyStrom
             IMessageQueue messageQueue,
             IMyStromDeviceNameService myStromDeviceNameService,
             IDeviceConfigurationBackupService deviceConfigurationBackupService)
-            : base("myStrom", false)
+            : base(messageQueue, "myStrom", false)
         {
-            _messageQueue = messageQueue;
             _myStromDeviceNameService = myStromDeviceNameService;
             _deviceConfigurationBackupService = deviceConfigurationBackupService;
 
-            _messageQueue.Subscribe<NetworkDeviceFoundMessage>(Notify);
-            _messageQueue.Subscribe<CommandMessage>(Notify);
+            messageQueue.Subscribe<NetworkDeviceFoundMessage>(Notify);
         }
 
         public IEnumerable<MyStromDevice> GetDevices()
@@ -80,21 +77,21 @@ namespace Xpressive.Home.Plugins.MyStrom
 
                     device.Power = dto.Power;
                     device.Relay = dto.Relay;
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Relay", dto.Relay));
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Name", device.Name));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Relay", dto.Relay));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Name", device.Name));
 
                     double previousPower;
                     if (previousPowers.TryGetValue(device.Id, out previousPower))
                     {
                         if (Math.Abs(previousPower - dto.Power) > 0.01)
                         {
-                            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Power", dto.Power));
+                            MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Power", dto.Power));
                             previousPowers[device.Id] = dto.Power;
                         }
                     }
                     else
                     {
-                        _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Power", dto.Power));
+                        MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Power", dto.Power));
                         previousPowers[device.Id] = dto.Power;
                     }
                 }

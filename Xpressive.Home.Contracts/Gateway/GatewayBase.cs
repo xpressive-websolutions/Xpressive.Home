@@ -9,20 +9,25 @@ using Xpressive.Home.Contracts.Messaging;
 
 namespace Xpressive.Home.Contracts.Gateway
 {
-    public abstract class GatewayBase : BackgroundService, IGateway, IMessageQueueListener<CommandMessage>
+    public abstract class GatewayBase : BackgroundService, IGateway
     {
-        protected GatewayBase(string name, bool canCreateDevices, IDevicePersistingService devicePersistingService = null)
+        protected GatewayBase(IMessageQueue messageQueue, string name, bool canCreateDevices, IDevicePersistingService devicePersistingService = null)
         {
+            MessageQueue = messageQueue;
             Name = name;
             CanCreateDevices = canCreateDevices;
             PersistingService = devicePersistingService;
             DeviceDictionary = new ConcurrentDictionary<string, DeviceBase>(StringComparer.Ordinal);
+
+            MessageQueue.Subscribe<CommandMessage>(Notify);
+            MessageQueue.Subscribe<RenameDeviceMessage>(Notify);
         }
 
         public string Name { get; }
         public IEnumerable<IDevice> Devices => DeviceDictionary.Values.ToList();
         public bool CanCreateDevices { get; }
         public IDevicePersistingService PersistingService { get; }
+        public IMessageQueue MessageQueue { get; }
         protected ConcurrentDictionary<string, DeviceBase> DeviceDictionary { get; }
 
         public bool AddDevice(IDevice device)
@@ -64,8 +69,8 @@ namespace Xpressive.Home.Contracts.Gateway
 
             var deviceId = parts[1];
             var actionName = parts[2];
-            DeviceBase device;
-            if (!DeviceDictionary.TryGetValue(deviceId, out device))
+
+            if (!DeviceDictionary.TryGetValue(deviceId, out var device))
             {
                 return;
             }
@@ -78,6 +83,21 @@ namespace Xpressive.Home.Contracts.Gateway
             }
 
             StartActionInNewTask(device, action, message.Parameters);
+        }
+
+        private void Notify(RenameDeviceMessage message)
+        {
+            if (!Name.Equals(message.Gateway, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            if (!DeviceDictionary.TryGetValue(message.Device, out var device))
+            {
+                return;
+            }
+
+            device.Name = message.Name;
         }
 
         protected async Task LoadDevicesAsync(Func<string, string, DeviceBase> emptyDevice)
@@ -116,9 +136,10 @@ namespace Xpressive.Home.Contracts.Gateway
 
         protected abstract Task ExecuteInternalAsync(IDevice device, IAction action, IDictionary<string, string> values);
 
-        public void Dispose()
+        public override void Dispose()
         {
             Dispose(true);
+            base.Dispose();
         }
 
         protected virtual void Dispose(bool disposing) { }

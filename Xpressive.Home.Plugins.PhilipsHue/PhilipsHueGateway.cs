@@ -23,7 +23,6 @@ namespace Xpressive.Home.Plugins.PhilipsHue
     {
         private readonly IVariableRepository _variableRepository;
         private readonly IPhilipsHueDeviceDiscoveringService _deviceDiscoveringService;
-        private readonly IMessageQueue _messageQueue;
         private readonly object _devicesLock = new object();
         private readonly RetryPolicy _executeCommandPolicy;
         private readonly ConcurrentQueue<Tuple<PhilipsHueBulb, LightCommand>> _commandQueue = new ConcurrentQueue<Tuple<PhilipsHueBulb, LightCommand>>();
@@ -32,13 +31,10 @@ namespace Xpressive.Home.Plugins.PhilipsHue
             IVariableRepository variableRepository,
             IPhilipsHueDeviceDiscoveringService deviceDiscoveringService,
             IMessageQueue messageQueue)
-            : base("PhilipsHue", false)
+            : base(messageQueue, "PhilipsHue", false)
         {
             _variableRepository = variableRepository;
             _deviceDiscoveringService = deviceDiscoveringService;
-            _messageQueue = messageQueue;
-
-            _messageQueue.Subscribe<CommandMessage>(Notify);
 
             _deviceDiscoveringService.BulbFound += OnDeviceFound;
             _deviceDiscoveringService.PresenceSensorFound += OnDeviceFound;
@@ -436,7 +432,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 
         private void UpdateVariable(string name, object value, string unit = null)
         {
-            _messageQueue.Publish(new UpdateVariableMessage(name, value, unit));
+            MessageQueue.Publish(new UpdateVariableMessage(name, value, unit));
         }
 
         private bool IsEqual(PhilipsHueBulb device, Light light)

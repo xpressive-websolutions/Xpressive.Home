@@ -17,20 +17,16 @@ namespace Xpressive.Home.Plugins.Lifx
 {
     internal sealed class LifxGateway : GatewayBase, ILifxGateway
     {
-        private readonly IMessageQueue _messageQueue;
         private readonly IDeviceConfigurationBackupService _deviceConfigurationBackupService;
         private readonly string _token;
         private readonly object _deviceLock = new object();
         private readonly LifxLocalClient _localClient = new LifxLocalClient();
 
         public LifxGateway(IMessageQueue messageQueue, IDeviceConfigurationBackupService deviceConfigurationBackupService, IConfiguration configuration)
-            : base("Lifx", false)
+            : base(messageQueue, "Lifx", false)
         {
-            _messageQueue = messageQueue;
             _deviceConfigurationBackupService = deviceConfigurationBackupService;
             _token = configuration["lifx.token"];
-
-            _messageQueue.Subscribe<CommandMessage>(Notify);
 
             _localClient.DeviceDiscovered += (s, e) =>
             {
@@ -45,7 +41,7 @@ namespace Xpressive.Home.Plugins.Lifx
                 }
 
                 var variable = $"{Name}.{e.Item1.Id}.{e.Item2}";
-                _messageQueue.Publish(new UpdateVariableMessage(variable, e.Item3));
+                MessageQueue.Publish(new UpdateVariableMessage(variable, e.Item3));
             };
         }
 
@@ -144,7 +140,7 @@ namespace Xpressive.Home.Plugins.Lifx
         {
             if (string.IsNullOrEmpty(_token))
             {
-                _messageQueue.Publish(new NotifyUserMessage("Add LIFX cloud token to config file."));
+                MessageQueue.Publish(new NotifyUserMessage("Add LIFX cloud token to config file."));
                 return;
             }
 
@@ -331,23 +327,23 @@ namespace Xpressive.Home.Plugins.Lifx
             {
                 case "switch on":
                     await client.SwitchOn(light, seconds);
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", true));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", true));
                     break;
                 case "switch off":
                     await client.SwitchOff(light, seconds);
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", false));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", false));
                     break;
                 case "change color":
                     var rgb = color.ParseRgb();
                     await client.ChangeColor(light, rgb.ToString(), seconds);
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", true));
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Color", rgb.ToString()));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", true));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Color", rgb.ToString()));
                     break;
                 case "change brightness":
                     await client.ChangeBrightness(light, brightness, seconds);
                     var db = Math.Round(brightness, 2);
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Brightness", db));
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", true));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Brightness", db));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", true));
                     break;
                 default:
                     return;
@@ -397,12 +393,12 @@ namespace Xpressive.Home.Plugins.Lifx
             var isConnected = light.IsConnected;
             var color = light.GetHexColor();
 
-            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Brightness", brightness));
-            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", isOn));
-            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsConnected", isConnected));
-            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Name", name));
-            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "GroupName", groupName));
-            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Color", color));
+            MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Brightness", brightness));
+            MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", isOn));
+            MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsConnected", isConnected));
+            MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Name", name));
+            MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "GroupName", groupName));
+            MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Color", color));
         }
 
         protected override void Dispose(bool disposing)

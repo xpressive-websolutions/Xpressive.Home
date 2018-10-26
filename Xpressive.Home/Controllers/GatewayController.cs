@@ -33,8 +33,7 @@ namespace Xpressive.Home.Controllers
         [HttpGet, Route("{gatewayName}")]
         public IEnumerable<IDevice> GetDevices(string gatewayName)
         {
-            IGateway gateway;
-            if (_gateways.TryGetValue(gatewayName, out gateway))
+            if (_gateways.TryGetValue(gatewayName, out var gateway))
             {
                 return gateway.Devices;
             }
@@ -47,8 +46,7 @@ namespace Xpressive.Home.Controllers
         {
             var result = new Dictionary<string, object>();
 
-            IGateway gateway;
-            if (_gateways.TryGetValue(gatewayName, out gateway) && gateway.CanCreateDevices)
+            if (_gateways.TryGetValue(gatewayName, out var gateway) && gateway.CanCreateDevices)
             {
                 var device = gateway.CreateEmptyDevice();
                 var properties = GetDeviceProperties(device);
@@ -67,8 +65,7 @@ namespace Xpressive.Home.Controllers
         [HttpPost, Route("{gatewayName}")]
         public IActionResult CreateDevice(string gatewayName, [FromBody]Dictionary<string, object> dto)
         {
-            IGateway gateway;
-            if (_gateways.TryGetValue(gatewayName, out gateway) && gateway.CanCreateDevices)
+            if (_gateways.TryGetValue(gatewayName, out var gateway) && gateway.CanCreateDevices)
             {
                 var device = gateway.CreateEmptyDevice();
                 var properties = GetDeviceProperties(device);
@@ -76,8 +73,7 @@ namespace Xpressive.Home.Controllers
 
                 foreach (var property in properties)
                 {
-                    object value;
-                    if (dto.TryGetValue(property.Name, out value))
+                    if (dto.TryGetValue(property.Name, out var value))
                     {
                         var converted = Convert.ChangeType(value, property.PropertyType);
                         property.SetValue(device, converted);
@@ -98,8 +94,7 @@ namespace Xpressive.Home.Controllers
         [HttpDelete, Route("{gatewayName}")]
         public IActionResult DeleteDevice(string gatewayName, string deviceId)
         {
-            IGateway gateway;
-            if (_gateways.TryGetValue(gatewayName, out gateway) && gateway.CanCreateDevices)
+            if (_gateways.TryGetValue(gatewayName, out var gateway) && gateway.CanCreateDevices)
             {
                 var device = gateway.Devices.SingleOrDefault(d => d.Id.Equals(deviceId, StringComparison.Ordinal));
 
@@ -118,8 +113,7 @@ namespace Xpressive.Home.Controllers
         [HttpPut, Route("{gatewayName}/{deviceId}/{actionName}")]
         public IActionResult ExecuteAction(string gatewayName, string deviceId, string actionName, [FromBody]Dictionary<string, string> parameters)
         {
-            IGateway gateway;
-            if (!_gateways.TryGetValue(gatewayName, out gateway))
+            if (!_gateways.TryGetValue(gatewayName, out var gateway))
             {
                 return NotFound();
             }
@@ -143,8 +137,7 @@ namespace Xpressive.Home.Controllers
         [HttpGet, Route("{gatewayName}/{deviceId}/actions")]
         public IEnumerable<ActionDto> GetActions(string gatewayName, string deviceId)
         {
-            IGateway gateway;
-            if (!_gateways.TryGetValue(gatewayName, out gateway))
+            if (!_gateways.TryGetValue(gatewayName, out var gateway))
             {
                 return Enumerable.Empty<ActionDto>();
             }

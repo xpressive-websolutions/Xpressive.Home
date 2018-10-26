@@ -14,7 +14,6 @@ namespace Xpressive.Home.Plugins.Tado
     internal class TadoGateway : GatewayBase
     {
         private readonly object _deviceListLock = new object();
-        private readonly IMessageQueue _messageQueue;
         private readonly RestClient _client;
         private readonly RestClient _authClient;
         private readonly string _username;
@@ -22,11 +21,8 @@ namespace Xpressive.Home.Plugins.Tado
         private TokenDto _token;
 
         public TadoGateway(IMessageQueue messageQueue, IConfiguration configuration)
-            : base("tado", false)
+            : base(messageQueue, "tado", false)
         {
-            _messageQueue = messageQueue;
-            _messageQueue.Subscribe<CommandMessage>(Notify);
-
             _client = new RestClient("https://my.tado.com/");
             _authClient = new RestClient("https://auth.tado.com/");
             _username = configuration["tado.username"];
@@ -44,7 +40,7 @@ namespace Xpressive.Home.Plugins.Tado
 
             if (string.IsNullOrEmpty(_username) || string.IsNullOrEmpty(_password))
             {
-                _messageQueue.Publish(new NotifyUserMessage("Add tado configuration to config file."));
+                MessageQueue.Publish(new NotifyUserMessage("Add tado configuration to config file."));
                 return;
             }
 
@@ -119,7 +115,7 @@ namespace Xpressive.Home.Plugins.Tado
         {
             if (value != null)
             {
-                _messageQueue.Publish(new UpdateVariableMessage(Name, deviceId, variableName, value, unit));
+                MessageQueue.Publish(new UpdateVariableMessage(Name, deviceId, variableName, value, unit));
             }
         }
 
@@ -127,7 +123,7 @@ namespace Xpressive.Home.Plugins.Tado
         {
             if (value.HasValue)
             {
-                _messageQueue.Publish(new UpdateVariableMessage(Name, deviceId, variableName, Round(value.Value), unit));
+                MessageQueue.Publish(new UpdateVariableMessage(Name, deviceId, variableName, Round(value.Value), unit));
             }
         }
 

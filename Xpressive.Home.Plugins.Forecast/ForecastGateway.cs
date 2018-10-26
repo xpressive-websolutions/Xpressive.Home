@@ -17,14 +17,12 @@ namespace Xpressive.Home.Plugins.Forecast
     public class ForecastGateway : GatewayBase
     {
         private readonly string _apiKey;
-        private readonly IMessageQueue _messageQueue;
         private readonly Policy _policy;
         private DarkSkyService _darkSky;
 
         public ForecastGateway(IMessageQueue messageQueue, IConfiguration configuration, IDevicePersistingService persistingService)
-            : base("Weather", true, persistingService)
+            : base(messageQueue, "Weather", true, persistingService)
         {
-            _messageQueue = messageQueue;
             _apiKey = configuration["forecast.apikey"];
 
             _policy = Policy
@@ -55,7 +53,7 @@ namespace Xpressive.Home.Plugins.Forecast
 
             if (string.IsNullOrEmpty(_apiKey))
             {
-                _messageQueue.Publish(new NotifyUserMessage("Add forecast.io configuration to config file."));
+                MessageQueue.Publish(new NotifyUserMessage("Add forecast.io configuration to config file."));
                 return;
             }
 
@@ -178,7 +176,7 @@ namespace Xpressive.Home.Plugins.Forecast
                 }
                 var name = prefix + CultureInfo.InvariantCulture.TextInfo.ToUpper(p[0]) + p.Substring(1);
                 var converted = convert(v);
-                _messageQueue.Publish(new UpdateVariableMessage(Name, deviceId, name, converted));
+                MessageQueue.Publish(new UpdateVariableMessage(Name, deviceId, name, converted));
             }
         }
     }

@@ -14,7 +14,6 @@ namespace Xpressive.Home.Plugins.Gardena
 {
     internal class GardenaGateway : GatewayBase
     {
-        private readonly IMessageQueue _messageQueue;
         private readonly string _username;
         private readonly string _password;
         private readonly RestClient _client;
@@ -23,9 +22,8 @@ namespace Xpressive.Home.Plugins.Gardena
         private Token _token;
 
         public GardenaGateway(IMessageQueue messageQueue, IConfiguration configuration)
-            : base("Gardena", false)
+            : base(messageQueue, "Gardena", false)
         {
-            _messageQueue = messageQueue;
             _username = configuration["gardena.username"];
             _password = configuration["gardena.password"];
 
@@ -97,7 +95,7 @@ namespace Xpressive.Home.Plugins.Gardena
 
             if (string.IsNullOrEmpty(_username) || string.IsNullOrEmpty(_password))
             {
-                _messageQueue.Publish(new NotifyUserMessage("Add gardena configuration to config file."));
+                MessageQueue.Publish(new NotifyUserMessage("Add gardena configuration to config file."));
                 return;
             }
 
@@ -185,7 +183,7 @@ namespace Xpressive.Home.Plugins.Gardena
                                         unit = null;
                                     }
 
-                                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, key, value, unit));
+                                    MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, key, value, unit));
 
                                     if (key.Equals("category", StringComparison.OrdinalIgnoreCase))
                                     {

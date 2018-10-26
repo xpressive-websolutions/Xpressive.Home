@@ -13,15 +13,13 @@ namespace Xpressive.Home.Plugins.NissanLeaf
     internal sealed class NissanLeafGateway : GatewayBase, INissanLeafGateway
     {
         private readonly INissanLeafClient _nissanLeafClient;
-        private readonly IMessageQueue _messageQueue;
         private readonly string _username;
         private readonly string _password;
 
         public NissanLeafGateway(INissanLeafClient nissanLeafClient, IMessageQueue messageQueue, IConfiguration configuration)
-            : base("NissanLeaf", false)
+            : base(messageQueue, "NissanLeaf", false)
         {
             _nissanLeafClient = nissanLeafClient;
-            _messageQueue = messageQueue;
             _username = configuration["nissanleaf.username"];
             _password = configuration["nissanleaf.password"];
         }
@@ -63,7 +61,7 @@ namespace Xpressive.Home.Plugins.NissanLeaf
 
             if (string.IsNullOrEmpty(_username) || string.IsNullOrEmpty(_password))
             {
-                _messageQueue.Publish(new NotifyUserMessage("Add nissan leaf configuration to config file."));
+                MessageQueue.Publish(new NotifyUserMessage("Add nissan leaf configuration to config file."));
                 return;
             }
 
@@ -105,11 +103,11 @@ namespace Xpressive.Home.Plugins.NissanLeaf
                     device.CruisingRangeAcOn = Math.Round(batteryStatus.CruisingRangeAcOn);
                     device.CruisingRangeAcOff = Math.Round(batteryStatus.CruisingRangeAcOff);
 
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "ChargingState", device.ChargingState));
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "PluginState", device.PluginState));
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Power", device.Power, "Percent"));
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "CruisingRangeAcOff", device.CruisingRangeAcOff, "Meter"));
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "CruisingRangeAcOn", device.CruisingRangeAcOn, "Meter"));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "ChargingState", device.ChargingState));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "PluginState", device.PluginState));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Power", device.Power, "Percent"));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "CruisingRangeAcOff", device.CruisingRangeAcOff, "Meter"));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "CruisingRangeAcOn", device.CruisingRangeAcOn, "Meter"));
                 }
             }
 

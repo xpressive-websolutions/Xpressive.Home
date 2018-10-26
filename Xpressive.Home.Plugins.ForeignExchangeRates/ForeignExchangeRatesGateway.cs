@@ -14,15 +14,13 @@ namespace Xpressive.Home.Plugins.ForeignExchangeRates
 {
     internal sealed class ForeignExchangeRatesGateway : GatewayBase, IForeignExchangeRatesGateway
     {
-        private readonly IMessageQueue _messageQueue;
         private readonly IHttpClientProvider _httpClientProvider;
         private readonly string _baseUrl;
         private readonly bool _isValidConfiguration = true;
 
         public ForeignExchangeRatesGateway(IMessageQueue messageQueue, IHttpClientProvider httpClientProvider, IConfiguration configuration, IDevicePersistingService persistingService)
-            : base("Forex", true, persistingService)
+            : base(messageQueue, "Forex", true, persistingService)
         {
-            _messageQueue = messageQueue;
             _httpClientProvider = httpClientProvider;
 
             var apiKey = configuration["forex:apikey"];
@@ -96,12 +94,12 @@ namespace Xpressive.Home.Plugins.ForeignExchangeRates
 
                 device.Rates.Clear();
                 device.LastUpdate = dto.Date;
-                _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "LastUpdate", dto.Date));
+                MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "LastUpdate", dto.Date));
 
                 foreach (var rate in dto.Rates)
                 {
                     device.Rates[rate.Key] = rate.Value;
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, rate.Key, rate.Value));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, rate.Key, rate.Value));
                 }
             }
             catch (Exception e)

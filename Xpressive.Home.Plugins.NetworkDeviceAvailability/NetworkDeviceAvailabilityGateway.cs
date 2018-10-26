@@ -13,15 +13,13 @@ namespace Xpressive.Home.Plugins.NetworkDeviceAvailability
     internal sealed class NetworkDeviceAvailabilityGateway : GatewayBase
     {
         private readonly IDictionary<string, DateTime> _lastSeenMacAddresses;
-        private readonly IMessageQueue _messageQueue;
 
         public NetworkDeviceAvailabilityGateway(IMessageQueue messageQueue, IDevicePersistingService persistingService)
-            : base("AvailableNetworkDevices", true, persistingService)
+            : base(messageQueue, "AvailableNetworkDevices", true, persistingService)
         {
-            _messageQueue = messageQueue;
             _lastSeenMacAddresses = new Dictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
 
-            _messageQueue.Subscribe<NetworkDeviceFoundMessage>(Notify);
+            messageQueue.Subscribe<NetworkDeviceFoundMessage>(Notify);
         }
 
         public override IEnumerable<IAction> GetActions(IDevice device)
@@ -49,7 +47,7 @@ namespace Xpressive.Home.Plugins.NetworkDeviceAvailability
                                 _lastSeenMacAddresses.TryGetValue(id, out lastSeen) &&
                                 DateTime.UtcNow - lastSeen < TimeSpan.FromMinutes(5);
 
-                            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsAvailable", isAvailable));
+                            MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsAvailable", isAvailable));
                         }
                     }
                     catch (Exception e)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Xpressive.Home.Contracts.Gateway;
+using Xpressive.Home.Contracts.Messaging;
 using Xpressive.Home.Contracts.Services;
 
 namespace Xpressive.Home.Plugins.WebHook
@@ -11,8 +12,8 @@ namespace Xpressive.Home.Plugins.WebHook
     {
         private readonly IWebHookService _webHookService;
 
-        public WebHookGateway(IWebHookService webHookService, IDevicePersistingService persistingService)
-            : base("WebHook", true, persistingService)
+        public WebHookGateway(IMessageQueue messageQueue, IWebHookService webHookService, IDevicePersistingService persistingService)
+            : base(messageQueue, "WebHook", true, persistingService)
         {
             _webHookService = webHookService;
         }
