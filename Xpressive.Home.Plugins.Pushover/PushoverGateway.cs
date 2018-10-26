@@ -58,7 +58,5 @@ namespace Xpressive.Home.Plugins.Pushover
                 _messageQueue.Publish(new NotifyUserMessage("Add pushover configuration to config file."));
             }
         }
-
-        public void Dispose() { }
     }
 }

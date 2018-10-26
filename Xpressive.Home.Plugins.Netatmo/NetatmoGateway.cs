@@ -107,7 +107,7 @@ namespace Xpressive.Home.Plugins.Netatmo
             var request = new RestRequest("/api/getstationsdata");
             request.AddQueryParameter("access_token", token.AccessToken);
 
-            var data = await client.GetTaskAsync<StationDataResponseDto>(request);
+            var data = await client.GetAsync<StationDataResponseDto>(request);
 
             if (data?.Body?.Devices == null)
             {
@@ -212,7 +212,7 @@ namespace Xpressive.Home.Plugins.Netatmo
                 request.AddParameter("password", _password);
                 request.AddParameter("scope", "read_station read_thermostat");
 
-                var token = await client.PostTaskAsync<TokenResponseDto>(request);
+                var token = await client.PostAsync<TokenResponseDto>(request);
 
                 if (token?.AccessToken == null)
                 {
@@ -237,7 +237,7 @@ namespace Xpressive.Home.Plugins.Netatmo
                 request.AddParameter("client_id", _clientId);
                 request.AddParameter("client_secret", _clientSecret);
 
-                var token = await client.PostTaskAsync<TokenResponseDto>(request);
+                var token = await client.PostAsync<TokenResponseDto>(request);
 
                 if (token?.AccessToken == null)
                 {

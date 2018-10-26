@@ -59,7 +59,5 @@ namespace Xpressive.Home.Plugins.Sms
                 _messageQueue.Publish(new NotifyUserMessage("Add sms configuration to config file."));
             }
         }
-
-        public void Dispose() { }
     }
 }

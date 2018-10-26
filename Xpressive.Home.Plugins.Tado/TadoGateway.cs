@@ -141,7 +141,7 @@ namespace Xpressive.Home.Plugins.Tado
             var request = new RestRequest(url);
             request.AddHeader("Authorization", "Bearer " + token.AccessToken);
             request.AddHeader("Referer", "https://my.tado.com/");
-            return await _client.GetTaskAsync<T>(request);
+            return await _client.GetAsync<T>(request);
         }
 
         private async Task<TokenDto> LoginAsync()
@@ -165,7 +165,7 @@ namespace Xpressive.Home.Plugins.Tado
             //loginRequest.AddHeader(":scheme", "https");
             loginRequest.AddHeader("Content-Type", "application/x-www-form-urlencoded");
 
-            var token = await _authClient.PostTaskAsync<TokenDto>(loginRequest);
+            var token = await _authClient.PostAsync<TokenDto>(loginRequest);
             token.Expires = DateTime.UtcNow.AddSeconds(token.ExpiresIn);
             return token;
         }
@@ -181,7 +181,7 @@ namespace Xpressive.Home.Plugins.Tado
             refreshRequest.AddQueryParameter("client_secret", "wZaRN7rpjn3FoNyF5IFuxg9uMzYJcvOoQ8QWiIqS3hfk6gLhVlG57j5YNoZL2Rtc");
             refreshRequest.AddQueryParameter("refresh_token", token.RefreshToken);
 
-            token = await _authClient.PostTaskAsync<TokenDto>(refreshRequest);
+            token = await _authClient.PostAsync<TokenDto>(refreshRequest);
             token.Expires = DateTime.UtcNow.AddSeconds(token.ExpiresIn);
             return token;
         }
@@ -249,7 +249,7 @@ namespace Xpressive.Home.Plugins.Tado
                 request.AddHeader("Content-Type", "application/json;charset=UTF-8");
                 request.AddJsonBody(payload);
 
-                var response = await _client.PutTaskAsync<object>(request);
+                var response = await _client.PutAsync<object>(request);
                 response.ToString();
             }
         }

@@ -155,7 +155,7 @@ namespace Xpressive.Home.Plugins.Lifx
                     }
                 }
             }
-            catch (Exception e) { }
+            catch (Exception) { }
         }
 
         private void OnReceivedPacket(LifxMessage e)
