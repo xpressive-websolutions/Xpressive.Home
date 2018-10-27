@@ -47,8 +47,7 @@ namespace Xpressive.Home.Plugins.Zwave
 
         public override IEnumerable<IAction> GetActions(IDevice device)
         {
-            var d = device as ZwaveDevice;
-            if (d == null)
+            if (!(device is ZwaveDevice d))
             {
                 yield break;
             }

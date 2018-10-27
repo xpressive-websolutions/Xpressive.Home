@@ -206,16 +206,12 @@ namespace Xpressive.Home.Plugins.Tado
                 return;
             }
 
-            string temp;
-            double temperature;
-
-            if (!values.TryGetValue("Temperature", out temp) || !double.TryParse(temp, out temperature))
+            if (!values.TryGetValue("Temperature", out string temp) || !double.TryParse(temp, out double temperature))
             {
                 return;
             }
 
-            var d = device as TadoDevice;
-            if (d == null)
+            if (!(device is TadoDevice d))
             {
                 return;
             }

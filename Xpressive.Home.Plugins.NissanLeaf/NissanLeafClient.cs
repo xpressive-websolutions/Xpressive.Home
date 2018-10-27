@@ -163,22 +163,18 @@ namespace Xpressive.Home.Plugins.NissanLeaf
                 ChargingState = response.chargeMode
             };
 
-            double acOn;
-            if (double.TryParse(response.cruisingRangeAcOn, out acOn))
+            if (double.TryParse(response.cruisingRangeAcOn, out double acOn))
             {
                 batteryStatus.CruisingRangeAcOn = acOn;
             }
 
-            double acOff;
-            if (double.TryParse(response.cruisingRangeAcOff, out acOff))
+            if (double.TryParse(response.cruisingRangeAcOff, out double acOff))
             {
                 batteryStatus.CruisingRangeAcOff = acOff;
             }
 
-            double degradation;
-            double capacity;
-            if (double.TryParse(response.batteryDegradation, out degradation) &&
-                double.TryParse(response.batteryCapacity, out capacity) &&
+            if (double.TryParse(response.batteryDegradation, out double degradation) &&
+                double.TryParse(response.batteryCapacity, out double capacity) &&
                 capacity > 0)
             {
                 batteryStatus.Power = degradation / capacity;
@@ -187,6 +183,7 @@ namespace Xpressive.Home.Plugins.NissanLeaf
             return batteryStatus;
         }
 
+#pragma warning disable IDE1006 // Benennungsstile
         private class BatteryStatusResultResponse
         {
             public int status { get; set; }
@@ -291,5 +288,6 @@ namespace Xpressive.Home.Plugins.NissanLeaf
             public string UserVehicleBoundTime { get; set; }
             public string LastDCMUseTime { get; set; }
         }
+#pragma warning restore IDE1006 // Benennungsstile
     }
 }

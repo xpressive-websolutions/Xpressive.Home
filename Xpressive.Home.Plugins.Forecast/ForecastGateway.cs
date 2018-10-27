@@ -169,8 +169,7 @@ namespace Xpressive.Home.Plugins.Forecast
         {
             foreach (var p in properties)
             {
-                object v;
-                if (!values.TryGetValue(p, out v) || v == null)
+                if (!values.TryGetValue(p, out object v) || v == null)
                 {
                     continue;
                 }
