@@ -109,9 +109,9 @@ namespace Xpressive.Home.Plugins.NissanLeaf
                     MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "CruisingRangeAcOff", device.CruisingRangeAcOff, "Meter"));
                     MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "CruisingRangeAcOn", device.CruisingRangeAcOn, "Meter"));
                 }
-            }
 
-            await Task.Delay(TimeSpan.FromMinutes(10), cancellationToken).ContinueWith(_ => { });
+                await Task.Delay(TimeSpan.FromMinutes(10), cancellationToken).ContinueWith(_ => { });
+            }
         }
 
         public override IDevice CreateEmptyDevice()

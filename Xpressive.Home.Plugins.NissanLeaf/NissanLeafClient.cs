@@ -17,7 +17,7 @@ namespace Xpressive.Home.Plugins.NissanLeaf
         public NissanLeafClient(IBlowfishEncryptionService encryptionService)
         {
             _encryptionService = encryptionService;
-            _restClient = new RestClient("https://gdcportalgw.its-mo.com/gworchest_160803A/gdc/");
+            _restClient = new RestClient("https://gdcportalgw.its-mo.com/api_v180117_NE/gdc/");
         }
 
         public async Task<bool> InitAsync()
@@ -100,7 +100,7 @@ namespace Xpressive.Home.Plugins.NissanLeaf
                         return CreateBatteryStatus(resultResponse);
                     }
 
-                    await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken).ContinueWith(_ => { });
+                    await Task.Delay(TimeSpan.FromMinutes(1), cancellationToken).ContinueWith(_ => { });
                 }
 
                 return null;
