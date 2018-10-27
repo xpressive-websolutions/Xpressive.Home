@@ -71,8 +71,7 @@ namespace Xpressive.Home.Plugins.Forecast
                     Log.Error(e, e.Message);
                 }
 
-                var minutes = Math.Max(DeviceDictionary.Count * 2.5, 10);
-                await Task.Delay(TimeSpan.FromMinutes(minutes), cancellationToken).ContinueWith(_ => { });
+                await Task.Delay(TimeSpan.FromHours(DeviceDictionary.Count), cancellationToken).ContinueWith(_ => { });
             }
         }
 
