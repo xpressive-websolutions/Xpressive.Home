@@ -91,13 +91,20 @@ namespace Xpressive.Home.Plugins.Unifi
                         return;
                     }
 
-                    var deviceResult = await client.ListDevicesAsync();
+                    var onlineClients = await client.ListOnlineClientsAsync();
 
-                    foreach (var device in deviceResult.Data)
+                    foreach (var onlineClient in onlineClients.Data)
                     {
-                        var mac = device.Mac.MacAddressToBytes();
-                        var name = device.Name ?? device.DeviceId ?? device.Model;
-                        _messageQueue.Publish(new NetworkDeviceFoundMessage("Unifi", device.Ip, mac, name));
+                        var mac = onlineClient.Mac.MacAddressToBytes();
+                        var name = onlineClient.Name ?? onlineClient.Hostname ?? onlineClient.Oui;
+                        var networkDeviceFoundMessage = new NetworkDeviceFoundMessage("Unifi", onlineClient.Ip, mac, name);
+                        networkDeviceFoundMessage.Values.Add("VLAN", onlineClient.Vlan.ToString("D"));
+                        networkDeviceFoundMessage.Values.Add("Radio", onlineClient.Radio);
+                        networkDeviceFoundMessage.Values.Add("Network", onlineClient.Network);
+                        networkDeviceFoundMessage.Values.Add("RadioProto", onlineClient.RadioProto);
+                        networkDeviceFoundMessage.Values.Add("IsWired", onlineClient.IsWired.ToString());
+                        networkDeviceFoundMessage.Values.Add("Signal", onlineClient.Signal.ToString("D"));
+                        _messageQueue.Publish(networkDeviceFoundMessage);
                     }
                 }
             }
