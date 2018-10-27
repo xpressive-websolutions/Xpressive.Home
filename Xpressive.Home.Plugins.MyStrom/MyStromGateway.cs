@@ -230,6 +230,11 @@ namespace Xpressive.Home.Plugins.MyStrom
 
         private async Task<Dto> GetReport(string ipAddress)
         {
+            if (string.IsNullOrEmpty(ipAddress))
+            {
+                return null;
+            }
+
             var client = new RestClient($"http://{ipAddress}");
             client.Timeout = 5000;
 
