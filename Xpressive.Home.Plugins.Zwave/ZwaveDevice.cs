@@ -1,4 +1,8 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using Xpressive.Home.Contracts.Gateway;
+using ZWave.Channel;
 
 namespace Xpressive.Home.Plugins.Zwave
 {
@@ -15,6 +19,10 @@ namespace Xpressive.Home.Plugins.Zwave
 
         public uint HomeId { get; }
 
-        public bool IsSwitchBinary { get; internal set; }
+        public SemaphoreSlim Semaphore { get; } = new SemaphoreSlim(1, 1);
+
+        public IEnumerable<CommandClass> CommandClasses { get; set; }
+
+        public bool IsSwitchBinary => CommandClasses?.Contains(CommandClass.SwitchBinary) ?? false;
     }
 }
