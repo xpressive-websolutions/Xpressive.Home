@@ -39,7 +39,7 @@ namespace Xpressive.Home
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<XpressiveHomeContext>(o => o.UseSqlServer(Configuration.GetConnectionString("ConnectionString")));
+            services.AddDbContext<XpressiveHomeContext>(o => o.UseSqlite("Data Source=XpressiveHome.db"));
 
             LoadPlugins(services);
 
