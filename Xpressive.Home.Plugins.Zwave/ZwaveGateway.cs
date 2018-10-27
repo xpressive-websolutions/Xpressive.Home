@@ -18,17 +18,13 @@ namespace Xpressive.Home.Plugins.Zwave
     public class ZwaveGateway : GatewayBase
     {
         private readonly ZWaveController _controller;
-        private readonly IMessageQueue _messageQueue;
         private readonly string _comPortName;
         private readonly IAsyncPolicy _policy;
 
         public ZwaveGateway(IMessageQueue messageQueue, IConfiguration configuration)
-            : base("zwave", false)
+            : base(messageQueue, "zwave", false)
         {
-            _messageQueue = messageQueue;
             _comPortName = configuration["zwave.port"];
-
-            _messageQueue.Subscribe<CommandMessage>(Notify);
 
             _policy = Policy
                 .Handle<Exception>()
@@ -36,7 +32,11 @@ namespace Xpressive.Home.Plugins.Zwave
 
             if (string.IsNullOrEmpty(_comPortName))
             {
-                _messageQueue.Publish(new NotifyUserMessage("Add Z-Wave configuration to config file."));
+                MessageQueue.Publish(new NotifyUserMessage("Add Z-Wave configuration to config file."));
+            }
+            else
+            {
+                _controller = new ZWaveController(_comPortName);
             }
         }
 
@@ -215,15 +215,15 @@ namespace Xpressive.Home.Plugins.Zwave
 
                 if (double.TryParse(s, out var d))
                 {
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, report.Node.NodeID.ToString("D"), field.Name, Math.Round(d, 10000)));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, report.Node.NodeID.ToString("D"), field.Name, Math.Round(d, 10000)));
                 }
                 else if (bool.TryParse(s, out var b))
                 {
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, report.Node.NodeID.ToString("D"), field.Name, b));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, report.Node.NodeID.ToString("D"), field.Name, b));
                 }
                 else
                 {
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, report.Node.NodeID.ToString("D"), field.Name, s));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, report.Node.NodeID.ToString("D"), field.Name, s));
                 }
             }
         }
