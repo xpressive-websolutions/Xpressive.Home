@@ -191,7 +191,7 @@ namespace Xpressive.Home.Plugins.MyStrom
             var request = new RestRequest("info.json", Method.GET);
             var response = await client.ExecuteTaskAsync<MyStromDeviceInfo>(request);
 
-            if (response.Data == null)
+            if (response.Data?.Mac == null)
             {
                 return false;
             }
