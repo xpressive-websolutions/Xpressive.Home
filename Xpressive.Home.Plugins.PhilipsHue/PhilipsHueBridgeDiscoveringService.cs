@@ -90,7 +90,7 @@ namespace Xpressive.Home.Plugins.PhilipsHue
 
         private async Task<string> GetApiKeyWithBridgeButtonClick(PhilipsHueBridge bridge)
         {
-            var endTime = DateTime.UtcNow.AddSeconds(30);
+            var endTime = DateTime.UtcNow.AddSeconds(60);
             var client = new LocalHueClient(bridge.IpAddress);
 
             while (DateTime.UtcNow < endTime)
