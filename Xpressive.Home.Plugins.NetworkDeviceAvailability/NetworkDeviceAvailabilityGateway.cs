@@ -83,6 +83,11 @@ namespace Xpressive.Home.Plugins.NetworkDeviceAvailability
                 device.LastSeen = DateTime.UtcNow.ToString("R");
                 device.IpAddress = message.IpAddress;
                 device.Manufacturer = message.Manufacturer;
+
+                foreach (var pair in message.Values)
+                {
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, pair.Key, pair.Value));
+                }
             }
         }
 

@@ -71,7 +71,7 @@ namespace Xpressive.Home.Plugins.Unifi
                 {
                     Log.Fatal(e, e.Message);
                 }
-                await Task.Delay(TimeSpan.FromMinutes(1), cancellationToken).ContinueWith(_ => { });
+                await Task.Delay(TimeSpan.FromSeconds(30), cancellationToken).ContinueWith(_ => { });
             }
         }
 
