@@ -33,7 +33,7 @@ namespace Xpressive.Home.Services
 
             await _contextFactory.InScope(async context =>
             {
-                var existing = await context.Device.FindAsync(dto.Id);
+                var existing = await context.Device.SingleOrDefaultAsync(d => d.Id == dto.Id);
 
                 if (existing != null)
                 {
@@ -72,8 +72,7 @@ namespace Xpressive.Home.Services
 
                 foreach (var property in GetPropertyInfo(device))
                 {
-                    object value;
-                    if (properties.TryGetValue(property.Name, out value))
+                    if (properties.TryGetValue(property.Name, out object value))
                     {
                         var converted = Convert.ChangeType(value, property.PropertyType);
                         property.SetValue(device, converted);

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
@@ -63,7 +64,7 @@ namespace Xpressive.Home.Controllers
         }
 
         [HttpPost, Route("{gatewayName}")]
-        public IActionResult CreateDevice(string gatewayName, [FromBody]Dictionary<string, object> dto)
+        public async Task<IActionResult> CreateDevice(string gatewayName, [FromBody]Dictionary<string, object> dto)
         {
             if (_gateways.TryGetValue(gatewayName, out var gateway) && gateway.CanCreateDevices)
             {
@@ -80,7 +81,7 @@ namespace Xpressive.Home.Controllers
                     }
                 }
 
-                var success = gateway.AddDevice(device);
+                var success = await gateway.AddDevice(device);
 
                 if (success)
                 {
@@ -92,7 +93,7 @@ namespace Xpressive.Home.Controllers
         }
 
         [HttpDelete, Route("{gatewayName}")]
-        public IActionResult DeleteDevice(string gatewayName, string deviceId)
+        public async Task<IActionResult> DeleteDevice(string gatewayName, string deviceId)
         {
             if (_gateways.TryGetValue(gatewayName, out var gateway) && gateway.CanCreateDevices)
             {
@@ -103,7 +104,7 @@ namespace Xpressive.Home.Controllers
                     return NotFound();
                 }
 
-                gateway.RemoveDevice(device);
+                await gateway.RemoveDevice(device);
                 return Ok();
             }
 

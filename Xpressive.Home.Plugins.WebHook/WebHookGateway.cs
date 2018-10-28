@@ -35,7 +35,7 @@ namespace Xpressive.Home.Plugins.WebHook
             await LoadDevicesAsync((id, name) => new WebHookDevice { Id = id, Name = name });
         }
 
-        protected override bool AddDeviceInternal(DeviceBase device)
+        protected override async Task<bool> AddDeviceInternal(DeviceBase device)
         {
             if (device == null)
             {
@@ -54,9 +54,9 @@ namespace Xpressive.Home.Plugins.WebHook
                 return false;
             }
 
-            _webHookService.RegisterNewWebHookAsync(Name, id, device);
+            await _webHookService.RegisterNewWebHookAsync(Name, id, device);
 
-            return base.AddDeviceInternal(device);
+            return await base.AddDeviceInternal(device);
         }
 
         protected override Task ExecuteInternalAsync(IDevice device, IAction action, IDictionary<string, string> values)

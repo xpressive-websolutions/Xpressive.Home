@@ -33,12 +33,12 @@ namespace Xpressive.Home.Plugins.Sms
             throw new NotSupportedException();
         }
 
-        public bool AddDevice(IDevice device)
+        public Task<bool> AddDevice(IDevice device)
         {
             throw new NotSupportedException();
         }
 
-        public void RemoveDevice(IDevice device)
+        public Task RemoveDevice(IDevice device)
         {
             throw new NotImplementedException();
         }

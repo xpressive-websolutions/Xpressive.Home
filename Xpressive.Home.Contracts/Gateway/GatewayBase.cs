@@ -30,23 +30,22 @@ namespace Xpressive.Home.Contracts.Gateway
         public IMessageQueue MessageQueue { get; }
         protected ConcurrentDictionary<string, DeviceBase> DeviceDictionary { get; }
 
-        public bool AddDevice(IDevice device)
+        public async Task<bool> AddDevice(IDevice device)
         {
             var d = device as DeviceBase;
-            return AddDeviceInternal(d);
+            return await AddDeviceInternal(d);
         }
 
-        public void RemoveDevice(IDevice device)
+        public async Task RemoveDevice(IDevice device)
         {
             if (!CanCreateDevices)
             {
                 throw new InvalidOperationException("Unable to remove devices.");
             }
 
-            DeviceBase d;
-            if (DeviceDictionary.TryRemove(device.Id, out d))
+            if (DeviceDictionary.TryRemove(device.Id, out DeviceBase d))
             {
-                PersistingService.DeleteAsync(Name, d);
+                await PersistingService.DeleteAsync(Name, d);
             }
         }
 
@@ -122,7 +121,7 @@ namespace Xpressive.Home.Contracts.Gateway
             Task.Factory.StartNew(async () => await ExecuteInternalAsync(device, action, values));
         }
 
-        protected virtual bool AddDeviceInternal(DeviceBase device)
+        protected virtual async Task<bool> AddDeviceInternal(DeviceBase device)
         {
             if (!CanCreateDevices || device == null || !device.IsConfigurationValid())
             {
@@ -130,7 +129,7 @@ namespace Xpressive.Home.Contracts.Gateway
             }
 
             DeviceDictionary.AddOrUpdate(device.Id, device, (_, e) => device);
-            PersistingService.SaveAsync(Name, device);
+            await PersistingService.SaveAsync(Name, device);
             return true;
         }
 

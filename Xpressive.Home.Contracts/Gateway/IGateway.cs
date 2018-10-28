@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 
 namespace Xpressive.Home.Contracts.Gateway
@@ -11,8 +12,8 @@ namespace Xpressive.Home.Contracts.Gateway
 
         IEnumerable<IDevice> Devices { get; }
         IDevice CreateEmptyDevice();
-        bool AddDevice(IDevice device);
-        void RemoveDevice(IDevice device);
+        Task<bool> AddDevice(IDevice device);
+        Task RemoveDevice(IDevice device);
 
         IEnumerable<IAction> GetActions(IDevice device);
     }

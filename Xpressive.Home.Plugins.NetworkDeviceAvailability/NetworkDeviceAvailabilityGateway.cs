@@ -82,7 +82,7 @@ namespace Xpressive.Home.Plugins.NetworkDeviceAvailability
             }
         }
 
-        protected override bool AddDeviceInternal(DeviceBase device)
+        protected override async Task<bool> AddDeviceInternal(DeviceBase device)
         {
             if (string.IsNullOrEmpty(device?.Id))
             {
@@ -91,7 +91,7 @@ namespace Xpressive.Home.Plugins.NetworkDeviceAvailability
 
             device.Id = device.Id.RemoveMacAddressDelimiters();
 
-            return base.AddDeviceInternal(device);
+            return await base.AddDeviceInternal(device);
         }
 
         protected override Task ExecuteInternalAsync(IDevice device, IAction action, IDictionary<string, string> values)
