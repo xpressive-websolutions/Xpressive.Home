@@ -214,7 +214,7 @@ namespace Xpressive.Home.Plugins.Zwave
 
                 if (double.TryParse(s, out var d))
                 {
-                    MessageQueue.Publish(new UpdateVariableMessage(Name, report.Node.NodeID.ToString("D"), field.Name, Math.Round(d, 10000)));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, report.Node.NodeID.ToString("D"), field.Name, Math.Round(d, 15)));
                 }
                 else if (bool.TryParse(s, out var b))
                 {
