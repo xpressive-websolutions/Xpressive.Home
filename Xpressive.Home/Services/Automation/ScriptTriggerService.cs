@@ -27,16 +27,16 @@ namespace Xpressive.Home.Services.Automation
             return await _contextFactory.InScope(async context => await context.TriggeredScript.Where(t => t.Variable == variable).ToListAsync());
         }
 
-        public async Task<IEnumerable<TriggeredScript>> GetTriggersByScriptAsync(Guid scriptId)
+        public async Task<IEnumerable<TriggeredScript>> GetTriggersByScriptAsync(string scriptId)
         {
             return await _contextFactory.InScope(async context => await context.TriggeredScript.Where(t => t.ScriptId == scriptId).ToListAsync());
         }
 
-        public async Task<TriggeredScript> AddTriggerAsync(Guid scriptId, string variable)
+        public async Task<TriggeredScript> AddTriggerAsync(string scriptId, string variable)
         {
             var triggeredScript = new TriggeredScript
             {
-                Id = Guid.NewGuid(),
+                Id = Guid.NewGuid().ToString("n"),
                 ScriptId = scriptId,
                 Variable = variable
             };
@@ -50,7 +50,7 @@ namespace Xpressive.Home.Services.Automation
             return triggeredScript;
         }
 
-        public async Task DeleteTriggerAsync(Guid id)
+        public async Task DeleteTriggerAsync(string id)
         {
             await _contextFactory.InScope(async context =>
             {

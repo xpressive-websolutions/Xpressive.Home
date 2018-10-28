@@ -26,13 +26,7 @@ namespace Xpressive.Home.Services.Automation
 
         private void ExecuteScript(string scriptId, double delayInMilliseconds)
         {
-            Guid id;
-            if (!Guid.TryParse(scriptId, out id))
-            {
-                return;
-            }
-
-            _messageQueue.Publish(new ExecuteScriptMessage(id, delayInMilliseconds));
+            _messageQueue.Publish(new ExecuteScriptMessage(scriptId, delayInMilliseconds));
         }
     }
 }

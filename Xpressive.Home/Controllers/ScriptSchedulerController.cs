@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -23,35 +22,22 @@ namespace Xpressive.Home.Controllers
         [HttpGet, Route("{scriptId}")]
         public async Task<IEnumerable<ScheduledScriptDto>> GetAsync(string scriptId)
         {
-            Guid id;
-            if (Guid.TryParse(scriptId, out id))
-            {
-                var scripts = await _repository.GetAsync();
-                return scripts
-                    .Where(s => s.ScriptId.Equals(id))
-                    .Select(s => new ScheduledScriptDto(s));
-            }
-            return Enumerable.Empty<ScheduledScriptDto>();
+            var scripts = await _repository.GetAsync();
+            return scripts
+                .Where(s => s.ScriptId.Equals(scriptId))
+                .Select(s => new ScheduledScriptDto(s));
         }
 
         [HttpPost, Route("{scriptId}")]
         public async Task ScheduleAsync(string scriptId, [FromBody]string cronTab)
         {
-            Guid id;
-            if (Guid.TryParse(scriptId, out id))
-            {
-                await _cronService.ScheduleAsync(id, cronTab);
-            }
+            await _cronService.ScheduleAsync(scriptId, cronTab);
         }
 
         [HttpDelete, Route("{scheduleId}")]
         public async Task DeleteAsync(string scheduleId)
         {
-            Guid id;
-            if (Guid.TryParse(scheduleId, out id))
-            {
-                await _cronService.DeleteScheduleAsync(id);
-            }
+            await _cronService.DeleteScheduleAsync(scheduleId);
         }
 
         public class ScheduledScriptDto
@@ -72,8 +58,8 @@ namespace Xpressive.Home.Controllers
                 CronDescription = ExpressionDescriptor.GetDescription(script.CronTab, descriptionOptions);
             }
 
-            public Guid Id { get; set; }
-            public Guid ScriptId { get; set; }
+            public string Id { get; set; }
+            public string ScriptId { get; set; }
             public string CronTab { get; set; }
             public string CronDescription { get; set; }
         }

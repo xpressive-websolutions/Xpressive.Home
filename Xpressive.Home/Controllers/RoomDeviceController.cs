@@ -25,7 +25,7 @@ namespace Xpressive.Home.Controllers
             {
                 GatewayName = r.Gateway,
                 DeviceId = r.Id,
-                RoomId = r.RoomId.ToString("d")
+                RoomId = r.RoomId
             });
         }
 

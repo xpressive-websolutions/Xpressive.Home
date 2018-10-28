@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -16,7 +15,7 @@ namespace Xpressive.Home.Services.Automation
             _contextFactory = contextFactory;
         }
 
-        public async Task InsertAsync(Guid jobId, Guid scriptId, string cronTab)
+        public async Task InsertAsync(string jobId, string scriptId, string cronTab)
         {
             await _contextFactory.InScope(async context =>
             {
@@ -31,7 +30,7 @@ namespace Xpressive.Home.Services.Automation
             });
         }
 
-        public async Task DeleteAsync(Guid id)
+        public async Task DeleteAsync(string id)
         {
             await _contextFactory.InScope(async context =>
             {
@@ -46,7 +45,7 @@ namespace Xpressive.Home.Services.Automation
             return await _contextFactory.InScope(async context => await context.ScheduledScript.ToListAsync());
         }
 
-        public Task<ScheduledScript> GetAsync(Guid id)
+        public Task<ScheduledScript> GetAsync(string id)
         {
             return _contextFactory.InScope(async context => await context.ScheduledScript.FindAsync(id));
         }

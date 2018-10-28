@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Xpressive.Home.Contracts.Automation;
-using Xpressive.Home.Contracts.Rooms;
 using Xpressive.Home.DatabaseModel;
 
 namespace Xpressive.Home.Controllers
@@ -14,12 +13,10 @@ namespace Xpressive.Home.Controllers
     public class ScriptController : Controller
     {
         private readonly XpressiveHomeContext _context;
-        private readonly IRoomScriptRepository _roomScriptRepository;
         private readonly IScriptEngine _scriptEngine;
 
-        public ScriptController(IRoomScriptRepository roomScriptRepository, IScriptEngine scriptEngine, XpressiveHomeContext context)
+        public ScriptController(IScriptEngine scriptEngine, XpressiveHomeContext context)
         {
-            _roomScriptRepository = roomScriptRepository;
             _scriptEngine = scriptEngine;
             _context = context;
         }
@@ -41,34 +38,26 @@ namespace Xpressive.Home.Controllers
         [HttpGet, Route("{id}")]
         public async Task<IActionResult> Get(string id)
         {
-            if (Guid.TryParse(id, out Guid guid))
+            var script = await _context.Script.FindAsync(id);
+
+            if (script == null)
             {
-                var script = await _context.Script.FindAsync(guid.ToString("n"));
-
-                if (script == null)
-                {
-                    return NotFound();
-                }
-
-                return Ok(script);
+                return NotFound();
             }
 
-            return BadRequest();
+            return Ok(script);
         }
 
         [HttpPost, Route("{scriptId}/enable")]
         public async Task<IActionResult> Enable(string scriptId)
         {
-            if (Guid.TryParse(scriptId, out Guid id))
-            {
-                var script = await _context.Script.FindAsync(id.ToString("n"));
+            var script = await _context.Script.FindAsync(scriptId);
 
-                if (script != null)
-                {
-                    script.IsEnabled = true;
-                    await _context.SaveChangesAsync();
-                    return Ok();
-                }
+            if (script != null)
+            {
+                script.IsEnabled = true;
+                await _context.SaveChangesAsync();
+                return Ok();
             }
 
             return NotFound();
@@ -77,9 +66,8 @@ namespace Xpressive.Home.Controllers
         [HttpPost, Route("{scriptId}/disable")]
         public async Task<IActionResult> Disable(string scriptId)
         {
-            if (Guid.TryParse(scriptId, out Guid id))
             {
-                var script = await _context.Script.FindAsync(id.ToString("n"));
+                var script = await _context.Script.FindAsync(scriptId);
 
                 if (script != null)
                 {
@@ -95,18 +83,14 @@ namespace Xpressive.Home.Controllers
         [HttpGet, Route("group/{scriptGroupId}")]
         public async Task<IEnumerable<ScriptDto>> GetByScriptGroup(string scriptGroupId)
         {
-            if (!Guid.TryParse(scriptGroupId, out Guid groupId))
-            {
-                return Enumerable.Empty<ScriptDto>();
-            }
-
-            var scripts = await _roomScriptRepository.GetAsync(groupId);
+            var group = await _context.RoomScriptGroup.FindAsync(scriptGroupId);
+            var scripts = await _context.RoomScript.Where(r => r.GroupId == scriptGroupId).ToListAsync();
 
             return scripts
                 .OrderBy(s => s.Name)
                 .Select(s => new ScriptDto
                 {
-                    Id = s.ScriptId.ToString("n"),
+                    Id = s.ScriptId,
                     Name = s.Name
                 });
         }
@@ -135,12 +119,7 @@ namespace Xpressive.Home.Controllers
         [HttpPost, Route("{id}")]
         public async Task Update(string id, [FromBody] Script script)
         {
-            if (!Guid.TryParse(id, out Guid guid) || script == null)
-            {
-                return;
-            }
-
-            var persisted = await _context.Script.FindAsync(guid.ToString("n"));
+            var persisted = await _context.Script.FindAsync(id);
             if (persisted == null)
             {
                 return;
@@ -155,23 +134,17 @@ namespace Xpressive.Home.Controllers
         [HttpPost, Route("execute/{scriptId}")]
         public async Task Execute(string scriptId)
         {
-            if (Guid.TryParse(scriptId, out Guid id))
-            {
-                await _scriptEngine.ExecuteEvenIfDisabledAsync(id);
-            }
+            await _scriptEngine.ExecuteEvenIfDisabledAsync(scriptId);
         }
 
         [HttpDelete, Route("{scriptId}")]
         public async Task Delete(string scriptId)
         {
-            if (Guid.TryParse(scriptId, out Guid id))
+            var script = await _context.Script.FindAsync(scriptId);
+            if (script != null)
             {
-                var script = await _context.Script.FindAsync(id.ToString("n"));
-                if (script != null)
-                {
-                    _context.Script.Remove(script);
-                    await _context.SaveChangesAsync();
-                }
+                _context.Script.Remove(script);
+                await _context.SaveChangesAsync();
             }
         }
 

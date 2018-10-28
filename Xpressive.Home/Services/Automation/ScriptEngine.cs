@@ -21,15 +21,15 @@ namespace Xpressive.Home.Services.Automation
             messageQueue.Subscribe<ExecuteScriptMessage>(Notify);
         }
 
-        public async Task ExecuteAsync(Guid scriptId, string triggerVariable, object triggerValue)
+        public async Task ExecuteAsync(string scriptId, string triggerVariable, object triggerValue)
         {
-            var script = await GetAsync(scriptId.ToString("n"));
+            var script = await GetAsync(scriptId);
             Execute(script, triggerVariable, triggerValue, false);
         }
 
-        public async Task ExecuteEvenIfDisabledAsync(Guid scriptId)
+        public async Task ExecuteEvenIfDisabledAsync(string scriptId)
         {
-            var script = await GetAsync(scriptId.ToString("n"));
+            var script = await GetAsync(scriptId);
             Execute(script, null, null, true);
         }
 

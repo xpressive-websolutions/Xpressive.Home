@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Xpressive.Home.Contracts.Automation;
@@ -20,34 +18,19 @@ namespace Xpressive.Home.Controllers
         [HttpGet, Route("{scriptId}")]
         public async Task<IEnumerable<TriggeredScript>> GetAsync(string scriptId)
         {
-            Guid id;
-            if (Guid.TryParse(scriptId, out id))
-            {
-                return await _triggerService.GetTriggersByScriptAsync(id);
-            }
-            return Enumerable.Empty<TriggeredScript>();
+            return await _triggerService.GetTriggersByScriptAsync(scriptId);
         }
 
         [HttpPost, Route("{scriptId}")]
         public async Task<TriggeredScript> CreateAsync(string scriptId, [FromBody] string variable)
         {
-            Guid id;
-            if (!Guid.TryParse(scriptId, out id) || string.IsNullOrEmpty(variable))
-            {
-                return null;
-            }
-
-            return await _triggerService.AddTriggerAsync(id, variable);
+            return await _triggerService.AddTriggerAsync(scriptId, variable);
         }
 
         [HttpDelete, Route("{triggerId}")]
         public async Task DeleteAsync(string triggerId)
         {
-            Guid id;
-            if (Guid.TryParse(triggerId, out id))
-            {
-                await _triggerService.DeleteTriggerAsync(id);
-            }
+            await _triggerService.DeleteTriggerAsync(triggerId);
         }
     }
 }

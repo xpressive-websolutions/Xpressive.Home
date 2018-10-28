@@ -1,19 +1,17 @@
-﻿using System;
-
-namespace Xpressive.Home.Contracts.Messaging
+﻿namespace Xpressive.Home.Contracts.Messaging
 {
     public sealed class ExecuteScriptMessage : IMessageQueueMessage
     {
-        private readonly Guid _scriptId;
+        private readonly string _scriptId;
         private readonly double _delayInMilliseconds;
 
-        public ExecuteScriptMessage(Guid scriptId, double delayInMilliseconds)
+        public ExecuteScriptMessage(string scriptId, double delayInMilliseconds)
         {
             _scriptId = scriptId;
             _delayInMilliseconds = delayInMilliseconds;
         }
 
-        public Guid ScriptId => _scriptId;
+        public string ScriptId => _scriptId;
         public double DelayInMilliseconds => _delayInMilliseconds;
     }
 }

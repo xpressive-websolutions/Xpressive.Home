@@ -23,14 +23,14 @@ namespace Xpressive.Home.Services.Automation
             _scheduledScriptRepository = scheduledScriptRepository;
         }
 
-        public async Task<ScheduledScript> ScheduleAsync(Guid scriptId, string cronTab)
+        public async Task<ScheduledScript> ScheduleAsync(string scriptId, string cronTab)
         {
             if (!CronExpression.IsValidExpression(cronTab))
             {
                 throw new InvalidOperationException($"Cron tab {cronTab} is invalid.");
             }
 
-            var id = Guid.NewGuid();
+            var id = Guid.NewGuid().ToString();
             await _scheduledScriptRepository.InsertAsync(id, scriptId, cronTab);
 
             Schedule(id, cronTab);
@@ -43,9 +43,9 @@ namespace Xpressive.Home.Services.Automation
             };
         }
 
-        public async Task DeleteScheduleAsync(Guid id)
+        public async Task DeleteScheduleAsync(string id)
         {
-            await _scheduler.DeleteJob(new JobKey(id.ToString("n")));
+            await _scheduler.DeleteJob(new JobKey(id));
             await _scheduledScriptRepository.DeleteAsync(id);
         }
 
@@ -90,14 +90,14 @@ namespace Xpressive.Home.Services.Automation
             _scheduler.Shutdown(false);
         }
 
-        private void Schedule(Guid id, string cronTab)
+        private void Schedule(string id, string cronTab)
         {
             var job = JobBuilder.Create<RecurrentScriptExecution>()
-                .WithIdentity(id.ToString("n"))
+                .WithIdentity(id)
                 .Build();
 
             var trigger = TriggerBuilder.Create()
-                .WithIdentity(id.ToString("n"))
+                .WithIdentity(id)
                 .WithCronSchedule(cronTab)
                 .Build();
 

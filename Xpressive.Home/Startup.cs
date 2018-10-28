@@ -67,8 +67,6 @@ namespace Xpressive.Home
             services.AddTransient<ITuneInRadioStationService, TuneInRadioStationService>();
             services.AddTransient<IDevicePersistingService, DevicePersistingService>();
             services.AddTransient<IRoomRepository, RoomRepository>();
-            services.AddTransient<IRoomScriptGroupRepository, RoomScriptGroupRepository>();
-            services.AddTransient<IRoomScriptRepository, RoomScriptRepository>();
             services.AddTransient<IFavoriteRadioStationService, FavoriteRadioStationService>();
             services.AddTransient<IRoomDeviceService, RoomDeviceService>();
             services.AddTransient<IDeviceConfigurationBackupService, DeviceConfigurationBackupService>();

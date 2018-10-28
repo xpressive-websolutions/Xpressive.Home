@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 
 namespace Xpressive.Home.Contracts.Rooms
@@ -10,7 +9,7 @@ namespace Xpressive.Home.Contracts.Rooms
             RoomDevice = new HashSet<RoomDevice>();
         }
 
-        public Guid Id { get; set; }
+        public string Id { get; set; }
         public string Name { get; set; }
         public int SortOrder { get; set; }
         public string Icon { get; set; }

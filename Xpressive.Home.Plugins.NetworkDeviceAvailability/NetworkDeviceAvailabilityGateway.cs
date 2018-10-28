@@ -46,7 +46,7 @@ namespace Xpressive.Home.Plugins.NetworkDeviceAvailability
                             var id = device.Id.RemoveMacAddressDelimiters();
                             var isAvailable =
                                 _lastSeenMacAddresses.TryGetValue(id, out var lastSeen) &&
-                                DateTime.UtcNow - lastSeen < TimeSpan.FromMinutes(5);
+                                DateTime.UtcNow - lastSeen < TimeSpan.FromMinutes(2);
 
                             if (device.IsAvailable != isAvailable)
                             {
@@ -61,7 +61,7 @@ namespace Xpressive.Home.Plugins.NetworkDeviceAvailability
                     }
                 }
 
-                await Task.Delay(TimeSpan.FromMinutes(1), cancellationToken).ContinueWith(_ => { });
+                await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken).ContinueWith(_ => { });
             }
         }
 

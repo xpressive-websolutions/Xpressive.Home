@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Xpressive.Home.Migrations
 {
@@ -38,7 +37,7 @@ namespace Xpressive.Home.Migrations
                 name: "Room",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(nullable: false),
+                    Id = table.Column<string>(nullable: false),
                     Name = table.Column<string>(maxLength: 64, nullable: false),
                     SortOrder = table.Column<int>(nullable: false),
                     Icon = table.Column<string>(maxLength: 512, nullable: false)
@@ -52,9 +51,9 @@ namespace Xpressive.Home.Migrations
                 name: "RoomScript",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(nullable: false),
-                    GroupId = table.Column<Guid>(nullable: false),
-                    ScriptId = table.Column<Guid>(nullable: false),
+                    Id = table.Column<string>(nullable: false),
+                    GroupId = table.Column<string>(nullable: false),
+                    ScriptId = table.Column<string>(nullable: false),
                     Name = table.Column<string>(maxLength: 64, nullable: false)
                 },
                 constraints: table =>
@@ -66,8 +65,8 @@ namespace Xpressive.Home.Migrations
                 name: "RoomScriptGroup",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(nullable: false),
-                    RoomId = table.Column<Guid>(nullable: false),
+                    Id = table.Column<string>(nullable: false),
+                    RoomId = table.Column<string>(nullable: false),
                     Name = table.Column<string>(maxLength: 64, nullable: false),
                     SortOrder = table.Column<int>(nullable: false),
                     Icon = table.Column<string>(maxLength: 512, nullable: false)
@@ -81,8 +80,8 @@ namespace Xpressive.Home.Migrations
                 name: "ScheduledScript",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(nullable: false),
-                    ScriptId = table.Column<Guid>(nullable: false),
+                    Id = table.Column<string>(nullable: false),
+                    ScriptId = table.Column<string>(nullable: false),
                     CronTab = table.Column<string>(maxLength: 32, nullable: false)
                 },
                 constraints: table =>
@@ -108,8 +107,8 @@ namespace Xpressive.Home.Migrations
                 name: "TriggeredScript",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(nullable: false),
-                    ScriptId = table.Column<Guid>(nullable: false),
+                    Id = table.Column<string>(nullable: false),
+                    ScriptId = table.Column<string>(nullable: false),
                     Variable = table.Column<string>(maxLength: 255, nullable: false)
                 },
                 constraints: table =>
@@ -149,7 +148,7 @@ namespace Xpressive.Home.Migrations
                 {
                     Gateway = table.Column<string>(maxLength: 16, nullable: false),
                     Id = table.Column<string>(maxLength: 64, nullable: false),
-                    RoomId = table.Column<Guid>(nullable: false)
+                    RoomId = table.Column<string>(nullable: false)
                 },
                 constraints: table =>
                 {

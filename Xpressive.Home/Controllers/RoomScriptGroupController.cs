@@ -3,34 +3,30 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Xpressive.Home.Contracts.Rooms;
+using Xpressive.Home.DatabaseModel;
 
 namespace Xpressive.Home.Controllers
 {
     [Route("api/v1/roomscriptgroup")]
     public class RoomScriptGroupController : Controller
     {
-        private readonly IRoomRepository _roomRepository;
-        private readonly IRoomScriptGroupRepository _repository;
+        private readonly XpressiveHomeContext _context;
 
-        public RoomScriptGroupController(IRoomScriptGroupRepository repository, IRoomRepository roomRepository)
+        public RoomScriptGroupController(XpressiveHomeContext context)
         {
-            _repository = repository;
-            _roomRepository = roomRepository;
+            _context = context;
         }
 
         [HttpGet, Route("{id}")]
         public async Task<IActionResult> Get(string id)
         {
-            Guid guid;
-            if (Guid.TryParse(id, out guid))
-            {
-                var group = await _repository.GetAsync(guid);
+            var group = await _context.RoomScriptGroup.FindAsync(id);
 
-                if (group != null)
-                {
-                    return Ok(group);
-                }
+            if (group != null)
+            {
+                return Ok(group);
             }
 
             return NotFound();
@@ -39,23 +35,14 @@ namespace Xpressive.Home.Controllers
         [HttpGet, Route("")]
         public async Task<IEnumerable<RoomScriptGroup>> GetByRoom([FromQuery] string roomId)
         {
-            var rooms = await _roomRepository.GetAsync();
-            var room = rooms.SingleOrDefault(r => r.Id.Equals(new Guid(roomId)));
-
-            if (room == null)
-            {
-                return Enumerable.Empty<RoomScriptGroup>();
-            }
-
-            var groups = await _repository.GetAsync(room);
+            var groups = await _context.RoomScriptGroup.Where(g => g.RoomId == roomId).ToListAsync();
             return groups;
         }
 
         [HttpPost, Route("{roomId}")]
         public async Task<RoomScriptGroup> Create(string roomId, [FromBody] RoomScriptGroup group)
         {
-            var rooms = await _roomRepository.GetAsync();
-            var room = rooms.SingleOrDefault(r => r.Id.Equals(new Guid(roomId)));
+            var room = await _context.Room.FindAsync(roomId);
 
             if (room == null)
             {
@@ -64,12 +51,14 @@ namespace Xpressive.Home.Controllers
 
             group = new RoomScriptGroup
             {
+                Id = Guid.NewGuid().ToString("n"),
                 Name = group.Name,
                 Icon = string.Empty,
                 RoomId = room.Id
             };
 
-            await _repository.SaveAsync(group);
+            _context.RoomScriptGroup.Add(group);
+            await _context.SaveChangesAsync();
 
             return group;
         }
@@ -77,12 +66,12 @@ namespace Xpressive.Home.Controllers
         [HttpPost, Route("")]
         public async Task<IActionResult> Save([FromBody] RoomScriptGroup group)
         {
-            if (group == null || group.Id == Guid.Empty)
+            if (string.IsNullOrEmpty(group?.Id))
             {
                 return NotFound();
             }
 
-            var existing = await _repository.GetAsync(group.Id);
+            var existing = await _context.RoomScriptGroup.FindAsync(group.Id);
 
             if (existing == null)
             {
@@ -93,7 +82,7 @@ namespace Xpressive.Home.Controllers
             existing.Name = group.Name;
             existing.SortOrder = group.SortOrder;
 
-            await _repository.SaveAsync(existing);
+            await _context.SaveChangesAsync();
             return Ok();
         }
     }

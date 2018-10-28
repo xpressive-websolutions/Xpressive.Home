@@ -17,13 +17,13 @@ namespace Xpressive.Home.Migrations
 
             modelBuilder.Entity("Xpressive.Home.Contracts.Automation.ScheduledScript", b =>
                 {
-                    b.Property<Guid>("Id");
+                    b.Property<string>("Id");
 
                     b.Property<string>("CronTab")
                         .IsRequired()
                         .HasMaxLength(32);
 
-                    b.Property<Guid>("ScriptId");
+                    b.Property<string>("ScriptId");
 
                     b.HasKey("Id");
 
@@ -51,9 +51,9 @@ namespace Xpressive.Home.Migrations
 
             modelBuilder.Entity("Xpressive.Home.Contracts.Automation.TriggeredScript", b =>
                 {
-                    b.Property<Guid>("Id");
+                    b.Property<string>("Id");
 
-                    b.Property<Guid>("ScriptId");
+                    b.Property<string>("ScriptId");
 
                     b.Property<string>("Variable")
                         .IsRequired()
@@ -66,7 +66,7 @@ namespace Xpressive.Home.Migrations
 
             modelBuilder.Entity("Xpressive.Home.Contracts.Rooms.Room", b =>
                 {
-                    b.Property<Guid>("Id");
+                    b.Property<string>("Id");
 
                     b.Property<string>("Icon")
                         .IsRequired()
@@ -91,7 +91,7 @@ namespace Xpressive.Home.Migrations
                     b.Property<string>("Id")
                         .HasMaxLength(64);
 
-                    b.Property<Guid>("RoomId");
+                    b.Property<string>("RoomId");
 
                     b.HasKey("Gateway", "Id");
 
@@ -102,15 +102,15 @@ namespace Xpressive.Home.Migrations
 
             modelBuilder.Entity("Xpressive.Home.Contracts.Rooms.RoomScript", b =>
                 {
-                    b.Property<Guid>("Id");
+                    b.Property<string>("Id");
 
-                    b.Property<Guid>("GroupId");
+                    b.Property<string>("GroupId");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(64);
 
-                    b.Property<Guid>("ScriptId");
+                    b.Property<string>("ScriptId");
 
                     b.HasKey("Id");
 
@@ -119,7 +119,7 @@ namespace Xpressive.Home.Migrations
 
             modelBuilder.Entity("Xpressive.Home.Contracts.Rooms.RoomScriptGroup", b =>
                 {
-                    b.Property<Guid>("Id");
+                    b.Property<string>("Id");
 
                     b.Property<string>("Icon")
                         .IsRequired()
@@ -129,7 +129,7 @@ namespace Xpressive.Home.Migrations
                         .IsRequired()
                         .HasMaxLength(64);
 
-                    b.Property<Guid>("RoomId");
+                    b.Property<string>("RoomId");
 
                     b.Property<int>("SortOrder");
 

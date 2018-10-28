@@ -27,8 +27,7 @@ namespace Xpressive.Home.Services.Variables
         {
             lock (_variablesLock)
             {
-                IVariable variable;
-                if (_variables.TryGetValue(name, out variable))
+                if (_variables.TryGetValue(name, out IVariable variable))
                 {
                     return (T)variable;
                 }
@@ -52,8 +51,7 @@ namespace Xpressive.Home.Services.Variables
         {
             lock (_variablesLock)
             {
-                IVariable variable;
-                if (_variables.TryGetValue(message.Name, out variable))
+                if (_variables.TryGetValue(message.Name, out IVariable variable))
                 {
                     try
                     {

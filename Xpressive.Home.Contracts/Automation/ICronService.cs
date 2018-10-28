@@ -1,12 +1,11 @@
-using System;
 using System.Threading.Tasks;
 
 namespace Xpressive.Home.Contracts.Automation
 {
     public interface ICronService
     {
-        Task<ScheduledScript> ScheduleAsync(Guid scriptId, string cronTab);
+        Task<ScheduledScript> ScheduleAsync(string scriptId, string cronTab);
 
-        Task DeleteScheduleAsync(Guid id);
+        Task DeleteScheduleAsync(string id);
     }
 }
