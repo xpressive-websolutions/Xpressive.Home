@@ -3,7 +3,6 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Xpressive.Home.DatabaseModel;
 
 namespace Xpressive.Home.Migrations
@@ -35,7 +34,7 @@ namespace Xpressive.Home.Migrations
 
             modelBuilder.Entity("Xpressive.Home.Contracts.Automation.Script", b =>
                 {
-                    b.Property<Guid>("Id");
+                    b.Property<string>("Id");
 
                     b.Property<bool>("IsEnabled");
 

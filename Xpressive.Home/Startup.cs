@@ -47,7 +47,6 @@ namespace Xpressive.Home
             services.AddSingleton<IVariablePersistingService, VariablePersistingService>();
             services.AddTransient<IJobFactory, RecurrentScriptJobFactory>();
             services.AddTransient<IScheduledScriptRepository, ScheduledScriptRepository>();
-            services.AddTransient<IScriptRepository, ScriptRepository>();
             services.AddTransient<IScriptObjectProvider, VariableScriptObjectProvider>();
             services.AddTransient<IScriptObjectProvider, DefaultScriptObjectProvider>();
             services.AddTransient<IScriptObjectProvider, SchedulerScriptObjectProvider>();

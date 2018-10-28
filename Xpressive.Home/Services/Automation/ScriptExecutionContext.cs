@@ -10,7 +10,7 @@ namespace Xpressive.Home.Services.Automation
 {
     internal class ScriptExecutionContext
     {
-        private static readonly HashSet<Guid> _currentlyExecuting = new HashSet<Guid>();
+        private static readonly HashSet<string> _currentlyExecuting = new HashSet<string>();
         private static readonly object _lock = new object();
         private readonly Script _script;
         private readonly IEnumerable<IScriptObjectProvider> _objectProviders;

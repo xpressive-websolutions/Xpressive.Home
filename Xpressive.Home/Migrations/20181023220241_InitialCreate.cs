@@ -94,7 +94,7 @@ namespace Xpressive.Home.Migrations
                 name: "Script",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(nullable: false),
+                    Id = table.Column<string>(maxLength: 64, nullable: false),
                     Name = table.Column<string>(maxLength: 64, nullable: false),
                     JavaScript = table.Column<string>(nullable: false),
                     IsEnabled = table.Column<bool>(nullable: false)

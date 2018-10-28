@@ -123,7 +123,10 @@ namespace Xpressive.Home.DatabaseModel
 
             modelBuilder.Entity<Script>(entity =>
             {
-                entity.Property(e => e.Id).ValueGeneratedNever();
+                entity.Property(e => e.Id)
+                    .IsRequired()
+                    .HasMaxLength(64)
+                    .ValueGeneratedNever();
 
                 entity.Property(e => e.JavaScript).IsRequired();
 

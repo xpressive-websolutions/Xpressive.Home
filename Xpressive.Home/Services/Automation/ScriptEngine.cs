@@ -4,17 +4,18 @@ using System.Linq;
 using System.Threading.Tasks;
 using Xpressive.Home.Contracts.Automation;
 using Xpressive.Home.Contracts.Messaging;
+using Xpressive.Home.DatabaseModel;
 
 namespace Xpressive.Home.Services.Automation
 {
     internal class ScriptEngine : IScriptEngine
     {
         private readonly IList<IScriptObjectProvider> _scriptObjectProviders;
-        private readonly IScriptRepository _scriptRepository;
+        private readonly IContextFactory _contextFactory;
 
-        public ScriptEngine(IMessageQueue messageQueue, IEnumerable<IScriptObjectProvider> scriptObjectProviders, IScriptRepository scriptRepository)
+        public ScriptEngine(IMessageQueue messageQueue, IEnumerable<IScriptObjectProvider> scriptObjectProviders, IContextFactory contextFactory)
         {
-            _scriptRepository = scriptRepository;
+            _contextFactory = contextFactory;
             _scriptObjectProviders = scriptObjectProviders.ToList();
 
             messageQueue.Subscribe<ExecuteScriptMessage>(Notify);
@@ -22,13 +23,13 @@ namespace Xpressive.Home.Services.Automation
 
         public async Task ExecuteAsync(Guid scriptId, string triggerVariable, object triggerValue)
         {
-            var script = await _scriptRepository.GetAsync(scriptId);
+            var script = await GetAsync(scriptId.ToString("n"));
             Execute(script, triggerVariable, triggerValue, false);
         }
 
         public async Task ExecuteEvenIfDisabledAsync(Guid scriptId)
         {
-            var script = await _scriptRepository.GetAsync(scriptId);
+            var script = await GetAsync(scriptId.ToString("n"));
             Execute(script, null, null, true);
         }
 
@@ -62,6 +63,11 @@ namespace Xpressive.Home.Services.Automation
             {
                 context.Execute(triggerVariable, triggerValue);
             }
+        }
+
+        public Task<Script> GetAsync(string id)
+        {
+            return _contextFactory.InScope(async context => await context.Script.FindAsync(id));
         }
     }
 }

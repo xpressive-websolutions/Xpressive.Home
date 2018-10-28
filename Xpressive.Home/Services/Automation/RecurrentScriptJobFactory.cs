@@ -5,20 +5,21 @@ using System.Threading.Tasks;
 using Quartz;
 using Quartz.Spi;
 using Xpressive.Home.Contracts.Automation;
+using Xpressive.Home.DatabaseModel;
 
 namespace Xpressive.Home.Services.Automation
 {
     internal class RecurrentScriptJobFactory : IJobFactory
     {
         private readonly IScheduledScriptRepository _repository;
-        private readonly IScriptRepository _scriptRepository;
+        private readonly IContextFactory _contextFactory;
         private readonly IList<IScriptObjectProvider> _scriptObjectProviders;
 
-        public RecurrentScriptJobFactory(IScheduledScriptRepository repository, IEnumerable<IScriptObjectProvider> scriptObjectProviders, IScriptRepository scriptRepository)
+        public RecurrentScriptJobFactory(IScheduledScriptRepository repository, IEnumerable<IScriptObjectProvider> scriptObjectProviders, IContextFactory contextFactory)
         {
             _repository = repository;
+            _contextFactory = contextFactory;
             _scriptObjectProviders = scriptObjectProviders.ToList();
-            _scriptRepository = scriptRepository;
         }
 
         public IJob NewJob(TriggerFiredBundle bundle, IScheduler scheduler)
@@ -32,8 +33,7 @@ namespace Xpressive.Home.Services.Automation
 
         private async Task<IJob> FindJobAsync(string id)
         {
-            Guid guid;
-            if (!Guid.TryParse(id, out guid))
+            if (!Guid.TryParse(id, out Guid guid))
             {
                 return null;
             }
@@ -45,7 +45,7 @@ namespace Xpressive.Home.Services.Automation
                 return null;
             }
 
-            var script = await _scriptRepository.GetAsync(scheduledScript.ScriptId);
+            var script = await GetAsync(scheduledScript.ScriptId.ToString("n"));
 
             if (script == null)
             {
@@ -53,6 +53,11 @@ namespace Xpressive.Home.Services.Automation
             }
 
             return new RecurrentScriptExecution(script, _scriptObjectProviders);
+        }
+
+        public Task<Script> GetAsync(string id)
+        {
+            return _contextFactory.InScope(async context => await context.Script.FindAsync(id));
         }
     }
 }
