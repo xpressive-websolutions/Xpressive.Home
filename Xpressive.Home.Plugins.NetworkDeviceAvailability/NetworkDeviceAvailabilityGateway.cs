@@ -31,6 +31,8 @@ namespace Xpressive.Home.Plugins.NetworkDeviceAvailability
         {
             await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
 
+            await LoadDevicesAsync((id, name) => new AvailableNetworkDevice { Id = id, Name = name });
+
             while (!cancellationToken.IsCancellationRequested)
             {
                 var devices = Devices.OfType<AvailableNetworkDevice>().ToList();
@@ -41,13 +43,16 @@ namespace Xpressive.Home.Plugins.NetworkDeviceAvailability
                     {
                         foreach (var device in devices)
                         {
-                            DateTime lastSeen;
                             var id = device.Id.RemoveMacAddressDelimiters();
                             var isAvailable =
-                                _lastSeenMacAddresses.TryGetValue(id, out lastSeen) &&
+                                _lastSeenMacAddresses.TryGetValue(id, out var lastSeen) &&
                                 DateTime.UtcNow - lastSeen < TimeSpan.FromMinutes(5);
 
-                            MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsAvailable", isAvailable));
+                            if (device.IsAvailable != isAvailable)
+                            {
+                                device.IsAvailable = isAvailable;
+                                MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsAvailable", isAvailable));
+                            }
                         }
                     }
                     catch (Exception e)
@@ -56,7 +61,7 @@ namespace Xpressive.Home.Plugins.NetworkDeviceAvailability
                     }
                 }
 
-                await Task.Delay(TimeSpan.FromMinutes(5), cancellationToken).ContinueWith(_ => { });
+                await Task.Delay(TimeSpan.FromMinutes(1), cancellationToken).ContinueWith(_ => { });
             }
         }
 
@@ -73,8 +78,7 @@ namespace Xpressive.Home.Plugins.NetworkDeviceAvailability
             var macAddress = message.MacAddress.MacAddressToString();
             _lastSeenMacAddresses[macAddress] = DateTime.UtcNow;
 
-            AvailableNetworkDevice device;
-            if (TryGetDevice(macAddress, out device))
+            if (TryGetDevice(macAddress, out AvailableNetworkDevice device))
             {
                 device.LastSeen = DateTime.UtcNow.ToString("R");
                 device.IpAddress = message.IpAddress;
