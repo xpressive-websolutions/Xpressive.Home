@@ -21,6 +21,24 @@ namespace Xpressive.Home.Controllers
             _gateways = gateways.ToDictionary(g => g.Name);
         }
 
+        [HttpGet, Route("{variable}/value")]
+        public IActionResult Get(string variable)
+        {
+            var result = _variableRepository.Get<IVariable>(variable);
+            if (result != null)
+            {
+                return Ok(new VariableDto
+                {
+                    Name = result.Name,
+                    Value = result.Value,
+                    Type = result.Value?.GetType().Name,
+                    Unit = result.Unit
+                });
+            }
+
+            return NotFound();
+        }
+
         [HttpGet, Route("{gatewayName}")]
         public IEnumerable<VariableDto> Get(string gatewayName, [FromQuery] string deviceId)
         {
@@ -44,24 +62,6 @@ namespace Xpressive.Home.Controllers
             .ToList();
 
             return dtos;
-        }
-
-        [HttpGet, Route("{variable}")]
-        public IActionResult Get(string variable)
-        {
-            var result = _variableRepository.Get<IVariable>(variable);
-            if (result != null)
-            {
-                return Ok(new VariableDto
-                {
-                    Name = result.Name,
-                    Value = result.Value,
-                    Type = result.Value?.GetType().Name,
-                    Unit = result.Unit
-                });
-            }
-
-            return NotFound();
         }
 
         [HttpGet, Route("history")]
