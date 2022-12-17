@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using log4net;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 
@@ -11,14 +10,9 @@ namespace Xpressive.Home.Plugins.Daylight
 {
     internal class DaylightGateway : GatewayBase, IDaylightGateway
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(DaylightGateway));
-        private readonly IMessageQueue _messageQueue;
-
-        public DaylightGateway(IMessageQueue messageQueue) : base("Daylight")
+        public DaylightGateway(IMessageQueue messageQueue, IDevicePersistingService persistingService)
+            : base(messageQueue, "Daylight", true, persistingService)
         {
-            _messageQueue = messageQueue;
-
-            _canCreateDevices = true;
         }
 
         public override IDevice CreateEmptyDevice()
@@ -36,7 +30,7 @@ namespace Xpressive.Home.Plugins.Daylight
             yield break;
         }
 
-        public override async Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
 
@@ -65,11 +59,11 @@ namespace Xpressive.Home.Plugins.Daylight
             var sunset = SunsetCalculator.GetSunset(device.Latitude, device.Longitude);
 
             device.IsDaylight = time >= sunrise && time <= sunset;
-            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsDaylight", device.IsDaylight));
+            MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsDaylight", device.IsDaylight));
 
             var offset = DateTime.UtcNow - DateTime.Now;
-            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Sunrise", (sunrise - offset).ToString("hh\\:mm\\:ss")));
-            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Sunset", (sunset - offset).ToString("hh\\:mm\\:ss")));
+            MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Sunrise", (sunrise - offset).ToString("hh\\:mm\\:ss"), "Local time"));
+            MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Sunset", (sunset - offset).ToString("hh\\:mm\\:ss"), "Local time"));
         }
     }
 }

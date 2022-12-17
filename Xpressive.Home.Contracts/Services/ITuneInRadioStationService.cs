@@ -22,18 +22,11 @@ namespace Xpressive.Home.Contracts.Services
     {
         public TuneInRadioStations()
         {
-            Stations = new List<TuneInRadioStation>();
+            Stations = new List<Radio>();
         }
 
-        public List<TuneInRadioStation> Stations { get; set; }
+        public List<Radio> Stations { get; set; }
         public string ShowMoreId { get; set; }
-    }
-
-    public class TuneInRadioStation
-    {
-        public string Id { get; set; }
-        public string Name { get; set; }
-        public string ImageUrl { get; set; }
     }
 
     public class TuneInRadioStationDetail

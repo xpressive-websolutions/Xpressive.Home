@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using ForecastIO;
-using log4net;
+using DarkSky.Services;
+using Microsoft.Extensions.Configuration;
 using Polly;
+using Serilog;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 
@@ -16,20 +16,18 @@ namespace Xpressive.Home.Plugins.Forecast
 {
     public class ForecastGateway : GatewayBase
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(ForecastGateway));
         private readonly string _apiKey;
-        private readonly IMessageQueue _messageQueue;
         private readonly Policy _policy;
+        private DarkSkyService _darkSky;
 
-        public ForecastGateway(IMessageQueue messageQueue) : base("Weather")
+        public ForecastGateway(IMessageQueue messageQueue, IConfiguration configuration, IDevicePersistingService persistingService)
+            : base(messageQueue, "Weather", true, persistingService)
         {
-            _messageQueue = messageQueue;
-            _apiKey = ConfigurationManager.AppSettings["forecast.apikey"];
-            _canCreateDevices = true;
+            _apiKey = configuration["forecast.apikey"];
 
             _policy = Policy
                 .Handle<WebException>()
-                .WaitAndRetry(new[]
+                .WaitAndRetryAsync(new[]
                 {
                     TimeSpan.FromSeconds(1),
                     TimeSpan.FromSeconds(2),
@@ -47,7 +45,7 @@ namespace Xpressive.Home.Plugins.Forecast
             yield break;
         }
 
-        public override async Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
 
@@ -55,24 +53,25 @@ namespace Xpressive.Home.Plugins.Forecast
 
             if (string.IsNullOrEmpty(_apiKey))
             {
-                _messageQueue.Publish(new NotifyUserMessage("Add forecast.io configuration to config file."));
+                MessageQueue.Publish(new NotifyUserMessage("Add forecast.io configuration to config file."));
                 return;
             }
+
+            _darkSky = new DarkSkyService(_apiKey);
 
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
-                    var devices = _devices.Cast<ForecastDevice>().ToList();
+                    var devices = Devices.Cast<ForecastDevice>().ToList();
                     devices.ForEach(async d => await GetWeatherInfo(d, cancellationToken));
                 }
                 catch (Exception e)
                 {
-                    _log.Error(e.Message, e);
+                    Log.Error(e, e.Message);
                 }
 
-                var minutes = Math.Max(_devices.Count*2.5, 10);
-                await Task.Delay(TimeSpan.FromMinutes(minutes), cancellationToken).ContinueWith(_ => { });
+                await Task.Delay(TimeSpan.FromHours(DeviceDictionary.Count), cancellationToken).ContinueWith(_ => { });
             }
         }
 
@@ -85,12 +84,24 @@ namespace Xpressive.Home.Plugins.Forecast
         {
             var latitude = (float)device.Latitude;
             var longitude = (float)device.Longitude;
-            ForecastIOResponse response;
+            DarkSky.Models.Forecast response;
 
             try
             {
-                var request = new ForecastIORequest(_apiKey, latitude, longitude, Unit.si);
-                response = _policy.Execute(() => request.Get());
+                response = await _policy.ExecuteAsync(async () =>
+                {
+                    var r = await _darkSky.GetForecast(latitude, longitude, new DarkSkyService.OptionalParameters
+                    {
+                        MeasurementUnits = "si"
+                    });
+
+                    if (!r.IsSuccessStatus)
+                    {
+                        throw new WebException(r.ResponseReasonPhrase);
+                    }
+
+                    return r.Response;
+                });
             }
             catch (WebException)
             {
@@ -98,21 +109,21 @@ namespace Xpressive.Home.Plugins.Forecast
             }
             catch (Exception e)
             {
-                _log.Error(e.Message, e);
+                Log.Error(e, e.Message);
                 return;
             }
 
-            UpdateVariables(device.Id, string.Empty, response.currently);
+            UpdateVariables(device.Id, string.Empty, response.Currently);
 
-            for (var hour = 0; hour < response.hourly.data.Count; hour++)
+            for (var hour = 0; hour < response.Hourly.Data.Count; hour++)
             {
-                var data = response.hourly.data[hour];
+                var data = response.Hourly.Data[hour];
                 UpdateVariables(device.Id, $"H+{hour}_", data);
             }
 
-            for (var day = 0; day < response.daily.data.Count; day++)
+            for (var day = 0; day < response.Daily.Data.Count; day++)
             {
-                var data = response.daily.data[day];
+                var data = response.Daily.Data[day];
                 UpdateVariables(device.Id, $"D+{day}_", data);
             }
 
@@ -121,8 +132,13 @@ namespace Xpressive.Home.Plugins.Forecast
 
         private void UpdateVariables(string deviceId, string prefix, object data)
         {
+            if (data == null)
+            {
+                return;
+            }
+
             var properties = data.GetType().GetProperties();
-            var dict = properties.ToDictionary(p => p.Name, p => p.GetValue(data));
+            var dict = properties.ToDictionary(p => p.Name, p => p.GetValue(data), StringComparer.OrdinalIgnoreCase);
 
             var doubleParameters = new[] {
                 "apparentTemperature",
@@ -144,22 +160,21 @@ namespace Xpressive.Home.Plugins.Forecast
 
             var stringParameters = new[] { "icon", "summary" };
 
-            UpdateVariables(deviceId, prefix, dict, doubleParameters, v => Math.Round((float)v, 2));
-            UpdateVariables(deviceId, prefix, dict, stringParameters, v => v);
+            UpdateVariables(deviceId, prefix, dict, doubleParameters, v => Math.Round((double)v, 2));
+            UpdateVariables(deviceId, prefix, dict, stringParameters, v => v is string ? v : v.ToString());
         }
 
         private void UpdateVariables(string deviceId, string prefix, IDictionary<string, object> values, IEnumerable<string> properties, Func<object, object> convert)
         {
             foreach (var p in properties)
             {
-                object v;
-                if (!values.TryGetValue(p, out v))
+                if (!values.TryGetValue(p, out object v) || v == null)
                 {
                     continue;
                 }
                 var name = prefix + CultureInfo.InvariantCulture.TextInfo.ToUpper(p[0]) + p.Substring(1);
                 var converted = convert(v);
-                _messageQueue.Publish(new UpdateVariableMessage(Name, deviceId, name, converted));
+                MessageQueue.Publish(new UpdateVariableMessage(Name, deviceId, name, converted));
             }
         }
     }

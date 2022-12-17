@@ -55,7 +55,7 @@ namespace Xpressive.Home.Plugins.Lifx
             var request = new RestRequest($"v1/lights/{light.Id}/state");
             request.AddHeader("Authorization", $"Bearer {_token}");
             request.AddJsonBody(payload);
-            await client.PutTaskAsync<object>(request);
+            await client.PutAsync<object>(request);
         }
     }
 }

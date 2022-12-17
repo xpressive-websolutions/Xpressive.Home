@@ -1,20 +1,23 @@
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 
 namespace Xpressive.Home.Plugins.Sms
 {
-    internal sealed class SmsGateway : IGateway
+    internal sealed class SmsGateway : BackgroundService, IGateway
     {
         private readonly IMessageQueue _messageQueue;
+        private readonly IConfiguration _configuration;
 
-        public SmsGateway(IMessageQueue messageQueue)
+        public SmsGateway(IMessageQueue messageQueue, IConfiguration configuration)
         {
             _messageQueue = messageQueue;
+            _configuration = configuration;
 
             Name = "SMS";
             CanCreateDevices = false;
@@ -30,9 +33,14 @@ namespace Xpressive.Home.Plugins.Sms
             throw new NotSupportedException();
         }
 
-        public bool AddDevice(IDevice device)
+        public Task<bool> AddDevice(IDevice device)
         {
             throw new NotSupportedException();
+        }
+
+        public Task RemoveDevice(IDevice device)
+        {
+            throw new NotImplementedException();
         }
 
         public IEnumerable<IAction> GetActions(IDevice device)
@@ -40,18 +48,16 @@ namespace Xpressive.Home.Plugins.Sms
             yield break;
         }
 
-        public async Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
-            var username = ConfigurationManager.AppSettings["sms.username"];
-            var password = ConfigurationManager.AppSettings["sms.password"];
+            var username = _configuration["sms.username"];
+            var password = _configuration["sms.password"];
 
             if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
             {
                 _messageQueue.Publish(new NotifyUserMessage("Add sms configuration to config file."));
             }
         }
-
-        public void Dispose() { }
     }
 }

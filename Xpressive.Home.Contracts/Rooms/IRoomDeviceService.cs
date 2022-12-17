@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Xpressive.Home.Contracts.Rooms
@@ -11,12 +10,5 @@ namespace Xpressive.Home.Contracts.Rooms
         Task AddDeviceToRoomAsync(string gatewayName, string deviceId, string roomId);
 
         Task RemoveDeviceFromRoomAsync(string gatewayName, string deviceId);
-    }
-
-    public class RoomDevice
-    {
-        public string Gateway { get; set; }
-        public string Id { get; set; }
-        public Guid RoomId { get; set; }
     }
 }

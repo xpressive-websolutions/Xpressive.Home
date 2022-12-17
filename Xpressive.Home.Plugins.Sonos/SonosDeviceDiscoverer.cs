@@ -8,10 +8,15 @@ using Xpressive.Home.Contracts.Messaging;
 
 namespace Xpressive.Home.Plugins.Sonos
 {
-    internal sealed class SonosDeviceDiscoverer : ISonosDeviceDiscoverer, IMessageQueueListener<NetworkDeviceFoundMessage>
+    internal sealed class SonosDeviceDiscoverer : ISonosDeviceDiscoverer
     {
         private readonly object _lock = new object();
         private readonly HashSet<string> _detectedSonosIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        public SonosDeviceDiscoverer(IMessageQueue messageQueue)
+        {
+            messageQueue.Subscribe<NetworkDeviceFoundMessage>(Notify);
+        }
 
         public event EventHandler<SonosDevice> DeviceFound;
 

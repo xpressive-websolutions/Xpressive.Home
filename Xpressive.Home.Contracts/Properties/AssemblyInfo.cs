@@ -1,10 +1,5 @@
-﻿using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.CompilerServices;
 
-[assembly: AssemblyTitle("Xpressive.Home.Contracts")]
-[assembly: AssemblyDescription("")]
-
-[assembly: Guid("d19262be-03d6-415f-b442-eddf9da2d435")]
 
 [assembly: InternalsVisibleTo("Xpressive.Home")]
+[assembly: InternalsVisibleTo("Xpressive.Home_old")]

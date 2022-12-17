@@ -2,47 +2,59 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using log4net;
+using Microsoft.Extensions.Hosting;
+using Serilog;
 using Xpressive.Home.Contracts.Messaging;
 
 namespace Xpressive.Home.Contracts.Gateway
 {
-    public abstract class GatewayBase : IGateway, IMessageQueueListener<CommandMessage>
+    public abstract class GatewayBase : BackgroundService, IGateway
     {
-        private readonly ILog _log;
-        private readonly string _name;
-        protected readonly ConcurrentBag<DeviceBase> _devices;
-        protected bool _canCreateDevices;
-
-        protected GatewayBase(string name)
+        protected GatewayBase(IMessageQueue messageQueue, string name, bool canCreateDevices, IDevicePersistingService devicePersistingService = null)
         {
-            _log = LogManager.GetLogger(GetType());
-            _name = name;
-            _devices = new ConcurrentBag<DeviceBase>();
+            MessageQueue = messageQueue;
+            Name = name;
+            CanCreateDevices = canCreateDevices;
+            PersistingService = devicePersistingService;
+            DeviceDictionary = new ConcurrentDictionary<string, DeviceBase>(StringComparer.Ordinal);
+
+            MessageQueue.Subscribe<CommandMessage>(Notify);
+            MessageQueue.Subscribe<RenameDeviceMessage>(Notify);
         }
 
-        public string Name => _name;
-        public IEnumerable<IDevice> Devices => _devices.ToList();
-        public bool CanCreateDevices => _canCreateDevices;
-        
-        public IDevicePersistingService PersistingService { get; set; }
+        public string Name { get; }
+        public IEnumerable<IDevice> Devices => DeviceDictionary.Values.ToList();
+        public bool CanCreateDevices { get; }
+        public IDevicePersistingService PersistingService { get; }
+        public IMessageQueue MessageQueue { get; }
+        protected ConcurrentDictionary<string, DeviceBase> DeviceDictionary { get; }
 
-        public bool AddDevice(IDevice device)
+        public async Task<bool> AddDevice(IDevice device)
         {
             var d = device as DeviceBase;
-            return AddDeviceInternal(d);
+            return await AddDeviceInternal(d);
+        }
+
+        public async Task RemoveDevice(IDevice device)
+        {
+            if (!CanCreateDevices)
+            {
+                throw new InvalidOperationException("Unable to remove devices.");
+            }
+
+            if (DeviceDictionary.TryRemove(device.Id, out DeviceBase d))
+            {
+                await PersistingService.DeleteAsync(Name, d);
+            }
         }
 
         public abstract IEnumerable<IAction> GetActions(IDevice device);
-
-        public abstract Task StartAsync(CancellationToken cancellationToken);
         public abstract IDevice CreateEmptyDevice();
 
         public void Notify(CommandMessage message)
         {
-            if (!message.ActionId.StartsWith(_name, StringComparison.Ordinal))
+            if (!message.ActionId.StartsWith(Name, StringComparison.Ordinal))
             {
                 return;
             }
@@ -56,9 +68,8 @@ namespace Xpressive.Home.Contracts.Gateway
 
             var deviceId = parts[1];
             var actionName = parts[2];
-            var device = Devices.SingleOrDefault(d => d.Id.Equals(deviceId, StringComparison.Ordinal));
 
-            if (device == null)
+            if (!DeviceDictionary.TryGetValue(deviceId, out var device))
             {
                 return;
             }
@@ -73,6 +84,21 @@ namespace Xpressive.Home.Contracts.Gateway
             StartActionInNewTask(device, action, message.Parameters);
         }
 
+        private void Notify(RenameDeviceMessage message)
+        {
+            if (!Name.Equals(message.Gateway, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            if (!DeviceDictionary.TryGetValue(message.Device, out var device))
+            {
+                return;
+            }
+
+            device.Name = message.Name;
+        }
+
         protected async Task LoadDevicesAsync(Func<string, string, DeviceBase> emptyDevice)
         {
             try
@@ -81,12 +107,12 @@ namespace Xpressive.Home.Contracts.Gateway
 
                 foreach (var device in devices)
                 {
-                    _devices.Add(device);
+                    DeviceDictionary.AddOrUpdate(device.Id, device, (_, e) => device);
                 }
             }
             catch (Exception e)
             {
-                _log.Error("Unable to load persisted devices.", e);
+                Log.Error(e, "Unable to load persisted devices.");
             }
         }
 
@@ -95,23 +121,24 @@ namespace Xpressive.Home.Contracts.Gateway
             Task.Factory.StartNew(async () => await ExecuteInternalAsync(device, action, values));
         }
 
-        protected virtual bool AddDeviceInternal(DeviceBase device)
+        protected virtual async Task<bool> AddDeviceInternal(DeviceBase device)
         {
-            if (!_canCreateDevices || device == null || !device.IsConfigurationValid())
+            if (!CanCreateDevices || device == null || !device.IsConfigurationValid())
             {
                 return false;
             }
 
-            _devices.Add(device);
-            PersistingService.SaveAsync(Name, device);
+            DeviceDictionary.AddOrUpdate(device.Id, device, (_, e) => device);
+            await PersistingService.SaveAsync(Name, device);
             return true;
         }
 
         protected abstract Task ExecuteInternalAsync(IDevice device, IAction action, IDictionary<string, string> values);
 
-        public void Dispose()
+        public override void Dispose()
         {
             Dispose(true);
+            base.Dispose();
         }
 
         protected virtual void Dispose(bool disposing) { }

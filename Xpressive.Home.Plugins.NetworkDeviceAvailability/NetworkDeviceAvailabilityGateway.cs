@@ -3,24 +3,23 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using log4net;
+using Serilog;
 using Xpressive.Home.Contracts;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 
 namespace Xpressive.Home.Plugins.NetworkDeviceAvailability
 {
-    internal sealed class NetworkDeviceAvailabilityGateway : GatewayBase, IMessageQueueListener<NetworkDeviceFoundMessage>
+    internal sealed class NetworkDeviceAvailabilityGateway : GatewayBase
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(NetworkDeviceAvailabilityGateway));
         private readonly IDictionary<string, DateTime> _lastSeenMacAddresses;
-        private readonly IMessageQueue _messageQueue;
 
-        public NetworkDeviceAvailabilityGateway(IMessageQueue messageQueue) : base("AvailableNetworkDevices")
+        public NetworkDeviceAvailabilityGateway(IMessageQueue messageQueue, IDevicePersistingService persistingService)
+            : base(messageQueue, "AvailableNetworkDevices", true, persistingService)
         {
-            _messageQueue = messageQueue;
             _lastSeenMacAddresses = new Dictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
-            _canCreateDevices = true;
+
+            messageQueue.Subscribe<NetworkDeviceFoundMessage>(Notify);
         }
 
         public override IEnumerable<IAction> GetActions(IDevice device)
@@ -28,9 +27,11 @@ namespace Xpressive.Home.Plugins.NetworkDeviceAvailability
             yield break;
         }
 
-        public override async Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
-            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { }).ConfigureAwait(false);
+            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
+
+            await LoadDevicesAsync((id, name) => new AvailableNetworkDevice { Id = id, Name = name });
 
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -42,22 +43,25 @@ namespace Xpressive.Home.Plugins.NetworkDeviceAvailability
                     {
                         foreach (var device in devices)
                         {
-                            DateTime lastSeen;
                             var id = device.Id.RemoveMacAddressDelimiters();
                             var isAvailable =
-                                _lastSeenMacAddresses.TryGetValue(id, out lastSeen) &&
-                                DateTime.UtcNow - lastSeen < TimeSpan.FromMinutes(5);
+                                _lastSeenMacAddresses.TryGetValue(id, out var lastSeen) &&
+                                DateTime.UtcNow - lastSeen < TimeSpan.FromMinutes(2);
 
-                            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsAvailable", isAvailable));
+                            if (device.IsAvailable != isAvailable)
+                            {
+                                device.IsAvailable = isAvailable;
+                                MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsAvailable", isAvailable));
+                            }
                         }
                     }
                     catch (Exception e)
                     {
-                        _log.Error(e.Message, e);
+                        Log.Error(e, e.Message);
                     }
                 }
 
-                await Task.Delay(TimeSpan.FromMinutes(5), cancellationToken).ContinueWith(_ => { }).ConfigureAwait(false);
+                await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken).ContinueWith(_ => { });
             }
         }
 
@@ -74,16 +78,20 @@ namespace Xpressive.Home.Plugins.NetworkDeviceAvailability
             var macAddress = message.MacAddress.MacAddressToString();
             _lastSeenMacAddresses[macAddress] = DateTime.UtcNow;
 
-            AvailableNetworkDevice device;
-            if (TryGetDevice(macAddress, out device))
+            if (TryGetDevice(macAddress, out AvailableNetworkDevice device))
             {
                 device.LastSeen = DateTime.UtcNow.ToString("R");
                 device.IpAddress = message.IpAddress;
                 device.Manufacturer = message.Manufacturer;
+
+                foreach (var pair in message.Values)
+                {
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, pair.Key, pair.Value));
+                }
             }
         }
 
-        protected override bool AddDeviceInternal(DeviceBase device)
+        protected override async Task<bool> AddDeviceInternal(DeviceBase device)
         {
             if (string.IsNullOrEmpty(device?.Id))
             {
@@ -92,7 +100,7 @@ namespace Xpressive.Home.Plugins.NetworkDeviceAvailability
 
             device.Id = device.Id.RemoveMacAddressDelimiters();
 
-            return base.AddDeviceInternal(device);
+            return await base.AddDeviceInternal(device);
         }
 
         protected override Task ExecuteInternalAsync(IDevice device, IAction action, IDictionary<string, string> values)
@@ -102,7 +110,11 @@ namespace Xpressive.Home.Plugins.NetworkDeviceAvailability
 
         private bool TryGetDevice(string id, out AvailableNetworkDevice device)
         {
-            device = _devices.SingleOrDefault(d => d.Id.Equals(id, StringComparison.OrdinalIgnoreCase)) as AvailableNetworkDevice;
+            device = null;
+            if (DeviceDictionary.TryGetValue(id, out var d))
+            {
+                device = d as AvailableNetworkDevice;
+            }
             return device != null;
         }
     }

@@ -8,6 +8,8 @@ namespace Xpressive.Home.Contracts.Gateway
     {
         Task SaveAsync(string gatewayName, DeviceBase device);
 
+        Task DeleteAsync(string gatewayName, DeviceBase device);
+
         Task<IEnumerable<DeviceBase>> GetAsync(string gatewayName, Func<string, string, DeviceBase> emptyDevice);
     }
 }

@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using log4net;
-using RestSharp.Extensions.MonoHttp;
+using System.Web;
+using Serilog;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 using Action = Xpressive.Home.Contracts.Gateway.Action;
@@ -13,15 +13,12 @@ namespace Xpressive.Home.Plugins.Sonos
 {
     internal class SonosGateway : GatewayBase, ISonosGateway
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(SonosGateway));
-        private readonly IMessageQueue _messageQueue;
         private readonly ISonosSoapClient _soapClient;
 
-        public SonosGateway(IMessageQueue messageQueue, ISonosDeviceDiscoverer deviceDiscoverer, ISonosSoapClient soapClient) : base("Sonos")
+        public SonosGateway(IMessageQueue messageQueue, ISonosDeviceDiscoverer deviceDiscoverer, ISonosSoapClient soapClient)
+            : base(messageQueue, "Sonos", false)
         {
-            _messageQueue = messageQueue;
             _soapClient = soapClient;
-            _canCreateDevices = false;
 
             deviceDiscoverer.DeviceFound += (s, e) =>
             {
@@ -32,7 +29,7 @@ namespace Xpressive.Home.Plugins.Sonos
                     e.Icon = "SonosIcon SonosIcon_" + e.Type;
                 }
 
-                _devices.Add(e);
+                DeviceDictionary.TryAdd(e.Id, e);
             };
         }
 
@@ -107,7 +104,7 @@ namespace Xpressive.Home.Plugins.Sonos
             StartActionInNewTask(device, new Action("Change Volume"), parameters);
         }
 
-        public override async Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
 
@@ -124,7 +121,7 @@ namespace Xpressive.Home.Plugins.Sonos
                 }
                 catch (Exception e)
                 {
-                    _log.Error(e.Message, e);
+                    Log.Error(e, e.Message);
                 }
 
                 await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken).ContinueWith(_ => { });
@@ -135,7 +132,7 @@ namespace Xpressive.Home.Plugins.Sonos
         {
             if (device == null)
             {
-                _log.Warn($"Unable to execute action {action.Name} because the device was not found.");
+                Log.Warning("Unable to execute action {actionName} because the device was not found.", action.Name);
                 return;
             }
 
@@ -273,7 +270,7 @@ namespace Xpressive.Home.Plugins.Sonos
             }
 
             var masterId = device.CurrentUri?.Replace("x-rincon:", string.Empty) ?? string.Empty;
-            var master = (SonosDevice) Devices.SingleOrDefault(d => d.Id.Equals(masterId, StringComparison.OrdinalIgnoreCase));
+            var master = (SonosDevice)Devices.SingleOrDefault(d => d.Id.Equals(masterId, StringComparison.OrdinalIgnoreCase));
             return master ?? device;
         }
 
@@ -334,7 +331,7 @@ namespace Xpressive.Home.Plugins.Sonos
 
         private void UpdateVariable(SonosDevice device, string variable, object value)
         {
-            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, variable, value));
+            MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, variable, value));
         }
     }
 }

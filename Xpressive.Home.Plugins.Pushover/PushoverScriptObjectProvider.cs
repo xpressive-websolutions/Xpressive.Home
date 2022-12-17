@@ -1,20 +1,25 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Configuration;
 using System.Net;
-using log4net;
+using Microsoft.Extensions.Configuration;
+using Serilog;
 using Xpressive.Home.Contracts.Automation;
 
 namespace Xpressive.Home.Plugins.Pushover
 {
     internal sealed class PushoverScriptObjectProvider : IScriptObjectProvider
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(PushoverScriptObjectProvider));
+        private readonly IConfiguration _configuration;
+
+        public PushoverScriptObjectProvider(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
 
         public IEnumerable<Tuple<string, object>> GetObjects()
         {
-            yield return Tuple.Create("pushover", (object)new PushoverScriptObject());
+            yield return Tuple.Create("pushover", (object)new PushoverScriptObject(_configuration));
         }
 
         public IEnumerable<Tuple<string, Delegate>> GetDelegates()
@@ -26,22 +31,22 @@ namespace Xpressive.Home.Plugins.Pushover
         {
             private readonly string _token;
 
-            public PushoverScriptObject()
+            public PushoverScriptObject(IConfiguration configuration)
             {
-                _token = ConfigurationManager.AppSettings["pushover.token"];
+                _token = configuration["pushover.token"];
             }
 
             public async void send(string body, string userKey)
             {
                 if (string.IsNullOrEmpty(_token))
                 {
-                    _log.Error("Unable to send push notification because 'pushover.token' is not specified.");
+                    Log.Error("Unable to send push notification because 'pushover.token' is not specified.");
                     return;
                 }
 
                 if (string.IsNullOrEmpty(body) || body.Length > 1024)
                 {
-                    _log.Error("Unable to send push notification because body is null or longer than 1024 characters.");
+                    Log.Error("Unable to send push notification because body is null or longer than 1024 characters.");
                     return;
                 }
 
@@ -58,7 +63,7 @@ namespace Xpressive.Home.Plugins.Pushover
                 }
                 catch (Exception e)
                 {
-                    _log.Error(e.Message, e);
+                    Log.Error(e.Message, e);
                 }
             }
         }

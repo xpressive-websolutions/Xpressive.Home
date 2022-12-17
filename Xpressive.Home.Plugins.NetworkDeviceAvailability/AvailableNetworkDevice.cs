@@ -14,6 +14,7 @@ namespace Xpressive.Home.Plugins.NetworkDeviceAvailability
         public string LastSeen { get; set; }
         public string IpAddress { get; set; }
         public string Manufacturer { get; set; }
+        public bool IsAvailable { get; set; }
 
         public override bool IsConfigurationValid()
         {

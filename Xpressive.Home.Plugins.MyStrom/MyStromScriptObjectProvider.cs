@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using log4net;
+using Serilog;
 using Xpressive.Home.Contracts.Automation;
 using Xpressive.Home.Contracts.Rooms;
 
@@ -91,7 +91,6 @@ namespace Xpressive.Home.Plugins.MyStrom
 
         public class MyStromScriptObject
         {
-            private static readonly ILog _log = LogManager.GetLogger(typeof(MyStromScriptObject));
             private readonly IMyStromGateway _gateway;
             private readonly MyStromDevice _device;
 
@@ -115,7 +114,7 @@ namespace Xpressive.Home.Plugins.MyStrom
             {
                 if (_device == null)
                 {
-                    _log.Warn("Unable to get variable value because the device was not found.");
+                    Log.Warning("Unable to get variable value because the device was not found.");
                     return null;
                 }
 
@@ -138,7 +137,7 @@ namespace Xpressive.Home.Plugins.MyStrom
             {
                 if (_device == null)
                 {
-                    _log.Warn("Unable to get variable value because the device was not found.");
+                    Log.Warning("Unable to get variable value because the device was not found.");
                     return null;
                 }
 

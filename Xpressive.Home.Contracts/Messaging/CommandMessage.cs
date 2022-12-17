@@ -5,22 +5,20 @@ namespace Xpressive.Home.Contracts.Messaging
 {
     public sealed class CommandMessage : IMessageQueueMessage
     {
-        private readonly string _actionId;
-        private readonly IDictionary<string, string> _parameters;
-
         public CommandMessage(string actionId, IDictionary<string, string> parameters)
         {
-            _actionId = actionId;
-            _parameters = new ReadOnlyDictionary<string, string>(parameters);
+            ActionId = actionId;
+            Parameters = new ReadOnlyDictionary<string, string>(parameters);
         }
 
         public CommandMessage(string gateway, string device, string action, IDictionary<string, string> parameters)
         {
-            _actionId = $"{gateway}.{device}.{action}".Replace("..", ".");
-            _parameters = new ReadOnlyDictionary<string, string>(parameters);
+            ActionId = $"{gateway}.{device}.{action}".Replace("..", ".");
+            Parameters = new ReadOnlyDictionary<string, string>(parameters);
         }
 
-        public string ActionId => _actionId;
-        public IDictionary<string, string> Parameters => _parameters;
+        public string ActionId { get; }
+
+        public IDictionary<string, string> Parameters { get; }
     }
 }

@@ -1,16 +1,13 @@
-﻿using System;
-using System.Configuration;
+﻿using DbUp;
+using System;
 using System.Reflection;
-using DbUp;
 
 namespace Xpressive.Home.DatabaseMigrator
 {
     public static class DbMigrator
     {
-        public static void Run()
+        public static void Run(string connectionString)
         {
-            var connectionString = ConfigurationManager.ConnectionStrings["ConnectionString"]?.ConnectionString;
-
             if (string.IsNullOrEmpty(connectionString))
             {
                 throw new ArgumentException("ConnectionString must not be null or empty.");

@@ -4,7 +4,6 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
-using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
@@ -103,16 +102,18 @@ namespace Xpressive.Home.Services
 
         private bool ValidateHash(byte[] hash, byte[] signature)
         {
-            const string publicKey =
-                "RUNTNUIAAAABLcbMBFKtpFlBY0j6TnD5DTeDjy2UoTt3ik2yhY9RGB8AdkZ44DTLG3L3e8S7g+bRmhwygtlsGUFEUMGiJ2SBeGAABS5nBJRfQhAA+vmishz0EWYXD5FUYClQaRHlrH9clkB9pDakzPSvPbGnpMuHgCWa6LniAb1zExIPbYv9zHlfqOA=";
+            // TODO
+            return true;
+            //const string publicKey =
+            //    "RUNTNUIAAAABLcbMBFKtpFlBY0j6TnD5DTeDjy2UoTt3ik2yhY9RGB8AdkZ44DTLG3L3e8S7g+bRmhwygtlsGUFEUMGiJ2SBeGAABS5nBJRfQhAA+vmishz0EWYXD5FUYClQaRHlrH9clkB9pDakzPSvPbGnpMuHgCWa6LniAb1zExIPbYv9zHlfqOA=";
 
-            using (var key = CngKey.Import(Convert.FromBase64String(publicKey), CngKeyBlobFormat.EccPublicBlob))
-            {
-                using (var ecdsa = new ECDsaCng(key))
-                {
-                    return ecdsa.VerifyHash(hash, signature);
-                }
-            }
+            //using (var key = CngKey.Import(Convert.FromBase64String(publicKey), CngKeyBlobFormat.EccPublicBlob))
+            //{
+            //    using (var ecdsa = new ECDsaCng(key))
+            //    {
+            //        return ecdsa.VerifyHash(hash, signature);
+            //    }
+            //}
         }
 
         private async Task<Tuple<FileInfo, FileInfo>> UnzipAsync(FileInfo package)

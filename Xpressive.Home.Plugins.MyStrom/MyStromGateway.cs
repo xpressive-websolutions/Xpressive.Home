@@ -4,9 +4,9 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using log4net;
 using Polly;
 using RestSharp;
+using Serilog;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 using Xpressive.Home.Contracts.Services;
@@ -14,10 +14,8 @@ using Action = Xpressive.Home.Contracts.Gateway.Action;
 
 namespace Xpressive.Home.Plugins.MyStrom
 {
-    internal class MyStromGateway : GatewayBase, IMyStromGateway, IMessageQueueListener<NetworkDeviceFoundMessage>
+    internal class MyStromGateway : GatewayBase, IMyStromGateway
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(MyStromGateway));
-        private readonly IMessageQueue _messageQueue;
         private readonly IMyStromDeviceNameService _myStromDeviceNameService;
         private readonly IDeviceConfigurationBackupService _deviceConfigurationBackupService;
         private readonly object _deviceListLock = new object();
@@ -25,17 +23,18 @@ namespace Xpressive.Home.Plugins.MyStrom
         public MyStromGateway(
             IMessageQueue messageQueue,
             IMyStromDeviceNameService myStromDeviceNameService,
-            IDeviceConfigurationBackupService deviceConfigurationBackupService) : base("myStrom")
+            IDeviceConfigurationBackupService deviceConfigurationBackupService)
+            : base(messageQueue, "myStrom", false)
         {
-            _messageQueue = messageQueue;
             _myStromDeviceNameService = myStromDeviceNameService;
             _deviceConfigurationBackupService = deviceConfigurationBackupService;
-            _canCreateDevices = false;
+
+            messageQueue.Subscribe<NetworkDeviceFoundMessage>(Notify);
         }
 
         public IEnumerable<MyStromDevice> GetDevices()
         {
-            return _devices.Cast<MyStromDevice>();
+            return Devices.Cast<MyStromDevice>();
         }
 
         public void SwitchOn(MyStromDevice device)
@@ -57,7 +56,7 @@ namespace Xpressive.Home.Plugins.MyStrom
             }
         }
 
-        public override async Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             await LoadDevicesFromBackup();
 
@@ -67,34 +66,32 @@ namespace Xpressive.Home.Plugins.MyStrom
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                foreach (var device in _devices.Cast<MyStromDevice>())
+                foreach (var device in Devices.Cast<MyStromDevice>())
                 {
                     var dto = await GetReport(device.IpAddress);
 
                     if (dto == null)
                     {
-                        device.ReadStatus = DeviceReadStatus.Erroneous;
                         continue;
                     }
 
-                    device.ReadStatus = DeviceReadStatus.Ok;
                     device.Power = dto.Power;
                     device.Relay = dto.Relay;
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Relay", dto.Relay));
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Name", device.Name));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Relay", dto.Relay));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Name", device.Name));
 
                     double previousPower;
                     if (previousPowers.TryGetValue(device.Id, out previousPower))
                     {
                         if (Math.Abs(previousPower - dto.Power) > 0.01)
                         {
-                            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Power", dto.Power));
+                            MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Power", dto.Power));
                             previousPowers[device.Id] = dto.Power;
                         }
                     }
                     else
                     {
-                        _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Power", dto.Power));
+                        MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Power", dto.Power));
                         previousPowers[device.Id] = dto.Power;
                     }
                 }
@@ -121,7 +118,7 @@ namespace Xpressive.Home.Plugins.MyStrom
             }
             catch (Exception e)
             {
-                _log.Error(e.Message, e);
+                Log.Error(e, e.Message);
             }
         }
 
@@ -129,7 +126,7 @@ namespace Xpressive.Home.Plugins.MyStrom
         {
             if (device == null)
             {
-                _log.Warn($"Unable to execute action {action.Name} because the device was not found.");
+                Log.Warning("Unable to execute action {actionName} because the device was not found.", action.Name);
                 return;
             }
 
@@ -156,7 +153,7 @@ namespace Xpressive.Home.Plugins.MyStrom
         {
             if (disposing)
             {
-                var ipAddresses = _devices.OfType<MyStromDevice>().Select(d => d.IpAddress).ToList();
+                var ipAddresses = Devices.OfType<MyStromDevice>().Select(d => d.IpAddress).ToList();
                 _deviceConfigurationBackupService.Save(Name, new DeviceConfigurationBackupDto(ipAddresses));
             }
             base.Dispose(disposing);
@@ -194,7 +191,7 @@ namespace Xpressive.Home.Plugins.MyStrom
             var request = new RestRequest("info.json", Method.GET);
             var response = await client.ExecuteTaskAsync<MyStromDeviceInfo>(request);
 
-            if (response.Data == null)
+            if (response.Data?.Mac == null)
             {
                 return false;
             }
@@ -210,8 +207,9 @@ namespace Xpressive.Home.Plugins.MyStrom
 
             lock (_deviceListLock)
             {
-                if (_devices.Cast<MyStromDevice>().Any(d => d.MacAddress.Equals(macAddress)))
+                if (DeviceDictionary.TryGetValue(macAddress, out var d) && d is MyStromDevice device)
                 {
+                    device.IpAddress = ipAddress;
                     return;
                 }
 
@@ -223,12 +221,17 @@ namespace Xpressive.Home.Plugins.MyStrom
                     }
                 }
 
-                _devices.Add(new MyStromDevice(name, ipAddress, macAddress));
+                DeviceDictionary.TryAdd(macAddress, new MyStromDevice(name, ipAddress, macAddress));
             }
         }
 
         private async Task<Dto> GetReport(string ipAddress)
         {
+            if (string.IsNullOrEmpty(ipAddress))
+            {
+                return null;
+            }
+
             var client = new RestClient($"http://{ipAddress}");
             client.Timeout = 5000;
 

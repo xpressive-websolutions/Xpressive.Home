@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 using Action = Xpressive.Home.Contracts.Gateway.Action;
@@ -13,22 +13,20 @@ namespace Xpressive.Home.Plugins.NissanLeaf
     internal sealed class NissanLeafGateway : GatewayBase, INissanLeafGateway
     {
         private readonly INissanLeafClient _nissanLeafClient;
-        private readonly IMessageQueue _messageQueue;
         private readonly string _username;
         private readonly string _password;
 
-        public NissanLeafGateway(INissanLeafClient nissanLeafClient, IMessageQueue messageQueue) : base("NissanLeaf")
+        public NissanLeafGateway(INissanLeafClient nissanLeafClient, IMessageQueue messageQueue, IConfiguration configuration)
+            : base(messageQueue, "NissanLeaf", false)
         {
             _nissanLeafClient = nissanLeafClient;
-            _messageQueue = messageQueue;
-            _canCreateDevices = false;
-            _username = ConfigurationManager.AppSettings["nissanleaf.username"];
-            _password = ConfigurationManager.AppSettings["nissanleaf.password"];
+            _username = configuration["nissanleaf.username"];
+            _password = configuration["nissanleaf.password"];
         }
 
         public IEnumerable<NissanLeafDevice> GetDevices()
         {
-            return _devices.Cast<NissanLeafDevice>();
+            return Devices.Cast<NissanLeafDevice>();
         }
 
         public void StartCharging(NissanLeafDevice device)
@@ -57,41 +55,42 @@ namespace Xpressive.Home.Plugins.NissanLeaf
             yield return new Action("Stop climate control");
         }
 
-        public override async Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
-            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { }).ConfigureAwait(false);
+            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
 
             if (string.IsNullOrEmpty(_username) || string.IsNullOrEmpty(_password))
             {
-                _messageQueue.Publish(new NotifyUserMessage("Add nissan leaf configuration to config file."));
+                MessageQueue.Publish(new NotifyUserMessage("Add nissan leaf configuration to config file."));
                 return;
             }
 
-            await _nissanLeafClient.InitAsync().ConfigureAwait(false);
+            var isInit = await _nissanLeafClient.InitAsync();
+
+            if (!isInit)
+            {
+                return;
+            }
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                var foundDevices = await _nissanLeafClient.LoginAsync(_username, _password).ConfigureAwait(false);
+                var foundDevices = await _nissanLeafClient.LoginAsync(_username, _password);
 
                 foreach (var foundDevice in foundDevices)
                 {
-                    var existingDevice = _devices
-                        .Cast<NissanLeafDevice>()
-                        .SingleOrDefault(d => d.Id.Equals(foundDevice.Id, StringComparison.OrdinalIgnoreCase));
-
-                    if (existingDevice == null)
-                    {
-                        _devices.Add(foundDevice);
-                    }
-                    else
+                    if (DeviceDictionary.TryGetValue(foundDevice.Id, out var d) && d is NissanLeafDevice existingDevice)
                     {
                         existingDevice.CustomSessionId = foundDevice.CustomSessionId;
                     }
+                    else
+                    {
+                        DeviceDictionary.TryAdd(foundDevice.Id, foundDevice);
+                    }
                 }
 
-                foreach (var device in _devices.Cast<NissanLeafDevice>())
+                foreach (var device in Devices.Cast<NissanLeafDevice>())
                 {
-                    var batteryStatus = await _nissanLeafClient.GetBatteryStatusAsync(device, cancellationToken).ConfigureAwait(false);
+                    var batteryStatus = await _nissanLeafClient.GetBatteryStatusAsync(device, cancellationToken);
 
                     if (batteryStatus == null || cancellationToken.IsCancellationRequested)
                     {
@@ -104,15 +103,15 @@ namespace Xpressive.Home.Plugins.NissanLeaf
                     device.CruisingRangeAcOn = Math.Round(batteryStatus.CruisingRangeAcOn);
                     device.CruisingRangeAcOff = Math.Round(batteryStatus.CruisingRangeAcOff);
 
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "ChargingState", device.ChargingState));
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "PluginState", device.PluginState));
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Power", device.Power, "Percent"));
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "CruisingRangeAcOff", device.CruisingRangeAcOff, "Meter"));
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "CruisingRangeAcOn", device.CruisingRangeAcOn, "Meter"));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "ChargingState", device.ChargingState));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "PluginState", device.PluginState));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Power", device.Power, "Percent"));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "CruisingRangeAcOff", device.CruisingRangeAcOff, "Meter"));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "CruisingRangeAcOn", device.CruisingRangeAcOn, "Meter"));
                 }
-            }
 
-            await Task.Delay(TimeSpan.FromMinutes(10), cancellationToken).ContinueWith(_ => { }).ConfigureAwait(false);
+                await Task.Delay(TimeSpan.FromMinutes(10), cancellationToken).ContinueWith(_ => { });
+            }
         }
 
         public override IDevice CreateEmptyDevice()
@@ -132,13 +131,13 @@ namespace Xpressive.Home.Plugins.NissanLeaf
             switch (action.Name.ToLowerInvariant())
             {
                 case "start charging":
-                    await _nissanLeafClient.StartCharging(leaf).ConfigureAwait(false);
+                    await _nissanLeafClient.StartCharging(leaf);
                     break;
                 case "start climate control":
-                    await _nissanLeafClient.ActivateClimateControl(leaf).ConfigureAwait(false);
+                    await _nissanLeafClient.ActivateClimateControl(leaf);
                     break;
                 case "stop climate control":
-                    await _nissanLeafClient.DeactivateClimateControl(leaf).ConfigureAwait(false);
+                    await _nissanLeafClient.DeactivateClimateControl(leaf);
                     break;
             }
         }

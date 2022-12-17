@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
-using log4net;
+using Microsoft.Extensions.Configuration;
 using Polly;
+using Serilog;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 using Xpressive.Home.Contracts.Services;
@@ -17,19 +17,16 @@ namespace Xpressive.Home.Plugins.Lifx
 {
     internal sealed class LifxGateway : GatewayBase, ILifxGateway
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(LifxGateway));
-        private readonly IMessageQueue _messageQueue;
         private readonly IDeviceConfigurationBackupService _deviceConfigurationBackupService;
         private readonly string _token;
         private readonly object _deviceLock = new object();
         private readonly LifxLocalClient _localClient = new LifxLocalClient();
 
-        public LifxGateway(IMessageQueue messageQueue, IDeviceConfigurationBackupService deviceConfigurationBackupService) : base("Lifx")
+        public LifxGateway(IMessageQueue messageQueue, IDeviceConfigurationBackupService deviceConfigurationBackupService, IConfiguration configuration)
+            : base(messageQueue, "Lifx", false)
         {
-            _messageQueue = messageQueue;
             _deviceConfigurationBackupService = deviceConfigurationBackupService;
-            _canCreateDevices = false;
-            _token = ConfigurationManager.AppSettings["lifx.token"];
+            _token = configuration["lifx.token"];
 
             _localClient.DeviceDiscovered += (s, e) =>
             {
@@ -38,15 +35,13 @@ namespace Xpressive.Home.Plugins.Lifx
 
             _localClient.VariableChanged += (s, e) =>
             {
-                var device = _devices.ToArray().Cast<LifxDevice>().SingleOrDefault(d => d.Id.Equals(e.Item1.Id));
-
-                if (device != null)
+                if (DeviceDictionary.TryGetValue(e.Item1.Id, out var d) && d is LifxDevice device)
                 {
                     device.Name = e.Item1.Name;
                 }
 
                 var variable = $"{Name}.{e.Item1.Id}.{e.Item2}";
-                _messageQueue.Publish(new UpdateVariableMessage(variable, e.Item3));
+                MessageQueue.Publish(new UpdateVariableMessage(variable, e.Item3));
             };
         }
 
@@ -117,12 +112,12 @@ namespace Xpressive.Home.Plugins.Lifx
             StartActionInNewTask(device, action, parameters);
         }
 
-        public override async Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
 
             FindLocalBulbs(cancellationToken);
-            FindCloudBulbsAsync(cancellationToken).ConfigureAwait(false);
+            FindCloudBulbsAsync(cancellationToken);
 
             await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
 
@@ -145,7 +140,7 @@ namespace Xpressive.Home.Plugins.Lifx
         {
             if (string.IsNullOrEmpty(_token))
             {
-                _messageQueue.Publish(new NotifyUserMessage("Add LIFX cloud token to config file."));
+                MessageQueue.Publish(new NotifyUserMessage("Add LIFX cloud token to config file."));
                 return;
             }
 
@@ -165,7 +160,7 @@ namespace Xpressive.Home.Plugins.Lifx
             }
             catch (Exception e)
             {
-                _log.Error(e.Message, e);
+                Log.Error(e, e.Message);
             }
         }
 
@@ -178,11 +173,11 @@ namespace Xpressive.Home.Plugins.Lifx
 
             if (device == null)
             {
-                _log.Warn($"Unable to execute action {action.Name} because the device was not found.");
+                Log.Warning("Unable to execute action {actionName} because the device was not found.", action.Name);
                 return;
             }
 
-            var bulb = (LifxDevice) device;
+            var bulb = (LifxDevice)device;
             int seconds;
             double brightness;
 
@@ -237,15 +232,15 @@ namespace Xpressive.Home.Plugins.Lifx
             }
             catch (WebException e)
             {
-                _log.Error($"Error while executing {description}: {e.Message}");
+                Log.Error(e, "Error while executing {description}.", description);
             }
             catch (XmlException e)
             {
-                _log.Error($"Error while executing {description}: {e.Message}");
+                Log.Error(e, "Error while executing {description}.", description);
             }
             catch (Exception e)
             {
-                _log.Error(e.Message, e);
+                Log.Error(e, e.Message);
             }
         }
 
@@ -332,23 +327,23 @@ namespace Xpressive.Home.Plugins.Lifx
             {
                 case "switch on":
                     await client.SwitchOn(light, seconds);
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", true));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", true));
                     break;
                 case "switch off":
                     await client.SwitchOff(light, seconds);
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", false));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", false));
                     break;
                 case "change color":
                     var rgb = color.ParseRgb();
                     await client.ChangeColor(light, rgb.ToString(), seconds);
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", true));
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Color", rgb.ToString()));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", true));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Color", rgb.ToString()));
                     break;
                 case "change brightness":
                     await client.ChangeBrightness(light, brightness, seconds);
                     var db = Math.Round(brightness, 2);
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Brightness", db));
-                    _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", true));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Brightness", db));
+                    MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", true));
                     break;
                 default:
                     return;
@@ -380,14 +375,11 @@ namespace Xpressive.Home.Plugins.Lifx
 
             lock (_deviceLock)
             {
-                var device = _devices.Cast<LifxDevice>().SingleOrDefault(d => d.Id.Equals(id));
-
-                if (device == null)
+                if (!DeviceDictionary.TryGetValue(id, out var d) || !(d is LifxDevice device))
                 {
                     device = create();
-                    _devices.Add(device);
+                    DeviceDictionary.TryAdd(device.Id, device);
                 }
-
                 return device;
             }
         }
@@ -401,12 +393,12 @@ namespace Xpressive.Home.Plugins.Lifx
             var isConnected = light.IsConnected;
             var color = light.GetHexColor();
 
-            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Brightness", brightness));
-            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", isOn));
-            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsConnected", isConnected));
-            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Name", name));
-            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "GroupName", groupName));
-            _messageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Color", color));
+            MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Brightness", brightness));
+            MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsOn", isOn));
+            MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "IsConnected", isConnected));
+            MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Name", name));
+            MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "GroupName", groupName));
+            MessageQueue.Publish(new UpdateVariableMessage(Name, device.Id, "Color", color));
         }
 
         protected override void Dispose(bool disposing)

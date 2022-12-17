@@ -83,7 +83,7 @@ namespace Xpressive.Home.Plugins.CloudTwin
 
                     if (!string.IsNullOrEmpty(twin.Id))
                     {
-                        _devices.Add(twin);
+                        _devices.TryAdd(twin.Id, twin);
                     }
                 }
 

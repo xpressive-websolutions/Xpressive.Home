@@ -1,20 +1,23 @@
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Xpressive.Home.Contracts.Gateway;
 using Xpressive.Home.Contracts.Messaging;
 
 namespace Xpressive.Home.Plugins.Pushover
 {
-    internal class PushoverGateway : IGateway
+    internal class PushoverGateway : BackgroundService, IGateway
     {
         private readonly IMessageQueue _messageQueue;
+        private readonly IConfiguration _configuration;
 
-        public PushoverGateway(IMessageQueue messageQueue)
+        public PushoverGateway(IMessageQueue messageQueue, IConfiguration configuration)
         {
             _messageQueue = messageQueue;
+            _configuration = configuration;
 
             Name = "Pushover";
             CanCreateDevices = false;
@@ -30,9 +33,14 @@ namespace Xpressive.Home.Plugins.Pushover
             throw new NotSupportedException();
         }
 
-        public bool AddDevice(IDevice device)
+        public Task<bool> AddDevice(IDevice device)
         {
             throw new NotSupportedException();
+        }
+
+        public Task RemoveDevice(IDevice device)
+        {
+            throw new NotImplementedException();
         }
 
         public IEnumerable<IAction> GetActions(IDevice device)
@@ -40,17 +48,15 @@ namespace Xpressive.Home.Plugins.Pushover
             yield break;
         }
 
-        public async Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ContinueWith(_ => { });
-            var token = ConfigurationManager.AppSettings["pushover.token"];
+            var token = _configuration["pushover.token"];
 
             if (string.IsNullOrEmpty(token))
             {
                 _messageQueue.Publish(new NotifyUserMessage("Add pushover configuration to config file."));
             }
         }
-
-        public void Dispose() { }
     }
 }
